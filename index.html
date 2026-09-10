@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gemini AI Chat Assistant</title>
+<title>AI Chat Assistant</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -29,6 +29,7 @@
 
   html,body{
     height:100%;
+    height:100dvh;
     margin:0;
     background:var(--bg);
     color:var(--text);
@@ -54,6 +55,7 @@
     flex-direction:column;
     flex-shrink:0;
     height:100vh;
+    height:100dvh;
     position:fixed;
     top:0; left:0;
     z-index:40;
@@ -200,6 +202,7 @@
     display:flex;
     flex-direction:column;
     height:100vh;
+    height:100dvh;
     min-width:0;
   }
 
@@ -551,7 +554,7 @@
     </button>
     <div class="brand-mark">AI</div>
     <div class="brand-info">
-      <div class="brand-title">Gemini Assistant</div>
+      <div class="brand-title">Zamir Ai</div>
       <div class="brand-status"><span class="status-dot" id="status-dot"></span><span id="status-text">Connecting...</span></div>
     </div>
     <button id="sound-toggle" type="button" title="Sound on/off">
@@ -575,7 +578,7 @@
       </button>
       <input type="file" id="file-input" accept="image/*" multiple hidden>
 
-      <input type="text" id="user-input" placeholder="Yahan apna message type karein..." autocomplete="off">
+      <input type="text" id="user-input" placeholder="Yahan apna Question type karein..." autocomplete="off">
       <button type="submit" id="send-btn"><span id="send-label">Send</span></button>
     </form>
   </footer>
@@ -601,7 +604,7 @@
   const API_KEY = 'AIzaSyCqSwiRqfIbHP3-8-6ljxbKDL_plKxYTkU';
   const MODEL = 'gemini-flash-lite-latest';
   const STREAM_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:streamGenerateContent?alt=sse&key=${API_KEY}`;
-  const WELCOME_TEXT = 'Hello! Main Gemini hoon. Aap mujhse kuch bhi pooch sakte hain.';
+  const WELCOME_TEXT = 'Aap Ai se kya poochna chahte hain.';
 
   /* ---------------- Elements ---------------- */
   const chatContainer = document.getElementById('chat-container');
@@ -705,7 +708,7 @@
     closeSidebarOnMobile();
   }
 
-  function deleteSession(id, evt) {
+   function deleteSession(id, evt) {
     evt.stopPropagation();
     sessionsRef.child(id).remove();
     if (currentSessionId === id) {
