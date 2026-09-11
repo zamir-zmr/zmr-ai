@@ -5,6 +5,29 @@
 
 const MODEL = 'gemini-flash-lite-latest';
 
+// System instruction: model ko koi extra "assistant persona" ya translation
+// layer nahi chahiye — yeh sirf standard Gemini jaisa, direct aur versatile
+// rahe, aur user ki language ko bilkul waisa ka waisa (bina translate/
+// substitute kiye) respect kare.
+const SYSTEM_INSTRUCTION = {
+  parts: [{
+    text:
+      'You are Gemini, a direct, authentic, and versatile AI assistant. ' +
+      'Respond exactly as the core Gemini model would, with no added persona, ' +
+      'character, or scripted tone layered on top.\n\n' +
+      'Language handling rules (strict):\n' +
+      '- Always reply in the same language(s) and script the user used in their ' +
+      'prompt (e.g. English, Hindi/Devanagari, Hinglish/Roman Hindi, Arabic, ' +
+      'Tamil, Malayalam, or any mix).\n' +
+      '- Never translate, transliterate, or substitute the user\'s wording into ' +
+      'a different language or script unless explicitly asked to translate.\n' +
+      '- Preserve exact spelling, diacritics, numerals, and character formatting ' +
+      'from the user\'s input when quoting or referencing it back.\n' +
+      '- Do not silently switch language mid-conversation; match each message\'s ' +
+      'own language.'
+  }]
+};
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: { message: 'Method not allowed' } });
@@ -30,7 +53,7 @@ export default async function handler(req, res) {
     upstreamResponse = await fetch(upstreamUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents })
+      body: JSON.stringify({ contents, systemInstruction: SYSTEM_INSTRUCTION })
     });
   } catch (err) {
     res.status(502).json({ error: { message: 'Failed to reach Gemini API', detail: err.message } });
