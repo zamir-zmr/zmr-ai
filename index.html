@@ -29,7 +29,7 @@
 
   html,body{
     height:100%;
-    height:100dvh;
+    height:var(--app-height, 100dvh);
     margin:0;
     background:var(--bg);
     color:var(--text);
@@ -55,7 +55,7 @@
     flex-direction:column;
     flex-shrink:0;
     height:100vh;
-    height:100dvh;
+    height:var(--app-height, 100dvh);
     position:fixed;
     top:0; left:0;
     z-index:40;
@@ -202,7 +202,7 @@
     display:flex;
     flex-direction:column;
     height:100vh;
-    height:100dvh;
+    height:var(--app-height, 100dvh);
     min-width:0;
   }
 
@@ -292,8 +292,8 @@
   main{
     flex:1;
     overflow-y:auto;
-    padding:24px 16px 12px;
-    max-width:760px;
+    padding:24px 10px 12px;
+    max-width:900px;
     width:100%;
     margin:0 auto;
     scroll-behavior:smooth;
@@ -320,10 +320,11 @@
   .msg-wrap{
     display:flex;
     flex-direction:column;
-    max-width:78%;
+    max-width:94%;
+    width:100%;
   }
 
-  .row.user .msg-wrap{ align-items:flex-end; }
+  .row.user .msg-wrap{ align-items:flex-end; max-width:88%; width:auto; }
 
   .avatar{
     width:30px; height:30px;
@@ -397,6 +398,34 @@
 
   .msg-actions button:hover{ background:var(--surface-2); color:var(--text); }
   .msg-actions svg{ width:13px; height:13px; }
+
+  .ai-actions{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    width:100%;
+    margin-top:6px;
+  }
+
+  .ai-actions button{
+    background:transparent;
+    border:none;
+    color:var(--text-dim);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:28px;
+    height:28px;
+    border-radius:8px;
+    flex-shrink:0;
+  }
+
+  .ai-actions button:hover{ background:var(--surface-2); color:var(--text); }
+  .ai-actions svg{ width:15px; height:15px; }
+
+  .ai-actions .copy-btn.done{ color:#57D68D; }
+  .ai-actions .speak-btn.speaking{ color:var(--accent); background:var(--accent-dim); }
 
   .typing{
     display:inline-flex; align-items:center; gap:4px; padding:4px 2px;
@@ -628,6 +657,31 @@
   const statusText = document.getElementById('status-text');
   const syncBadge = document.getElementById('sync-badge');
 
+  /* ---------------- Mobile viewport height fix ----------------
+     100dvh doesn't always update instantly on Android Chrome when the
+     on-screen keyboard opens/closes, which was pushing the latest
+     message up behind the header until the user manually scrolled.
+     We track the real visual viewport height in JS and re-run
+     scrollToBottom() whenever it changes. */
+  function setAppHeight() {
+    const h = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
+    document.documentElement.style.setProperty('--app-height', h + 'px');
+  }
+  setAppHeight();
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+      setAppHeight();
+      scrollToBottom();
+    });
+  }
+  window.addEventListener('resize', () => {
+    setAppHeight();
+    scrollToBottom();
+  });
+  window.addEventListener('orientationchange', () => {
+    setTimeout(() => { setAppHeight(); scrollToBottom(); }, 200);
+  });
+
   /* ---------------- State ---------------- */
   let sessions = [];                      // array of { id, title, updatedAt, messages:[{role,text,attachments}] }
   let currentSessionId = null;
@@ -651,7 +705,7 @@
     }
   });
 
-  sessionsRef.on('value', (snapshot) => {
+sessionsRef.on('value', (snapshot) => {
     const data = snapshot.val() || {};
     sessions = Object.keys(data)
       .map(id => ({ id, ...data[id] }))
@@ -708,8 +762,7 @@
     closeSidebarOnMobile();
   }
 
-  
-    function deleteSession(id, evt) {
+  function deleteSession(id, evt) {
     evt.stopPropagation();
     sessionsRef.child(id).remove();
     if (currentSessionId === id) {
@@ -1075,16 +1128,59 @@
         </button>
       </div>` : '';
 
+    const aiActionsHtml = (!isUser && index >= 0) ? `
+      <div class="ai-actions">
+        <button type="button" class="copy-btn" title="Copy" aria-label="Copy response">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        </button>
+        <button type="button" class="speak-btn" title="Listen" aria-label="Read response aloud">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+        </button>
+      </div>` : '';
+
     row.innerHTML = `
       <div class="avatar ${isUser ? 'user' : 'ai'}">${isUser ? 'You' : 'AI'}</div>
       <div class="msg-wrap">
         <div class="bubble">${imagesHtml}<span class="msg-text">${escapeHtml(msg.text || '')}</span></div>
         ${editBtnHtml}
+        ${aiActionsHtml}
       </div>
     `;
 
     if (isUser && index >= 0) {
       row.querySelector('.edit-btn').addEventListener('click', () => startEdit(index));
+    }
+
+    if (!isUser && index >= 0) {
+      const copyBtn = row.querySelector('.copy-btn');
+      const speakBtn = row.querySelector('.speak-btn');
+
+      copyBtn.addEventListener('click', () => {
+        const text = row.querySelector('.msg-text').textContent || '';
+        navigator.clipboard.writeText(text).then(() => {
+          copyBtn.classList.add('done');
+          setTimeout(() => copyBtn.classList.remove('done'), 1200);
+        }).catch(() => {});
+      });
+
+      speakBtn.addEventListener('click', () => {
+        if (!('speechSynthesis' in window)) return;
+        const text = row.querySelector('.msg-text').textContent || '';
+        if (!text) return;
+
+        if (speakBtn.classList.contains('speaking')) {
+          window.speechSynthesis.cancel();
+          speakBtn.classList.remove('speaking');
+          return;
+        }
+
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.onend = () => speakBtn.classList.remove('speaking');
+        utterance.onerror = () => speakBtn.classList.remove('speaking');
+        speakBtn.classList.add('speaking');
+        window.speechSynthesis.speak(utterance);
+      });
     }
 
     chatContainer.appendChild(row);
