@@ -601,9 +601,9 @@
   const sessionsRef = db.ref('geminiChatApp/sessions');
 
   /* ---------------- Config ---------------- */
-  const API_KEY = 'AIzaSyCqSwiRqfIbHP3-8-6ljxbKDL_plKxYTkU';
-  const MODEL = 'gemini-flash-lite-latest';
-  const STREAM_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:streamGenerateContent?alt=sse&key=${API_KEY}`;
+  // NOTE: API_KEY, MODEL aur direct Gemini URL yahan se hata diye gaye hain.
+  // Ab request hamare apne backend endpoint par jaati hai; key sirf server (Vercel env var) par rehti hai.
+  const STREAM_URL = '/api/gemini';
   const WELCOME_TEXT = 'Aap Ai se kya poochna chahte hain.';
 
   /* ---------------- Elements ---------------- */
@@ -708,7 +708,8 @@
     closeSidebarOnMobile();
   }
 
-   function deleteSession(id, evt) {
+  
+    function deleteSession(id, evt) {
     evt.stopPropagation();
     sessionsRef.child(id).remove();
     if (currentSessionId === id) {
