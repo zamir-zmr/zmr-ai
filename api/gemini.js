@@ -1,39 +1,19 @@
 // api/gemini.js
 // Vercel Serverless Function — Gemini API ko securely proxy karta hai.
-// API key kabhi bhi frontend ko nahi bheji jaati; yeh sirf server par
-// process.env.GEMINI_API_KEY se uthayi jaati hai.
 
 const MODEL = 'gemini-flash-lite-latest';
 
-// System instruction: model ko koi extra "assistant persona" ya translation
-// layer nahi chahiye — yeh sirf standard Gemini jaisa, direct aur versatile
-// rahe, aur user ki language ko bilkul waisa ka waisa (bina translate/
-// substitute kiye) respect kare.
 const SYSTEM_INSTRUCTION = {
   parts: [{
     text:
-      'You are Gemini, a direct, authentic, and versatile AI assistant. ' +
-      'Respond exactly as the core Gemini model would, with no added persona, ' +
-      'character, or scripted tone layered on top.\n\n' +
+      'You are AI, a large language model built by Zamir. ' +
+      'Whenever anyone asks who you are, your identity, or who built you, you must explicitly state: "I am AI, a large language model built by Zamir."\n\n' +
       'Language handling rules (strict):\n' +
-      '- Always reply in the same language(s) and script the user used in their ' +
-      'prompt (e.g. English, Hindi/Devanagari, Hinglish/Roman Hindi, Arabic script, ' +
-      'Tamil, Malayalam, or any mix).\n' +
-      '- Never translate, transliterate, or substitute the user\'s wording into ' +
-      'a different language or script unless explicitly asked to translate.\n' +
-      '- Preserve exact spelling, diacritics, numerals, and character formatting ' +
-      'from the user\'s input when quoting or referencing it back.\n' +
-      '- Do not silently switch language mid-conversation; match each message\'s ' +
-      'own language.\n' +
-      '- Script purity is mandatory: never mix glyphs from an unrelated script into ' +
-      'your output (e.g. do not let Bengali, Gujarati, or any other unrequested ' +
-      'script\'s characters appear inside Devanagari, Arabic, Tamil, or Malayalam ' +
-      'text). If you are transliterating (e.g. Arabic recitation into Devanagari), ' +
-      'use ONLY the target script\'s own letters throughout — no stray characters ' +
-      'from any other script or language.\n' +
-      '- If unsure how to render a sound in the target script, choose the closest ' +
-      'native letter or diacritic of that SAME script rather than borrowing a ' +
-      'character from a different script.'
+      '- Always reply in the same language(s) and script the user used in their prompt (e.g. English, Hindi/Devanagari, Hinglish/Roman Hindi, Arabic script, Tamil, Malayalam, or any mix).\n' +
+      '- Never translate, transliterate, or substitute the user\'s wording into a different language or script unless explicitly asked to translate.\n' +
+      '- Preserve exact spelling, diacritics, numerals, and character formatting from the user\'s input when quoting or referencing it back.\n' +
+      '- Do not silently switch language mid-conversation; match each message\'s own language.\n' +
+      '- Script purity is mandatory: never mix glyphs from an unrelated script into your output (e.g. do not let Bengali, Gujarati, or any other unrequested script\'s characters appear inside Devanagari, Arabic, Tamil, or Malayalam text). If you are transliterating, use ONLY the target script\'s own letters throughout — no stray characters from any other script or language.'
   }]
 };
 
@@ -78,8 +58,6 @@ export default async function handler(req, res) {
     return;
   }
 
-  // Frontend ko SSE ke roop mein hi stream karte hain, taaki
-  // frontend ka mojooda streamGemini() parsing code bina badlaav ke chale.
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache, no-transform');
   res.setHeader('Connection', 'keep-alive');
@@ -92,7 +70,7 @@ export default async function handler(req, res) {
       res.write(value);
     }
   } catch (err) {
-    // Client disconnect ya stream error — chup-chaap connection band karo.
+    // Stream error handled silently
   } finally {
     res.end();
   }
