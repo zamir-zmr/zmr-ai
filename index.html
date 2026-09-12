@@ -1268,7 +1268,14 @@
 
   function createLiveRecognizer() {
     const rec = new SpeechRecognitionAPI();
-    rec.continuous = true;
+    // Fix for repeated/duplicated words: continuous=true on Android Chrome
+    // sometimes re-emits earlier "final" segments again inside the same
+    // session, and manually concatenating (+=) those chunks compounded the
+    // duplication ("1 se lekar1 se lekar1 se lekar..."). Using one
+    // utterance per session avoids that engine quirk entirely — the
+    // session ends naturally when the user pauses, and we immediately
+    // start a fresh session for the next utterance (see rec.onend below).
+    rec.continuous = false;
     rec.interimResults = true;
     rec.lang = 'hi-IN';
 
@@ -1277,18 +1284,21 @@
       // fully stopped (see speakInLiveMode / rec.onend below), so this
       // should never fire during playback. This guard is just a safety
       // net in case a stray event lands right as we're stopping the mic —
-      // it must NEVER accumulate into livePendingTranscript, otherwise the
-      // AI's own voice gets picked up and re-sent as if the user said it.
+      // it must NEVER be treated as user speech, otherwise the AI's own
+      // voice gets picked up and re-sent as if the user said it.
       if (isLiveSpeaking) return;
 
-      let interim = '';
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const chunk = event.results[i][0].transcript;
-        if (event.results[i].isFinal) livePendingTranscript += chunk;
-        else interim += chunk;
+      // Recompute the full transcript fresh from all results every time,
+      // instead of appending (+=) to a running buffer — this is what
+      // makes the fix self-correcting even if the engine re-sends a
+      // result: we always end up with the current best transcript, not
+      // an ever-growing, duplicated one.
+      let transcript = '';
+      for (let i = 0; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
       }
-      const liveSnapshot = (livePendingTranscript + ' ' + interim).trim();
-      userInput.value = liveSnapshot;
+      livePendingTranscript = transcript.trim();
+      userInput.value = livePendingTranscript;
     };
 
     rec.onerror = () => {};
@@ -1782,7 +1792,7 @@
     chatContainer.scrollTop = chatContainer.scrollHeight;
   }
 
-  function escapeHtml(text) {
+    function escapeHtml(text) {
     const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
     return text.replace(/[&<>"']/g, m => map[m]);
   }
