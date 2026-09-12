@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zamir Ai</title>
+<title>AI Chat Assistant</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -396,6 +396,43 @@
     border-radius:6px;
   }
 
+  .msg-text strong{ font-weight:700; }
+  .msg-text em{ font-style:italic; }
+  .msg-text code{
+    background:rgba(255,255,255,0.08);
+    padding:1px 5px;
+    border-radius:4px;
+    font-family:'SFMono-Regular',Consolas,monospace;
+    font-size:0.9em;
+  }
+  .msg-text pre{
+    background:rgba(0,0,0,0.35);
+    padding:10px 12px;
+    border-radius:8px;
+    overflow-x:auto;
+    margin:6px 0;
+  }
+  .msg-text pre code{ background:none; padding:0; }
+
+  .ai-meta{
+    display:flex;
+    align-items:center;
+    gap:4px;
+    margin-top:6px;
+    width:100%;
+  }
+
+  .ai-meta .ai-actions{ margin-top:0; width:auto; gap:2px; }
+  .ai-meta .msg-time{
+    font-size:11px;
+    color:var(--text-dim);
+    margin-left:auto;
+    white-space:nowrap;
+  }
+
+  .ai-actions .regen-btn.spinning svg{ animation:spin 0.8s linear infinite; }
+  @keyframes spin{ from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+
   .msg-actions button:hover{ background:var(--surface-2); color:var(--text); }
   .msg-actions svg{ width:13px; height:13px; }
 
@@ -705,8 +742,7 @@
     }
   });
 
-  
-    sessionsRef.on('value', (snapshot) => {
+  sessionsRef.on('value', (snapshot) => {
     const data = snapshot.val() || {};
     sessions = Object.keys(data)
       .map(id => ({ id, ...data[id] }))
@@ -1055,7 +1091,7 @@
     }
 
     if (!session.messages) session.messages = [];
-    const userMsg = { role: 'user', text: promptText, attachments: attachmentsForThisMessage };
+    const userMsg = { role: 'user', text: promptText, attachments: attachmentsForThisMessage, createdAt: Date.now() };
     session.messages.push(userMsg);
     updateSessionTitle(session);
     saveSession(session);
@@ -1068,7 +1104,7 @@
     const cacheKey = attachmentsForThisMessage.length === 0 ? (session.id + '|' + promptText.toLowerCase()) : null;
     if (cacheKey && responseCache.has(cacheKey)) {
       const cached = responseCache.get(cacheKey);
-      const aiMsg = { role: 'ai', text: cached, attachments: [] };
+      const aiMsg = { role: 'ai', text: cached, attachments: [], createdAt: Date.now() };
       session.messages.push(aiMsg);
       saveSession(session);
       appendMessageDOM(aiMsg, session.messages.length - 1);
@@ -1088,7 +1124,7 @@
           fullText += chunk;
           if (!aiRow) {
             removeMessage(loadingId);
-            aiRow = appendMessageDOM({ role: 'ai', text: '', attachments: [] }, session.messages.length);
+            aiRow = appendMessageDOM({ role: 'ai', text: '', attachments: [], createdAt: Date.now() }, session.messages.length);
           }
           updateMessageBubble(aiRow, fullText);
         });
@@ -1105,7 +1141,7 @@
             fullText += chunk;
             if (!aiRow) {
               removeMessage(loadingId);
-              aiRow = appendMessageDOM({ role: 'ai', text: '', attachments: [] }, session.messages.length);
+              aiRow = appendMessageDOM({ role: 'ai', text: '', attachments: [], createdAt: Date.now() }, session.messages.length);
             }
             updateMessageBubble(aiRow, fullText);
           });
@@ -1117,10 +1153,10 @@
       if (!aiRow) {
         removeMessage(loadingId);
         fullText = fullText || 'No response generated.';
-        aiRow = appendMessageDOM({ role: 'ai', text: fullText, attachments: [] }, session.messages.length);
+        aiRow = appendMessageDOM({ role: 'ai', text: fullText, attachments: [], createdAt: Date.now() }, session.messages.length);
       }
 
-      const aiMsg = { role: 'ai', text: fullText, attachments: [] };
+      const aiMsg = { role: 'ai', text: fullText, attachments: [], createdAt: Date.now() };
       session.messages.push(aiMsg);
       saveSession(session);
       if (cacheKey) responseCache.set(cacheKey, fullText);
@@ -1133,9 +1169,9 @@
       if (aiRow) {
         updateMessageBubble(aiRow, errMsg, true);
       } else {
-        appendMessageDOM({ role: 'ai', text: errMsg, attachments: [] }, session.messages.length);
+        appendMessageDOM({ role: 'ai', text: errMsg, attachments: [], createdAt: Date.now() }, session.messages.length);
       }
-      session.messages.push({ role: 'ai', text: errMsg, attachments: [] });
+      session.messages.push({ role: 'ai', text: errMsg, attachments: [], createdAt: Date.now() });
       saveSession(session);
     } finally {
       finishSend();
@@ -1194,6 +1230,48 @@
 
   function keepFocus() {
     requestAnimationFrame(() => userInput.focus());
+  }
+
+  async function regenerateResponse(indexStr, regenBtn) {
+    if (isSending) return;
+    const index = parseInt(indexStr, 10);
+    const session = getCurrentSession();
+    if (!session || !session.messages || !session.messages[index]) return;
+
+    const row = chatContainer.querySelector(`.row[data-index="${index}"]`);
+    if (!row) return;
+
+    const originalMsg = session.messages[index];
+    const historyForRegen = buildApiHistory({ messages: session.messages.slice(0, index) });
+
+    isSending = true;
+    regenBtn.classList.add('spinning');
+    regenBtn.disabled = true;
+    updateMessageBubble(row, '');
+
+    let fullText = '';
+    try {
+      await streamGemini(historyForRegen, (chunk) => {
+        fullText += chunk;
+        updateMessageBubble(row, fullText);
+      });
+      fullText = fullText || 'No response generated.';
+
+      session.messages[index] = { role: 'ai', text: fullText, attachments: [], createdAt: Date.now() };
+      saveSession(session);
+
+      const timeEl = row.querySelector('.msg-time');
+      if (timeEl) timeEl.textContent = formatRelativeTime(Date.now());
+
+    } catch (error) {
+      console.error(error);
+      updateMessageBubble(row, (originalMsg.text || '') + '\n\n[Regenerate failed: ' + error.message + ']', true);
+      setTimeout(() => updateMessageBubble(row, originalMsg.text || ''), 2500);
+    } finally {
+      isSending = false;
+      regenBtn.classList.remove('spinning');
+      regenBtn.disabled = false;
+    }
   }
 
   /* ---------------- Streaming API call ---------------- */
@@ -1257,7 +1335,7 @@
     }
   }
 
-/* ---------------- DOM rendering ---------------- */
+  /* ---------------- DOM rendering ---------------- */
   function appendMessageDOM(msg, index) {
     const isUser = msg.role === 'user';
     const row = document.createElement('div');
@@ -1275,19 +1353,27 @@
       </div>` : '';
 
     const aiActionsHtml = (!isUser && index >= 0) ? `
-      <div class="ai-actions">
-        <button type="button" class="copy-btn" title="Copy" aria-label="Copy response">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-        </button>
-        <button type="button" class="speak-btn" title="Listen" aria-label="Read response aloud">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
-        </button>
+      <div class="ai-meta">
+        <div class="ai-actions">
+          <button type="button" class="copy-btn" title="Copy" aria-label="Copy response">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          </button>
+          <button type="button" class="speak-btn" title="Listen" aria-label="Read response aloud">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+          </button>
+          <button type="button" class="regen-btn" title="Regenerate" aria-label="Regenerate response">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+          </button>
+        </div>
+        <span class="msg-time">${formatRelativeTime(msg.createdAt)}</span>
       </div>` : '';
+
+    const bubbleTextHtml = isUser ? escapeHtml(msg.text || '') : renderMarkdown(msg.text || '');
 
     row.innerHTML = `
       <div class="avatar ${isUser ? 'user' : 'ai'}">${isUser ? 'You' : 'AI'}</div>
       <div class="msg-wrap">
-        <div class="bubble">${imagesHtml}<span class="msg-text">${escapeHtml(msg.text || '')}</span></div>
+        <div class="bubble">${imagesHtml}<span class="msg-text">${bubbleTextHtml}</span></div>
         ${editBtnHtml}
         ${aiActionsHtml}
       </div>
@@ -1300,6 +1386,7 @@
     if (!isUser && index >= 0) {
       const copyBtn = row.querySelector('.copy-btn');
       const speakBtn = row.querySelector('.speak-btn');
+      const regenBtn = row.querySelector('.regen-btn');
 
       copyBtn.addEventListener('click', () => {
         const text = row.querySelector('.msg-text').textContent || '';
@@ -1327,6 +1414,8 @@
         speakBtn.classList.add('speaking');
         window.speechSynthesis.speak(utterance);
       });
+
+      regenBtn.addEventListener('click', () => regenerateResponse(row.dataset.index, regenBtn));
     }
 
     chatContainer.appendChild(row);
@@ -1338,7 +1427,7 @@
     const bubble = row.querySelector('.bubble');
     bubble.classList.toggle('error', isError);
     const textSpan = bubble.querySelector('.msg-text');
-    if (textSpan) textSpan.textContent = text;
+    if (textSpan) textSpan.innerHTML = isError ? escapeHtml(text) : renderMarkdown(text);
     scrollToBottom();
   }
 
@@ -1368,6 +1457,40 @@
   function escapeHtml(text) {
     const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
     return text.replace(/[&<>"']/g, m => map[m]);
+  }
+
+  function renderMarkdown(text) {
+    let escaped = escapeHtml(text || '');
+
+    // Fenced code blocks ```code```
+    escaped = escaped.replace(/```([\s\S]*?)```/g, (_, code) => `<pre><code>${code.trim()}</code></pre>`);
+
+    // Inline code `code`
+    escaped = escaped.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+
+    // Bold **text** or __text__
+    escaped = escaped.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    escaped = escaped.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+
+    // Italic *text* or _text_
+    escaped = escaped.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    escaped = escaped.replace(/(^|[^a-zA-Z0-9])_([^_]+)_(?![a-zA-Z0-9])/g, '$1<em>$2</em>');
+
+    return escaped;
+  }
+
+  function formatRelativeTime(ts) {
+    if (!ts) return '';
+    const diffSec = Math.floor((Date.now() - ts) / 1000);
+    if (diffSec < 10) return 'Just now';
+    if (diffSec < 60) return diffSec + 's ago';
+    const diffMin = Math.floor(diffSec / 60);
+    if (diffMin < 60) return diffMin + (diffMin === 1 ? ' minute ago' : ' minutes ago');
+    const diffHr = Math.floor(diffMin / 60);
+    if (diffHr < 24) return diffHr + (diffHr === 1 ? ' hour ago' : ' hours ago');
+    const diffDay = Math.floor(diffHr / 24);
+    if (diffDay < 30) return diffDay + (diffDay === 1 ? ' day ago' : ' days ago');
+    return new Date(ts).toLocaleDateString();
   }
 </script>
 </body>
