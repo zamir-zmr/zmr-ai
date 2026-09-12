@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ZAMIR AI</title>
+<title>AI Chat Assistant</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -705,7 +705,7 @@
     }
   });
 
-sessionsRef.on('value', (snapshot) => {
+  sessionsRef.on('value', (snapshot) => {
     const data = snapshot.val() || {};
     sessions = Object.keys(data)
       .map(id => ({ id, ...data[id] }))
@@ -874,9 +874,16 @@ sessionsRef.on('value', (snapshot) => {
   fileInput.addEventListener('change', async () => {
     const files = Array.from(fileInput.files || []);
     for (const file of files) {
-      const base64 = await fileToBase64(file);
-      const previewUrl = `data:${file.type};base64,${base64}`;
-      pendingAttachments.push({ mimeType: file.type, base64, previewUrl });
+      try {
+        const { base64, mimeType } = await compressImageToTarget(file);
+        const previewUrl = `data:${mimeType};base64,${base64}`;
+        pendingAttachments.push({ mimeType, base64, previewUrl });
+      } catch (err) {
+        console.error('Image compress failed, falling back to raw file:', err);
+        const base64 = await fileToBase64(file);
+        const previewUrl = `data:${file.type};base64,${base64}`;
+        pendingAttachments.push({ mimeType: file.type, base64, previewUrl });
+      }
     }
     fileInput.value = '';
     renderPreviewBar();
@@ -890,6 +897,84 @@ sessionsRef.on('value', (snapshot) => {
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
+  }
+
+  /* ---------------- Client-side image compression ----------------
+     Vercel serverless functions reject overly large request bodies
+     (413 Payload Too Large). Instead of sending the raw photo, we
+     draw it onto a canvas and re-encode it as JPEG, shrinking both
+     the dimensions and the quality step-by-step until the resulting
+     base64 payload lands around ~50-60 KB. */
+  const TARGET_MAX_BYTES = 60 * 1024;   // 60 KB upper bound (best-effort ~50-60KB)
+
+  function loadImageFromFile(file) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+      img.onerror = (e) => { URL.revokeObjectURL(url); reject(e); };
+      img.src = url;
+    });
+  }
+
+  function canvasToBase64(canvas, quality) {
+    const dataUrl = canvas.toDataURL('image/jpeg', quality);
+    return dataUrl.split(',')[1];
+  }
+
+  function base64SizeBytes(base64) {
+    // Approx decoded byte size of a base64 string.
+    return Math.ceil((base64.length * 3) / 4);
+  }
+
+  async function compressImageToTarget(file) {
+    if (!file.type.startsWith('image/')) {
+      const base64 = await fileToBase64(file);
+      return { base64, mimeType: file.type };
+    }
+
+    const img = await loadImageFromFile(file);
+
+    let width = img.naturalWidth || img.width;
+    let height = img.naturalHeight || img.height;
+
+    // Start by capping the longest side to keep the canvas reasonable.
+    const MAX_DIMENSION = 1280;
+    if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+      const scale = MAX_DIMENSION / Math.max(width, height);
+      width = Math.round(width * scale);
+      height = Math.round(height * scale);
+    }
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    let quality = 0.8;
+    let base64 = '';
+
+    // Iteratively lower quality first, then shrink dimensions, until
+    // the encoded size fits inside our target window (or we hit floors).
+    for (let attempt = 0; attempt < 12; attempt++) {
+      canvas.width = width;
+      canvas.height = height;
+      ctx.clearRect(0, 0, width, height);
+      ctx.drawImage(img, 0, 0, width, height);
+
+      base64 = canvasToBase64(canvas, quality);
+      const size = base64SizeBytes(base64);
+
+      if (size <= TARGET_MAX_BYTES) break;
+
+      if (quality > 0.35) {
+        quality -= 0.1;
+      } else {
+        width = Math.round(width * 0.85);
+        height = Math.round(height * 0.85);
+        if (width < 160 || height < 160) break; // don't go below a usable minimum
+      }
+    }
+
+    return { base64, mimeType: 'image/jpeg' };
   }
 
   function renderPreviewBar() {
