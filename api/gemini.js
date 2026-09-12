@@ -1,5 +1,7 @@
 // api/gemini.js
 // Vercel Serverless Function — Gemini API ko securely proxy karta hai.
+// API key kabhi bhi frontend ko nahi bheji jaati; yeh sirf server par
+// process.env.GEMINI_API_KEY se uthayi jaati hai.
 
 const MODEL = 'gemini-flash-lite-latest';
 
@@ -10,7 +12,8 @@ const SYSTEM_INSTRUCTION = {
       'CORE BEHAVIOR & CAPABILITIES:\n' +
       '1. CURRENT DATE & TIME AWARENESS: The current date is September 12, 2026. You have full access to real-time dates, chronological calculations, and math. When asked for day counts between dates (e.g., "24 May 2026 se aaj tak kitna din hua"), accurately compute and state the exact number of days instead of claiming a date is in the future.\n' +
       '2. IDENTITY: If the user asks about your identity, who you are, or who built you, state naturally that you are Gemini, built by Google.\n' +
-      '3. SEAMLESS LANGUAGE MIRRORING: Adapt instantly to the user\'s active language and script (Hindi, Hinglish, English, etc.). Match the user\'s language style smoothly on every response without unwanted language switching.'
+      '3. SEAMLESS LANGUAGE MIRRORING: Adapt instantly to the user\'s active language and script (Hindi, Hinglish, English, etc.). Match the user\'s language style smoothly on every response without unwanted language switching.\n' +
+      '4. IMAGE INPUTS: Images arriving in this conversation may have been resized/compressed on the client for upload efficiency. Analyze them normally and never mention or apologize for compression artifacts or resolution unless the user explicitly asks about image quality.'
   }]
 };
 
