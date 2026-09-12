@@ -731,6 +731,7 @@
   </footer>
 </div>
 
+
 <div id="attach-menu-backdrop"></div>
 <div id="attach-menu">
   <button type="button" class="attach-menu-item" id="attach-camera-option">
@@ -1258,6 +1259,7 @@
   let isLiveSpeaking = false;
   let livePendingTranscript = '';
   const LIVE_STOP_WORDS = ['ruko ruko', 'ruk jao', 'ruko', 'stop stop', 'stop', 'bas ruko', 'chup ho jao', 'wait wait'];
+  const LIVE_GREETING = 'Hi! Boliye, main sun raha hoon.';
 
   function containsStopWord(text) {
     const t = (text || '').toLowerCase();
@@ -1270,8 +1272,15 @@
     rec.interimResults = true;
     rec.lang = 'hi-IN';
 
-    
-       rec.onresult = (event) => {
+    rec.onresult = (event) => {
+      // Feedback-loop fix: while the AI is speaking, the recognizer is
+      // fully stopped (see speakInLiveMode / rec.onend below), so this
+      // should never fire during playback. This guard is just a safety
+      // net in case a stray event lands right as we're stopping the mic —
+      // it must NEVER accumulate into livePendingTranscript, otherwise the
+      // AI's own voice gets picked up and re-sent as if the user said it.
+      if (isLiveSpeaking) return;
+
       let interim = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const chunk = event.results[i][0].transcript;
@@ -1279,32 +1288,22 @@
         else interim += chunk;
       }
       const liveSnapshot = (livePendingTranscript + ' ' + interim).trim();
-
-      if (containsStopWord(liveSnapshot)) {
-        window.speechSynthesis.cancel();
-        isLiveSpeaking = false;
-        livePendingTranscript = '';
-        return;
-      }
-
-      if (!isLiveSpeaking) {
-        userInput.value = liveSnapshot;
-      }
+      userInput.value = liveSnapshot;
     };
 
     rec.onerror = () => {};
 
     rec.onend = () => {
-      if (!liveModeActive) return;
+      if (!liveModeActive || isLiveSpeaking) return;
 
       const finished = livePendingTranscript.trim();
       livePendingTranscript = '';
 
-      if (finished && !isLiveSpeaking && !containsStopWord(finished)) {
+      if (finished && !containsStopWord(finished)) {
         userInput.value = finished;
         if (chatForm.requestSubmit) chatForm.requestSubmit();
         else chatForm.dispatchEvent(new Event('submit', { cancelable: true }));
-        return; // listening resumes automatically when the AI reply starts speaking
+        return; // mic stays off; startLiveListening() resumes it once the AI finishes speaking
       }
 
       startLiveListening();
@@ -1314,13 +1313,28 @@
   }
 
   function startLiveListening() {
-    if (!liveModeActive) return;
+    if (!liveModeActive || isLiveSpeaking) return;
+    if (liveRecognizer) {
+      try { liveRecognizer.onend = null; liveRecognizer.stop(); } catch (_) {}
+    }
     try {
       liveRecognizer = createLiveRecognizer();
       liveRecognizer.start();
     } catch (err) {
       console.error('Live listen error:', err);
     }
+  }
+
+  function stopLiveListeningForSpeech() {
+    // Fully stop (not just ignore) the recognizer before the AI speaks,
+    // so the microphone hardware itself is off — this is what actually
+    // prevents the AI's TTS audio from being captured and looped back
+    // in as a fake user message.
+    if (liveRecognizer) {
+      try { liveRecognizer.onend = null; liveRecognizer.stop(); } catch (_) {}
+      liveRecognizer = null;
+    }
+    livePendingTranscript = '';
   }
 
   function startLiveMode() {
@@ -1331,17 +1345,25 @@
     liveModeActive = true;
     liveBtn.classList.add('live-active');
     livePendingTranscript = '';
-    startLiveListening();
+
+    // Instant greeting the moment the button is tapped — no waiting on a
+    // round trip to the AI, matching Gemini Live's immediate "hi".
+    const session = getCurrentSession();
+    if (session) {
+      const greetMsg = { role: 'ai', text: LIVE_GREETING, attachments: [], createdAt: Date.now() };
+      if (!session.messages) session.messages = [];
+      session.messages.push(greetMsg);
+      saveSession(session);
+      appendMessageDOM(greetMsg, session.messages.length - 1);
+    }
+    speakInLiveMode(LIVE_GREETING);
   }
 
   function stopLiveMode() {
     liveModeActive = false;
     liveBtn.classList.remove('live-active');
     isLiveSpeaking = false;
-    livePendingTranscript = '';
-    if (liveRecognizer) {
-      try { liveRecognizer.onend = null; liveRecognizer.stop(); } catch (_) {}
-    }
+    stopLiveListeningForSpeech();
     window.speechSynthesis.cancel();
   }
 
@@ -1353,12 +1375,18 @@
   function speakInLiveMode(text) {
     if (!liveModeActive || !text) return;
     isLiveSpeaking = true;
+    stopLiveListeningForSpeech(); // mic OFF while the AI talks — stops the feedback loop
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.onend = () => { isLiveSpeaking = false; };
-    utterance.onerror = () => { isLiveSpeaking = false; };
+    utterance.onend = () => {
+      isLiveSpeaking = false;
+      if (liveModeActive) startLiveListening(); // mic back ON only after the AI finishes speaking
+    };
+    utterance.onerror = () => {
+      isLiveSpeaking = false;
+      if (liveModeActive) startLiveListening();
+    };
     window.speechSynthesis.speak(utterance);
-    startLiveListening(); // keep the mic open during playback so a stop word can interrupt
   }
 
   chatForm.addEventListener('submit', async (e) => {
