@@ -705,7 +705,8 @@
     }
   });
 
-   sessionsRef.on('value', (snapshot) => {
+  
+    sessionsRef.on('value', (snapshot) => {
     const data = snapshot.val() || {};
     sessions = Object.keys(data)
       .map(id => ({ id, ...data[id] }))
@@ -1081,14 +1082,37 @@
     let fullText = '';
 
     try {
-      await streamGemini(apiHistory, (chunk) => {
-        fullText += chunk;
-        if (!aiRow) {
-          removeMessage(loadingId);
-          aiRow = appendMessageDOM({ role: 'ai', text: '', attachments: [] }, session.messages.length);
+      let historyToSend = apiHistory;
+      try {
+        await streamGemini(historyToSend, (chunk) => {
+          fullText += chunk;
+          if (!aiRow) {
+            removeMessage(loadingId);
+            aiRow = appendMessageDOM({ role: 'ai', text: '', attachments: [] }, session.messages.length);
+          }
+          updateMessageBubble(aiRow, fullText);
+        });
+      } catch (firstError) {
+        // Self-healing: if we still hit 413 even after the history cap
+        // and single-image trimming above (e.g. a huge legacy image sitting
+        // in an old chat), retry ONE more time using only the current
+        // message with no prior context, instead of forcing the user to
+        // manually start a new chat.
+        if (firstError.status === 413 && historyToSend.length > 1) {
+          historyToSend = historyToSend.slice(-1);
+          fullText = '';
+          await streamGemini(historyToSend, (chunk) => {
+            fullText += chunk;
+            if (!aiRow) {
+              removeMessage(loadingId);
+              aiRow = appendMessageDOM({ role: 'ai', text: '', attachments: [] }, session.messages.length);
+            }
+            updateMessageBubble(aiRow, fullText);
+          });
+        } else {
+          throw firstError;
         }
-        updateMessageBubble(aiRow, fullText);
-      });
+      }
 
       if (!aiRow) {
         removeMessage(loadingId);
@@ -1119,7 +1143,15 @@
   });
 
   function buildApiHistory(session) {
-    const messages = session.messages || [];
+    const allMessages = session.messages || [];
+
+    // Permanent guard against 413 Payload Too Large: never resend more
+    // than the last MAX_HISTORY_MESSAGES turns as context, no matter how
+    // long the saved chat history grows. Full history stays saved in
+    // Firebase for the user to scroll back through; only what we SEND to
+    // Gemini is capped.
+    const MAX_HISTORY_MESSAGES = 20;
+    const messages = allMessages.slice(-MAX_HISTORY_MESSAGES);
 
     // Fix for 413 Payload Too Large: earlier versions resent EVERY image
     // ever attached in this chat on every single request, so the payload
@@ -1194,7 +1226,9 @@
         await new Promise(res => setTimeout(res, 300));
         return streamGemini(apiHistory, onChunk, retriesLeft - 1);
       }
-      throw new Error(errMsg);
+      const err = new Error(errMsg);
+      err.status = response.status;
+      throw err;
     }
 
     const reader = response.body.getReader();
@@ -1223,7 +1257,7 @@
     }
   }
 
-  /* ---------------- DOM rendering ---------------- */
+/* ---------------- DOM rendering ---------------- */
   function appendMessageDOM(msg, index) {
     const isUser = msg.role === 'user';
     const row = document.createElement('div');
@@ -1265,4 +1299,76 @@
 
     if (!isUser && index >= 0) {
       const copyBtn = row.querySelector('.copy-btn');
-      const speakBtn = row.queryS
+      const speakBtn = row.querySelector('.speak-btn');
+
+      copyBtn.addEventListener('click', () => {
+        const text = row.querySelector('.msg-text').textContent || '';
+        navigator.clipboard.writeText(text).then(() => {
+          copyBtn.classList.add('done');
+          setTimeout(() => copyBtn.classList.remove('done'), 1200);
+        }).catch(() => {});
+      });
+
+      speakBtn.addEventListener('click', () => {
+        if (!('speechSynthesis' in window)) return;
+        const text = row.querySelector('.msg-text').textContent || '';
+        if (!text) return;
+
+        if (speakBtn.classList.contains('speaking')) {
+          window.speechSynthesis.cancel();
+          speakBtn.classList.remove('speaking');
+          return;
+        }
+
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.onend = () => speakBtn.classList.remove('speaking');
+        utterance.onerror = () => speakBtn.classList.remove('speaking');
+        speakBtn.classList.add('speaking');
+        window.speechSynthesis.speak(utterance);
+      });
+    }
+
+    chatContainer.appendChild(row);
+    scrollToBottom();
+    return row;
+  }
+
+  function updateMessageBubble(row, text, isError = false) {
+    const bubble = row.querySelector('.bubble');
+    bubble.classList.toggle('error', isError);
+    const textSpan = bubble.querySelector('.msg-text');
+    if (textSpan) textSpan.textContent = text;
+    scrollToBottom();
+  }
+
+  function appendTypingIndicator() {
+    const id = 'typing-' + Date.now();
+    const row = document.createElement('div');
+    row.id = id;
+    row.className = 'row ai';
+    row.innerHTML = `
+      <div class="avatar ai">AI</div>
+      <div class="msg-wrap"><div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div></div>
+    `;
+    chatContainer.appendChild(row);
+    scrollToBottom();
+    return id;
+  }
+
+  function removeMessage(id) {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+  }
+
+  function scrollToBottom() {
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+  }
+
+  function escapeHtml(text) {
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return text.replace(/[&<>"']/g, m => map[m]);
+  }
+</script>
+</body>
+</html>
