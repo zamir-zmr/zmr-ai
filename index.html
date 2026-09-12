@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zamir Ai</title>
+<title>AI Chat Assistant</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -580,6 +580,16 @@
     50%{ box-shadow:0 0 0 8px rgba(255,77,77,0); }
   }
 
+  #live-btn.live-active{
+    color:var(--accent);
+    background:var(--accent-dim);
+    animation:live-pulse 1.3s ease-in-out infinite;
+  }
+  @keyframes live-pulse{
+    0%,100%{ box-shadow:0 0 0 0 rgba(255,138,61,0.35); }
+    50%{ box-shadow:0 0 0 8px rgba(255,138,61,0); }
+  }
+
   #attach-menu-backdrop{
     display:none;
     position:fixed; inset:0;
@@ -708,6 +718,10 @@
 
       <input type="text" id="user-input" placeholder="Yahan apna Question type karein..." autocomplete="off">
 
+      <button type="button" id="live-btn" class="icon-btn" title="Live voice conversation">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 10v4"></path><path d="M6 6v12"></path><path d="M10 3v18"></path><path d="M14 8v8"></path><path d="M18 5v14"></path><path d="M22 10v4"></path></svg>
+      </button>
+
       <button type="button" id="mic-btn" class="icon-btn" title="Voice input">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
       </button>
@@ -762,6 +776,7 @@
   const fileInput = document.getElementById('file-input');
   const fileInputCamera = document.getElementById('file-input-camera');
   const micBtn = document.getElementById('mic-btn');
+  const liveBtn = document.getElementById('live-btn');
   const attachMenu = document.getElementById('attach-menu');
   const attachMenuBackdrop = document.getElementById('attach-menu-backdrop');
   const attachCameraOption = document.getElementById('attach-camera-option');
@@ -1231,6 +1246,121 @@
     });
   }
 
+  /* ---------------- Live voice conversation mode ----------------
+     Note: this uses the browser's own Speech-to-Text (SpeechRecognition)
+     and Text-to-Speech (speechSynthesis) together with our existing
+     text chat pipeline. It is a continuous listen -> auto-send ->
+     auto-speak-reply loop, not a raw audio-to-audio stream — a Vercel
+     serverless function proxying REST calls cannot hold a native
+     bidirectional audio socket the way Gemini's own Live app does. */
+  let liveModeActive = false;
+  let liveRecognizer = null;
+  let isLiveSpeaking = false;
+  let livePendingTranscript = '';
+  const LIVE_STOP_WORDS = ['ruko ruko', 'ruk jao', 'ruko', 'stop stop', 'stop', 'bas ruko', 'chup ho jao', 'wait wait'];
+
+  function containsStopWord(text) {
+    const t = (text || '').toLowerCase();
+    return LIVE_STOP_WORDS.some(w => t.includes(w));
+  }
+
+  function createLiveRecognizer() {
+    const rec = new SpeechRecognitionAPI();
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.lang = 'hi-IN';
+
+    
+       rec.onresult = (event) => {
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const chunk = event.results[i][0].transcript;
+        if (event.results[i].isFinal) livePendingTranscript += chunk;
+        else interim += chunk;
+      }
+      const liveSnapshot = (livePendingTranscript + ' ' + interim).trim();
+
+      if (containsStopWord(liveSnapshot)) {
+        window.speechSynthesis.cancel();
+        isLiveSpeaking = false;
+        livePendingTranscript = '';
+        return;
+      }
+
+      if (!isLiveSpeaking) {
+        userInput.value = liveSnapshot;
+      }
+    };
+
+    rec.onerror = () => {};
+
+    rec.onend = () => {
+      if (!liveModeActive) return;
+
+      const finished = livePendingTranscript.trim();
+      livePendingTranscript = '';
+
+      if (finished && !isLiveSpeaking && !containsStopWord(finished)) {
+        userInput.value = finished;
+        if (chatForm.requestSubmit) chatForm.requestSubmit();
+        else chatForm.dispatchEvent(new Event('submit', { cancelable: true }));
+        return; // listening resumes automatically when the AI reply starts speaking
+      }
+
+      startLiveListening();
+    };
+
+    return rec;
+  }
+
+  function startLiveListening() {
+    if (!liveModeActive) return;
+    try {
+      liveRecognizer = createLiveRecognizer();
+      liveRecognizer.start();
+    } catch (err) {
+      console.error('Live listen error:', err);
+    }
+  }
+
+  function startLiveMode() {
+    if (!SpeechRecognitionAPI) {
+      alert('Aapka browser live voice conversation support nahi karta.');
+      return;
+    }
+    liveModeActive = true;
+    liveBtn.classList.add('live-active');
+    livePendingTranscript = '';
+    startLiveListening();
+  }
+
+  function stopLiveMode() {
+    liveModeActive = false;
+    liveBtn.classList.remove('live-active');
+    isLiveSpeaking = false;
+    livePendingTranscript = '';
+    if (liveRecognizer) {
+      try { liveRecognizer.onend = null; liveRecognizer.stop(); } catch (_) {}
+    }
+    window.speechSynthesis.cancel();
+  }
+
+  liveBtn.addEventListener('click', () => {
+    if (liveModeActive) stopLiveMode();
+    else startLiveMode();
+  });
+
+  function speakInLiveMode(text) {
+    if (!liveModeActive || !text) return;
+    isLiveSpeaking = true;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.onend = () => { isLiveSpeaking = false; };
+    utterance.onerror = () => { isLiveSpeaking = false; };
+    window.speechSynthesis.speak(utterance);
+    startLiveListening(); // keep the mic open during playback so a stop word can interrupt
+  }
+
   chatForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (isSending) return;
@@ -1276,6 +1406,7 @@
       saveSession(session);
       appendMessageDOM(aiMsg, session.messages.length - 1);
       playReceiveSound();
+      if (liveModeActive) speakInLiveMode(cached);
       finishSend();
       return;
     }
@@ -1328,6 +1459,7 @@
       saveSession(session);
       if (cacheKey) responseCache.set(cacheKey, fullText);
       playReceiveSound();
+      if (liveModeActive) speakInLiveMode(fullText);
 
     } catch (error) {
       console.error(error);
@@ -1340,6 +1472,7 @@
       }
       session.messages.push({ role: 'ai', text: errMsg, attachments: [], createdAt: Date.now() });
       saveSession(session);
+      if (liveModeActive) startLiveListening();
     } finally {
       finishSend();
     }
