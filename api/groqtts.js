@@ -4,7 +4,24 @@
 // model se audio generate karke base64 string ke roop mein wapas
 // bhejta hai. API key kabhi bhi frontend ko nahi bheji jaati.
 
-const TTS_MODEL = 'canopylabs/orpheus-v1-english';
+const TTS_MODELS = ['canopylabs/orpheus-v1-english', 'playai-tts'];
+
+async function callGroqTTS(apiKey, model, text, voice) {
+  const upstreamResponse = await fetch('https://api.groq.com/openai/v1/audio/speech', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model,
+      input: text,
+      voice,
+      response_format: 'wav'
+    })
+  });
+  return upstreamResponse;
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -24,33 +41,28 @@ export default async function handler(req, res) {
     return;
   }
 
-  const upstreamUrl = 'https://api.groq.com/openai/v1/audio/speech';
+  let upstreamResponse = null;
+  let lastErrorDetail = null;
+  let lastStatus = 502;
 
-  let upstreamResponse;
-  try {
-    upstreamResponse = await fetch(upstreamUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: TTS_MODEL,
-        input: text,
-        voice,
-        response_format: 'wav'
-      })
-    });
-  } catch (err) {
-    res.status(502).json({ error: { message: 'Failed to reach Groq TTS API', detail: err.message } });
-    return;
+  for (const model of TTS_MODELS) {
+    try {
+      const resp = await callGroqTTS(apiKey, model, text, voice);
+      if (resp.ok) {
+        upstreamResponse = resp;
+        break;
+      }
+      lastStatus = resp.status;
+      try { lastErrorDetail = await resp.json(); } catch (_) { lastErrorDetail = null; }
+    } catch (err) {
+      res.status(502).json({ error: { message: 'Failed to reach Groq TTS API', detail: err.message } });
+      return;
+    }
   }
 
-  if (!upstreamResponse.ok) {
-    let detail = null;
-    try { detail = await upstreamResponse.json(); } catch (_) {}
-    res.status(upstreamResponse.status).json({
-      error: { message: detail?.error?.message || `Groq TTS error: ${upstreamResponse.status}` }
+  if (!upstreamResponse) {
+    res.status(lastStatus).json({
+      error: { message: lastErrorDetail?.error?.message || `Groq TTS error: ${lastStatus}` }
     });
     return;
   }
