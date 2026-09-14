@@ -1153,7 +1153,7 @@
     }
 
     if (onStart) onStart();
-    fetch('/api/tts', {
+    fetch('/api/groqtts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: plain, voice: voice.gemini })
@@ -1173,7 +1173,7 @@
           } catch (_) {
             // A non-JSON body (plain "404 Not Found" HTML, etc.) usually
             // means /api/tts.js isn't deployed on the server at all.
-            reason += ' (non-JSON response — check that api/tts.js is deployed)';
+            reason += ' (non-JSON response — check that api/groqtts.js is deployed)';
           }
         }
         // Dev-only diagnostic: never shown to the user, but visible in
