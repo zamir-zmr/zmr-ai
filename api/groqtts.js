@@ -4,7 +4,7 @@
 // model se audio generate karke base64 string ke roop mein wapas
 // bhejta hai. API key kabhi bhi frontend ko nahi bheji jaati.
 
-const TTS_MODEL = 'playai-tts';
+const TTS_MODEL = 'canopylabs/orpheus-v1-english';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
