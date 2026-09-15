@@ -4,7 +4,7 @@
 // model se audio generate karke base64 string ke roop mein wapas
 // bhejta hai. API key kabhi bhi frontend ko nahi bheji jaati.
 
-const TTS_MODELS = ['canopylabs/orpheus-v1-english', 'playai-tts'];
+const TTS_MODELS = ['canopylabs/orpheus-v1-english'];
 
 async function callGroqTTS(apiKey, model, text, voice) {
   const upstreamResponse = await fetch('https://api.groq.com/openai/v1/audio/speech', {
