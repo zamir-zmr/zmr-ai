@@ -3,7 +3,7 @@
 // API key kabhi bhi frontend ko nahi bheji jaati; yeh sirf server par
 // process.env se uthayi jaati hai.
 
-const MODEL = 'gemini-3.1-flash-lite';
+const MODEL = 'gemini-flash-lite-latest';
 const MODEL_LABEL = 'Gemini 2';
 const KEY_ENV_NAME = 'GEMINI_API_KEY_2';
 
