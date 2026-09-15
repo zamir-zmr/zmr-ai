@@ -29,7 +29,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const apiKey = process.env.GROQ_API_KEY;
+  const apiKey = (process.env.GROQ_API_KEY || '').trim();
   if (!apiKey) {
     res.status(500).json({ error: { message: 'Server misconfigured: GROQ_API_KEY missing' } });
     return;
@@ -40,6 +40,7 @@ export default async function handler(req, res) {
     res.status(400).json({ error: { message: 'Missing "text" or "voice" in request body' } });
     return;
   }
+  const cleanVoice = String(voice).trim();
 
   let upstreamResponse = null;
   let lastErrorDetail = null;
@@ -47,7 +48,7 @@ export default async function handler(req, res) {
 
   for (const model of TTS_MODELS) {
     try {
-      const resp = await callGroqTTS(apiKey, model, text, voice);
+      const resp = await callGroqTTS(apiKey, model, text, cleanVoice);
       if (resp.ok) {
         upstreamResponse = resp;
         break;
