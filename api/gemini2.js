@@ -1,11 +1,8 @@
 // api/gemini2.js
-// Vercel Serverless Function — Gemini API ko securely proxy karta hai (Gemini 2).
-// API key kabhi bhi frontend ko nahi bheji jaati; yeh sirf server par
-// process.env se uthayi jaati hai.
-
 const MODEL = 'gemini-flash-lite-latest';
 const MODEL_LABEL = 'Gemini 2';
-const KEY_ENV_NAME = 'GEMINI_API_KEY_2';
+const OWN_KEY_ENV = 'GEMINI_API_KEY_2';
+const ALL_KEY_ENVS = ['GEMINI_API_KEY_1','GEMINI_API_KEY_2','GEMINI_API_KEY_3','GEMINI_API_KEY_4','GEMINI_API_KEY_5'];
 
 const SYSTEM_INSTRUCTION = {
   parts: [{
@@ -26,21 +23,15 @@ function maskKey(k) {
   return k.slice(0, 4) + '...' + k.slice(-4);
 }
 
+function orderedKeyEnvs() {
+  const startIdx = ALL_KEY_ENVS.indexOf(OWN_KEY_ENV);
+  const rotated = ALL_KEY_ENVS.slice(startIdx).concat(ALL_KEY_ENVS.slice(0, startIdx));
+  return rotated;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: { message: 'Method not allowed' } });
-    return;
-  }
-
-  // Dedicated key ONLY — no silent fallback to shared GEMINI_API_KEY, kyunki
-  // fallback hi is bug ki wajah tha (sab endpoints ek hi key reuse kar rahe
-  // the jab dedicated var missing/misnamed thi, isliye sab me same quota
-  // error aa raha tha).
-  const apiKey = process.env[KEY_ENV_NAME];
-  if (!apiKey) {
-    res.status(500).json({
-      error: { message: `Server misconfigured: ${KEY_ENV_NAME} missing in Vercel env vars (redeploy required after adding).` }
-    });
     return;
   }
 
@@ -50,56 +41,80 @@ export default async function handler(req, res) {
     return;
   }
 
-  const upstreamUrl = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:streamGenerateContent?alt=sse&key=${apiKey}`;
-
-  let upstreamResponse;
-  try {
-    upstreamResponse = await fetch(upstreamUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents,
-        systemInstruction: SYSTEM_INSTRUCTION,
-        tools: [{ google_search: {} }]
-      })
-    });
-  } catch (err) {
-    res.status(502).json({ error: { message: 'Failed to reach Gemini API', detail: err.message } });
+  const keyEnvsToTry = orderedKeyEnvs().filter((name) => !!process.env[name]);
+  if (keyEnvsToTry.length === 0) {
+    res.status(500).json({ error: { message: 'Server misconfigured: no GEMINI_API_KEY_1..5 set in Vercel env vars.' } });
     return;
   }
 
-  if (!upstreamResponse.ok || !upstreamResponse.body) {
+  let lastErrorStatus = 500;
+  let lastErrorBody = { error: { message: 'Unknown error' } };
+  let usedKeyEnv = null;
+
+  for (const keyEnvName of keyEnvsToTry) {
+    const apiKey = process.env[keyEnvName];
+    const upstreamUrl = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:streamGenerateContent?alt=sse&key=${apiKey}`;
+
+    let upstreamResponse;
+    try {
+      upstreamResponse = await fetch(upstreamUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents,
+          systemInstruction: SYSTEM_INSTRUCTION,
+          tools: [{ google_search: {} }]
+        })
+      });
+    } catch (err) {
+      lastErrorStatus = 502;
+      lastErrorBody = { error: { message: 'Failed to reach Gemini API', detail: err.message } };
+      continue;
+    }
+
+    if (upstreamResponse.ok && upstreamResponse.body) {
+      usedKeyEnv = keyEnvName;
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache, no-transform');
+      res.setHeader('Connection', 'keep-alive');
+      res.setHeader('X-Model-Label', MODEL_LABEL);
+      res.setHeader('X-Key-Env', usedKeyEnv);
+      res.setHeader('X-Key-Used', maskKey(apiKey));
+
+      const reader = upstreamResponse.body.getReader();
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          res.write(value);
+        }
+      } catch (err) {
+        // Stream error handled silently
+      } finally {
+        res.end();
+      }
+      return;
+    }
+
     let detail = null;
     try { detail = await upstreamResponse.json(); } catch (_) {}
-    res.status(upstreamResponse.status).json({
+    lastErrorStatus = upstreamResponse.status;
+    lastErrorBody = {
       error: {
         message: detail?.error?.message || `Gemini API error: ${upstreamResponse.status}`,
-        keyEnv: KEY_ENV_NAME,
+        keyEnv: keyEnvName,
         keyUsed: maskKey(apiKey)
       }
-    });
-    return;
-  }
+    };
 
-  res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache, no-transform');
-  res.setHeader('Connection', 'keep-alive');
-  res.setHeader('X-Model-Label', MODEL_LABEL);
-  res.setHeader('X-Key-Env', KEY_ENV_NAME);
-  res.setHeader('X-Key-Used', maskKey(apiKey));
-
-  const reader = upstreamResponse.body.getReader();
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      res.write(value);
+    // 429 (quota) ya 403 par hi next key try karo; baaki errors (jaise bad
+    // request) par turant fail return karo taaki galat error na chhupe.
+    if (upstreamResponse.status !== 429 && upstreamResponse.status !== 403) {
+      break;
     }
-  } catch (err) {
-    // Stream error handled silently
-  } finally {
-    res.end();
   }
+
+  res.status(lastErrorStatus).json(lastErrorBody);
 }
 
 export const config = {
