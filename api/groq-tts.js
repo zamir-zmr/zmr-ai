@@ -1,8 +1,15 @@
-// api/groqtts.js
-// Vercel Serverless Function — Groq TTS (PlayAI) ko securely proxy karta hai.
+// api/groq-tts.js
+// Vercel Serverless Function — Groq TTS (Orpheus) ko securely proxy karta hai.
 // Frontend { text, voice } bhejta hai; yeh server par Groq ke TTS
 // model se audio generate karke base64 string ke roop mein wapas
 // bhejta hai. API key kabhi bhi frontend ko nahi bheji jaati.
+//
+// NOTE: Groq ka Orpheus model sirf English (aur Arabic) support karta
+// hai — Hindi/Devanagari text isi English engine se bola jaata hai,
+// isliye Hindi lines thodi "ajeeb" lag sakti hain (yeh Groq ki API
+// limitation hai, is file ka bug nahi). Speed bhi API-side supported
+// nahi hai, isliye playback speed index.html me client-side control
+// hoti hai.
 
 const TTS_MODELS = ['canopylabs/orpheus-v1-english'];
 
@@ -41,6 +48,9 @@ export default async function handler(req, res) {
     return;
   }
   const cleanVoice = String(voice).trim();
+  // A leading vocal-direction tag (Orpheus-supported) makes delivery sound
+  // warmer/more natural instead of flat — applied to every line.
+  const styledText = /^\s*\[/.test(text) ? text : `[warm] ${text}`;
 
   let upstreamResponse = null;
   let lastErrorDetail = null;
@@ -48,7 +58,7 @@ export default async function handler(req, res) {
 
   for (const model of TTS_MODELS) {
     try {
-      const resp = await callGroqTTS(apiKey, model, text, cleanVoice);
+      const resp = await callGroqTTS(apiKey, model, styledText, cleanVoice);
       if (resp.ok) {
         upstreamResponse = resp;
         break;
