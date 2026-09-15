@@ -5,6 +5,7 @@
 
 const MODEL = 'gemini-flash-lite-latest';
 const MODEL_LABEL = 'Gemini 2';
+const KEY_ENV_NAME = 'GEMINI_API_KEY_2';
 
 const SYSTEM_INSTRUCTION = {
   parts: [{
@@ -19,18 +20,27 @@ const SYSTEM_INSTRUCTION = {
   }]
 };
 
+function maskKey(k) {
+  if (!k) return null;
+  if (k.length <= 8) return '****';
+  return k.slice(0, 4) + '...' + k.slice(-4);
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: { message: 'Method not allowed' } });
     return;
   }
 
-  // Gemini 1 apni alag API key use karta hai (quota/rate-limit alag rakhne
-  // ke liye), aur agar wo set nahi hai to shared GEMINI_API_KEY par fallback
-  // karta hai — taaki sirf ek key set karke bhi sab 5 endpoints kaam karein.
-  const apiKey = process.env.GEMINI_API_KEY_2 || process.env.GEMINI_API_KEY;
+  // Dedicated key ONLY — no silent fallback to shared GEMINI_API_KEY, kyunki
+  // fallback hi is bug ki wajah tha (sab endpoints ek hi key reuse kar rahe
+  // the jab dedicated var missing/misnamed thi, isliye sab me same quota
+  // error aa raha tha).
+  const apiKey = process.env[KEY_ENV_NAME];
   if (!apiKey) {
-    res.status(500).json({ error: { message: 'Server misconfigured: GEMINI_API_KEY_2 (ya GEMINI_API_KEY) missing' } });
+    res.status(500).json({
+      error: { message: `Server misconfigured: ${KEY_ENV_NAME} missing in Vercel env vars (redeploy required after adding).` }
+    });
     return;
   }
 
@@ -50,9 +60,6 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         contents,
         systemInstruction: SYSTEM_INSTRUCTION,
-        // Google Search grounding — lets the model look up real, current
-        // facts (today's date/time, live events, current data, etc.)
-        // instead of guessing, matching how the real Gemini app answers.
         tools: [{ google_search: {} }]
       })
     });
@@ -65,7 +72,11 @@ export default async function handler(req, res) {
     let detail = null;
     try { detail = await upstreamResponse.json(); } catch (_) {}
     res.status(upstreamResponse.status).json({
-      error: { message: detail?.error?.message || `Gemini API error: ${upstreamResponse.status}` }
+      error: {
+        message: detail?.error?.message || `Gemini API error: ${upstreamResponse.status}`,
+        keyEnv: KEY_ENV_NAME,
+        keyUsed: maskKey(apiKey)
+      }
     });
     return;
   }
@@ -73,9 +84,9 @@ export default async function handler(req, res) {
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache, no-transform');
   res.setHeader('Connection', 'keep-alive');
-  // Frontend isko header se padhkar chat me sahi model-naam (Gemini 2)
-  // dikha sakta hai, bina hardcode kiye.
   res.setHeader('X-Model-Label', MODEL_LABEL);
+  res.setHeader('X-Key-Env', KEY_ENV_NAME);
+  res.setHeader('X-Key-Used', maskKey(apiKey));
 
   const reader = upstreamResponse.body.getReader();
   try {
@@ -98,4 +109,3 @@ export const config = {
     }
   }
 };
-  
