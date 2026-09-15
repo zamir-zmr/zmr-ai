@@ -8,7 +8,7 @@ const MODEL = 'gemini-flash-lite-latest';
 const SYSTEM_INSTRUCTION = {
   parts: [{
     text:
-      'You are Gemini, a large language model built by Google. '
+      ''
       
   }]
 };
