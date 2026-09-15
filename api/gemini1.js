@@ -1,11 +1,6 @@
 // api/gemini1.js
-// Vercel Serverless Function — Gemini API ko securely proxy karta hai (Gemini 1).
-// API key kabhi bhi frontend ko nahi bheji jaati; yeh sirf server par
-// process.env se uthayi jaati hai.
-
 const MODEL = 'gemini-flash-lite-latest';
 const MODEL_LABEL = 'Gemini 1';
-const KEY_ENV_NAME = 'GEMINI_API_KEY_1';
 
 const SYSTEM_INSTRUCTION = {
   parts: [{
@@ -20,27 +15,15 @@ const SYSTEM_INSTRUCTION = {
   }]
 };
 
-function maskKey(k) {
-  if (!k) return null;
-  if (k.length <= 8) return '****';
-  return k.slice(0, 4) + '...' + k.slice(-4);
-}
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: { message: 'Method not allowed' } });
     return;
   }
 
-  // Dedicated key ONLY — no silent fallback to shared GEMINI_API_KEY, kyunki
-  // fallback hi is bug ki wajah tha (sab endpoints ek hi key reuse kar rahe
-  // the jab dedicated var missing/misnamed thi, isliye sab me same quota
-  // error aa raha tha).
-  const apiKey = process.env[KEY_ENV_NAME];
+  const apiKey = process.env.GEMINI_API_KEY_1 || process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    res.status(500).json({
-      error: { message: `Server misconfigured: ${KEY_ENV_NAME} missing in Vercel env vars (redeploy required after adding).` }
-    });
+    res.status(500).json({ error: { message: 'Server misconfigured: GEMINI_API_KEY_1 (ya GEMINI_API_KEY) missing' } });
     return;
   }
 
@@ -72,11 +55,7 @@ export default async function handler(req, res) {
     let detail = null;
     try { detail = await upstreamResponse.json(); } catch (_) {}
     res.status(upstreamResponse.status).json({
-      error: {
-        message: detail?.error?.message || `Gemini API error: ${upstreamResponse.status}`,
-        keyEnv: KEY_ENV_NAME,
-        keyUsed: maskKey(apiKey)
-      }
+      error: { message: detail?.error?.message || `Gemini API error: ${upstreamResponse.status}` }
     });
     return;
   }
@@ -85,8 +64,6 @@ export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-cache, no-transform');
   res.setHeader('Connection', 'keep-alive');
   res.setHeader('X-Model-Label', MODEL_LABEL);
-  res.setHeader('X-Key-Env', KEY_ENV_NAME);
-  res.setHeader('X-Key-Used', maskKey(apiKey));
 
   const reader = upstreamResponse.body.getReader();
   try {
