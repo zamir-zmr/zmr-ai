@@ -2160,7 +2160,7 @@
       if (nameEl) nameEl.textContent = regenLabel;
       const avatarEl = row.querySelector('.avatar');
       if (avatarEl) {
-        avatarEl.textContent = regenLabel.replace('Gemini ', 'G');
+        avatarEl.textContent = regenLabel.replace('Ai ', 'Ai');
         avatarEl.title = regenLabel;
       }
       if (!liveModeActive) speakText(fullText, {
@@ -2279,7 +2279,7 @@
     // usi ka naam yahan dikhaya jaata hai — hardcoded "AI" nahi.
     const modelLabel = (!isUser && index >= 0) ? getModelLabel(msg.model || selectedModel) : null;
     const modelNameHtml = modelLabel ? `<span class="model-name">${escapeHtml(modelLabel)}</span>` : '';
-    const avatarText = isUser ? 'You' : (modelLabel ? modelLabel.replace('Gemini ', 'G') : 'AI');
+    const avatarText = isUser ? 'You' : (modelLabel ? modelLabel.replace('Ai ', 'Ai') : 'AI');
 
     row.innerHTML = `
       <div class="avatar ${isUser ? 'user' : 'ai'}"${modelLabel ? ` title="${escapeHtml(modelLabel)}"` : ''}>${avatarText}</div>
@@ -2348,7 +2348,7 @@
     row.className = 'row ai';
     const typingLabel = getModelLabel(selectedModel);
     row.innerHTML = `
-      <div class="avatar ai" title="${escapeHtml(typingLabel)}">${typingLabel.replace('Gemini ', 'G')}</div>
+      <div class="avatar ai" title="${escapeHtml(typingLabel)}">${typingLabel.replace('Ai ', 'Ai')}</div>
       <div class="msg-wrap"><div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div></div>
     `;
     chatContainer.appendChild(row);
