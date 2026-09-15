@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const apiKey = process.env.GEMINI_API_KEY_11;
+  const apiKey = process.env.GEMINI_API_KEY_1;
   if (!apiKey) {
     res.status(500).json({ error: { message: 'Server misconfigured: GEMINI_API_KEY missing' } });
     return;
