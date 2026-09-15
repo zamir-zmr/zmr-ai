@@ -1,9 +1,10 @@
-// api/gemini.js
-// Vercel Serverless Function — Gemini API ko securely proxy karta hai.
+// api/gemini1.js
+// Vercel Serverless Function — Gemini API ko securely proxy karta hai (Gemini 1).
 // API key kabhi bhi frontend ko nahi bheji jaati; yeh sirf server par
-// process.env.GEMINI_API_KEY se uthayi jaati hai.
+// process.env se uthayi jaati hai.
 
 const MODEL = 'gemini-flash-lite-latest';
+const MODEL_LABEL = 'Gemini 1';
 
 const SYSTEM_INSTRUCTION = {
   parts: [{
@@ -24,9 +25,12 @@ export default async function handler(req, res) {
     return;
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  // Gemini 1 apni alag API key use karta hai (quota/rate-limit alag rakhne
+  // ke liye), aur agar wo set nahi hai to shared GEMINI_API_KEY par fallback
+  // karta hai — taaki sirf ek key set karke bhi sab 5 endpoints kaam karein.
+  const apiKey = process.env.GEMINI_API_KEY_1 || process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    res.status(500).json({ error: { message: 'Server misconfigured: GEMINI_API_KEY missing' } });
+    res.status(500).json({ error: { message: 'Server misconfigured: GEMINI_API_KEY_1 (ya GEMINI_API_KEY) missing' } });
     return;
   }
 
@@ -69,6 +73,9 @@ export default async function handler(req, res) {
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache, no-transform');
   res.setHeader('Connection', 'keep-alive');
+  // Frontend isko header se padhkar chat me sahi model-naam (Gemini 1)
+  // dikha sakta hai, bina hardcode kiye.
+  res.setHeader('X-Model-Label', MODEL_LABEL);
 
   const reader = upstreamResponse.body.getReader();
   try {
@@ -91,3 +98,4 @@ export const config = {
     }
   }
 };
+      
