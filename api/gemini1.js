@@ -13,27 +13,26 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { contents, clientTime } = req.body || {};
+  const { contents, systemInstruction } = req.body || {};
   if (!contents) {
     res.status(400).json({ error: { message: 'Missing "contents" in request body' } });
     return;
   }
 
-  // Frontend se aaya user ka local date/time/timezone; na mile toh server UTC fallback
-  const now = new Date();
-  const localString = clientTime?.localString || now.toUTCString();
-  const timeZone = clientTime?.timeZone || 'UTC';
-  const isoString = clientTime?.isoString || now.toISOString();
-
-  const dynamicSystemInstruction = {
+  // Fallback: Agar frontend se custom time/instruction nahi aaye toh server ka current UTC time use hoga
+  const currentUTC = new Date().toUTCString();
+  const defaultSystemInstruction = {
     parts: [{
       text: `You are a helpful AI assistant.
-User's current local date and time: ${localString} (Timezone: ${timeZone}).
-Reference ISO timestamp: ${isoString}.
-When the user asks for time in any specific country or timezone, use this as the accurate baseline and correctly calculate the target local time.
+Current exact UTC timestamp: ${currentUTC}.
+The user is located in Gulf Standard Time zone (UTC+4, Oman/UAE).
+Always use this exact timestamp reference when responding to any current time, date, or relative scheduling queries.
 Answer concisely in Hinglish/Hindi as requested by the user.`
     }]
   };
+
+  // User ka systemInstruction prefer karein, otherwise default fallback
+  const finalSystemInstruction = systemInstruction || defaultSystemInstruction;
 
   const upstreamUrl = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:streamGenerateContent?alt=sse&key=${apiKey}`;
 
@@ -42,9 +41,9 @@ Answer concisely in Hinglish/Hindi as requested by the user.`
     upstreamResponse = await fetch(upstreamUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents,
-        systemInstruction: dynamicSystemInstruction
+      body: JSON.stringify({ 
+        contents, 
+        systemInstruction: finalSystemInstruction 
       })
     });
   } catch (err) {
@@ -73,7 +72,7 @@ Answer concisely in Hinglish/Hindi as requested by the user.`
       res.write(value);
     }
   } catch (err) {
-    // Stream error handled silently
+    // Stream error handled
   } finally {
     res.end();
   }
