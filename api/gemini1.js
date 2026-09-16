@@ -13,21 +13,24 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { contents } = req.body || {};
+  const { contents, clientTime } = req.body || {};
   if (!contents) {
     res.status(400).json({ error: { message: 'Missing "contents" in request body' } });
     return;
   }
 
-  // Current real-time UTC timestamp dynamically generate karein
+  // Frontend se aaya user ka local date/time/timezone; na mile toh server UTC fallback
   const now = new Date();
-  const utcString = now.toUTCString();
+  const localString = clientTime?.localString || now.toUTCString();
+  const timeZone = clientTime?.timeZone || 'UTC';
+  const isoString = clientTime?.isoString || now.toISOString();
 
   const dynamicSystemInstruction = {
     parts: [{
-      text: `You are a helpful AI assistant. 
-Current exact UTC Date and Time: ${utcString}. 
-When the user asks for time in any specific country or time zone, use this UTC timestamp as the baseline and accurately calculate the local time for that target timezone/country.
+      text: `You are a helpful AI assistant.
+User's current local date and time: ${localString} (Timezone: ${timeZone}).
+Reference ISO timestamp: ${isoString}.
+When the user asks for time in any specific country or timezone, use this as the accurate baseline and correctly calculate the target local time.
 Answer concisely in Hinglish/Hindi as requested by the user.`
     }]
   };
@@ -39,9 +42,9 @@ Answer concisely in Hinglish/Hindi as requested by the user.`
     upstreamResponse = await fetch(upstreamUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        contents, 
-        systemInstruction: dynamicSystemInstruction 
+      body: JSON.stringify({
+        contents,
+        systemInstruction: dynamicSystemInstruction
       })
     });
   } catch (err) {
