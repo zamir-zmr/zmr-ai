@@ -1,17 +1,5 @@
 // api/gemini.js
-// Vercel Serverless Function — Gemini API ko securely proxy karta hai.
-// API key kabhi bhi frontend ko nahi bheji jaati; yeh sirf server par
-// process.env.GEMINI_API_KEY se uthayi jaati hai.
-
 const MODEL = 'gemini-flash-lite-latest';
-
-const SYSTEM_INSTRUCTION = {
-  parts: [{
-    text:
-      ''
-      
-  }]
-};
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -31,6 +19,19 @@ export default async function handler(req, res) {
     return;
   }
 
+  // Current real-time UTC timestamp dynamically generate karein
+  const now = new Date();
+  const utcString = now.toUTCString();
+
+  const dynamicSystemInstruction = {
+    parts: [{
+      text: `You are a helpful AI assistant. 
+Current exact UTC Date and Time: ${utcString}. 
+When the user asks for time in any specific country or time zone, use this UTC timestamp as the baseline and accurately calculate the local time for that target timezone/country.
+Answer concisely in Hinglish/Hindi as requested by the user.`
+    }]
+  };
+
   const upstreamUrl = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:streamGenerateContent?alt=sse&key=${apiKey}`;
 
   let upstreamResponse;
@@ -38,7 +39,10 @@ export default async function handler(req, res) {
     upstreamResponse = await fetch(upstreamUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents, systemInstruction: SYSTEM_INSTRUCTION })
+      body: JSON.stringify({ 
+        contents, 
+        systemInstruction: dynamicSystemInstruction 
+      })
     });
   } catch (err) {
     res.status(502).json({ error: { message: 'Failed to reach Gemini API', detail: err.message } });
