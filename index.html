@@ -368,27 +368,6 @@
     padding:10px 4px 4px;
   }
 
-  #confirm-backdrop{
-    display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:300;
-  }
-  #confirm-backdrop.show{ display:block; animation:fade-in 160ms ease both; }
-  #confirm-dialog{
-    display:none; position:fixed; left:50%; top:50%; transform:translate(-50%,-50%);
-    width:min(320px, 86vw); background:var(--surface); border:1px solid var(--border);
-    border-radius:16px; padding:20px; z-index:301; box-shadow:0 20px 60px rgba(0,0,0,.4);
-  }
-  #confirm-dialog.show{ display:block; animation:sheet-spring 260ms cubic-bezier(.2,.9,.25,1.05) both; }
-  .confirm-title{ font-weight:700; font-size:16px; color:var(--text); margin-bottom:8px; }
-  .confirm-msg{ font-size:13.5px; color:var(--text-dim); line-height:1.5; margin-bottom:18px; }
-  .confirm-actions{ display:flex; justify-content:flex-end; gap:10px; }
-  .confirm-actions button{
-    padding:9px 16px; border-radius:10px; font-weight:600; font-size:13.5px; cursor:pointer; border:1px solid var(--border);
-    background:var(--surface-2); color:var(--text);
-  }
-  #confirm-ok{ background:#E5484D; border-color:#E5484D; color:#fff; }
-  #confirm-ok:hover{ background:#c93f43; }
-  #confirm-cancel:hover{ background:var(--border); }
-
   #voice-sheet-backdrop{
     display:none;
     position:fixed; inset:0;
@@ -560,18 +539,7 @@
     margin-top:4px;
     opacity:0;
     transition:opacity 140ms ease;
-    background:rgba(10,10,14,0.62);
-    backdrop-filter:blur(8px) saturate(1.4);
-    -webkit-backdrop-filter:blur(8px) saturate(1.4);
-    border:1px solid rgba(255,255,255,0.08);
-    border-radius:10px;
-    padding:3px;
-    width:fit-content;
-    box-shadow:0 2px 10px rgba(0,0,0,0.25);
   }
-  .msg-actions button{ color:#E8E8EC; }
-  html[data-theme="light"] .msg-actions{ background:rgba(255,255,255,0.82); border-color:rgba(0,0,0,0.06); }
-  html[data-theme="light"] .msg-actions button{ color:#333; }
 
   .row:hover .msg-actions{ opacity:1; }
 
@@ -891,8 +859,8 @@
   footer{animation:rise-up 560ms 80ms cubic-bezier(.2,.8,.2,1) both}
   .sidebar-top,.sidebar-label{animation:fade-in 600ms 150ms both}
   .brand-mark{animation:glow 4s ease-in-out infinite}
-  .row.ai{animation:msg-in-left 650ms cubic-bezier(.2,.9,.25,1) both}
-  .row.user{animation:msg-in-right 600ms cubic-bezier(.2,.9,.25,1) both}
+  .row.ai{animation:msg-in-left 420ms cubic-bezier(.2,.9,.25,1) both}
+  .row.user{animation:msg-in-right 380ms cubic-bezier(.2,.9,.25,1) both}
   .row .avatar{animation:pop 450ms 80ms cubic-bezier(.3,1.4,.5,1) both}
   .bubble{transition:box-shadow 200ms ease}
   .row.ai:hover .bubble{box-shadow:0 4px 18px rgba(0,0,0,.12)}
@@ -1108,11 +1076,11 @@
   @keyframes msg-bounce{0%{opacity:0;transform:translateY(46px)}55%{opacity:1;transform:translateY(-10px)}75%{transform:translateY(4px)}100%{transform:none}}
   @keyframes msg-zoom{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:none}}
   @keyframes msg-flip{from{opacity:0;transform:perspective(600px) rotateX(-60deg) translateY(10px)}to{opacity:1;transform:none}}
-  html[data-msg="pop"] .row.ai,html[data-msg="pop"] .row.user,html[data-msg="pop"] .demo-in{animation:msg-pop 750ms cubic-bezier(.2,1.1,.3,1) both}
-  html[data-msg="fade"] .row.ai,html[data-msg="fade"] .row.user,html[data-msg="fade"] .demo-in{animation:msg-fade 820ms ease both}
-  html[data-msg="bounce"] .row.ai,html[data-msg="bounce"] .row.user,html[data-msg="bounce"] .demo-in{animation:msg-bounce 980ms cubic-bezier(.3,1,.4,1) both}
-  html[data-msg="zoom"] .row.ai,html[data-msg="zoom"] .row.user,html[data-msg="zoom"] .demo-in{animation:msg-zoom 620ms cubic-bezier(.2,.9,.25,1) both}
-  html[data-msg="flip"] .row.ai,html[data-msg="flip"] .row.user,html[data-msg="flip"] .demo-in{animation:msg-flip 860ms cubic-bezier(.2,.9,.25,1) both;transform-origin:50% 100%}
+  html[data-msg="pop"] .row.ai,html[data-msg="pop"] .row.user,html[data-msg="pop"] .demo-in{animation:msg-pop 480ms cubic-bezier(.2,1.1,.3,1) both}
+  html[data-msg="fade"] .row.ai,html[data-msg="fade"] .row.user,html[data-msg="fade"] .demo-in{animation:msg-fade 520ms ease both}
+  html[data-msg="bounce"] .row.ai,html[data-msg="bounce"] .row.user,html[data-msg="bounce"] .demo-in{animation:msg-bounce 640ms cubic-bezier(.3,1,.4,1) both}
+  html[data-msg="zoom"] .row.ai,html[data-msg="zoom"] .row.user,html[data-msg="zoom"] .demo-in{animation:msg-zoom 380ms cubic-bezier(.2,.9,.25,1) both}
+  html[data-msg="flip"] .row.ai,html[data-msg="flip"] .row.user,html[data-msg="flip"] .demo-in{animation:msg-flip 560ms cubic-bezier(.2,.9,.25,1) both;transform-origin:50% 100%}
   .anim-demo{padding:6px 10px 10px;overflow:hidden}
   .demo-in{display:inline-block;background:var(--surface-2);border:1px solid var(--border);border-radius:16px 16px 16px 6px;padding:10px 14px;font-size:13.5px;color:var(--text);animation:msg-in-left 420ms cubic-bezier(.2,.9,.25,1) both}
 
@@ -1196,6 +1164,31 @@
   .dlg-row button{flex:1;padding:11px;border-radius:11px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);font-family:'Manrope',sans-serif;font-weight:700;font-size:13.5px;cursor:pointer;transition:transform .15s}
   .dlg-row button:active{transform:scale(.96)}
   .dlg-row button.danger{background:#FF6E6E;border-color:#FF6E6E;color:#2A0000}
+
+  /* ===== v7: adaptive-contrast action pills + timestamps ===== */
+  :root{--pill-bg:rgba(14,17,22,.68);--pill-fg:#EEF1F7;--pill-fg-dim:rgba(238,241,247,.86);--pill-bd:rgba(255,255,255,.16);--pill-hover:rgba(255,255,255,.16);--pill-shadow:0 2px 10px rgba(0,0,0,.28)}
+  html[data-theme="light"]{--pill-bg:rgba(255,255,255,.82);--pill-fg:#1B2030;--pill-fg-dim:rgba(27,32,48,.82);--pill-bd:rgba(27,32,48,.12);--pill-hover:rgba(27,32,48,.09);--pill-shadow:0 2px 10px rgba(20,30,60,.14)}
+  @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+    :root{--pill-bg:rgba(14,17,22,.9)}
+    html[data-theme="light"]{--pill-bg:rgba(255,255,255,.95)}
+  }
+  .ai-meta{gap:8px}
+  .ai-meta .ai-actions,.ai-meta .msg-time,.model-name,.msg-actions button{
+    background:var(--pill-bg);
+    -webkit-backdrop-filter:blur(12px) saturate(1.5);backdrop-filter:blur(12px) saturate(1.5);
+    border:1px solid var(--pill-bd);box-shadow:var(--pill-shadow)
+  }
+  .ai-meta .ai-actions{border-radius:999px;padding:2px 5px;gap:1px;width:auto}
+  .ai-meta .ai-actions button{color:var(--pill-fg-dim)}
+  .ai-meta .ai-actions button:hover{background:var(--pill-hover);color:var(--pill-fg)}
+  .ai-meta .ai-actions svg{stroke-width:2.2}
+  .ai-meta .ai-actions .copy-btn.done{color:#57D68D}
+  .ai-meta .ai-actions .speak-btn.speaking{color:var(--accent);background:var(--accent-dim)}
+  .ai-meta .msg-time{border-radius:999px;padding:4px 10px;color:var(--pill-fg-dim);font-weight:600;font-size:11px;letter-spacing:.01em}
+  .model-name{display:block;width:fit-content;align-self:flex-start;border-radius:999px;padding:2px 9px;margin:0 0 5px 0;color:var(--accent);font-weight:800}
+  html[data-theme="light"] .model-name{color:#C2410C}
+  .msg-actions button{color:var(--pill-fg-dim)}
+  .msg-actions button:hover{background:var(--pill-hover);color:var(--pill-fg)}
 </style>
 </head>
 <body>
@@ -1318,15 +1311,6 @@
   <button type="button" id="attach-menu-cancel">Cancel</button>
 </div>
 
-<div id="confirm-backdrop"></div>
-<div id="confirm-dialog">
-  <div class="confirm-title" id="confirm-title">Delete chat?</div>
-  <div class="confirm-msg" id="confirm-msg">Yeh chat permanently delete ho jayegi.</div>
-  <div class="confirm-actions">
-    <button type="button" id="confirm-cancel">Cancel</button>
-    <button type="button" id="confirm-ok">Delete</button>
-  </div>
-</div>
 <div id="voice-sheet-backdrop"></div>
 <div id="voice-sheet">
   <div class="voice-sheet-title">Choose a voice</div>
@@ -1336,8 +1320,6 @@
 <div class="sheet-backdrop" id="settings-backdrop"></div>
 <div class="sheet" id="settings-sheet" role="dialog" aria-label="Settings">
   <div class="sheet-title"><span>Settings</span><button type="button" class="icon-btn" id="settings-close" aria-label="Close">✕</button></div>
-  <div class="set-section">AI Model</div>
-  <div class="set-row"><div class="set-label">Default model</div><select class="set-select" id="set-model"><option value="gemini1">Ai 1</option><option value="gemini2">Ai 2</option><option value="gemini3">Ai 3</option><option value="gemini4">Ai 4</option><option value="gemini5">Ai 5</option></select></div>
   <div class="set-section">Look</div>
   <div class="set-row"><div class="set-label">Theme</div><div class="seg" data-key="theme"><button type="button" data-v="dark">Dark</button><button type="button" data-v="light">Light</button></div></div>
   <div class="set-row"><div class="set-label">Font size</div><div class="seg" data-key="fontSize"><button type="button" data-v="13">S</button><button type="button" data-v="14.5">M</button><button type="button" data-v="16.5">L</button><button type="button" data-v="18">XL</button></div></div>
@@ -1351,6 +1333,7 @@
   <div class="set-section">Chat</div>
   <div class="set-row"><div class="set-label">Auto-scroll</div><label class="switch"><input type="checkbox" id="set-autoscroll"><span></span></label></div>
   <div class="set-row"><div class="set-label">Sounds</div><label class="switch"><input type="checkbox" id="set-sound"><span></span></label></div>
+  <div class="set-row"><div class="set-label">Default model</div><select class="set-select" id="set-model"><option value="gemini1">Ai 1</option><option value="gemini2">Ai 2</option><option value="gemini3">Ai 3</option><option value="gemini4">Ai 4</option><option value="gemini5">Ai 5</option></select></div>
   <div class="set-row"><div class="set-label">Default voice</div><button type="button" class="set-btn" id="set-voice-btn"></button></div>
   <div class="set-note">Theme, font size, sounds, wallpaper aur animations sirf is phone/browser par save hote hain. Firebase se sync nahi hote, isliye aap aur aapki wife alag-alag rakh sakte hain.</div>
 </div>
@@ -1525,6 +1508,7 @@
   /* ---------------- Settings ---------------- */
   var WP_KEY = 'zamirWallpaperCustom';
   var customWps = [], v5Ready = false;
+  var scrollLock = false, holdScrollUntil = 0;
   var WP_LIST = ['aurora', 'sunset', 'ocean', 'forest', 'rose', 'dots'];
   var replyTo = null;
   var replyBanner = document.getElementById('reply-banner');
@@ -1887,9 +1871,7 @@
       if (sessions.length === 0) {
         createSession();
       } else {
-        let lastId = null;
-        try { lastId = localStorage.getItem('zamirLastSessionId'); } catch (_) {}
-        currentSessionId = (lastId && sessions.find(s => s.id === lastId)) ? lastId : sessions[0].id;
+        currentSessionId = sessions[0].id;
         renderCurrentSession();
         restoreDraft();
       }
@@ -1917,14 +1899,9 @@
   }
 
   /* ---------------- Session management ---------------- */
-  function rememberLastSession() {
-    try { localStorage.setItem('zamirLastSessionId', currentSessionId || ''); } catch (_) {}
-  }
-
   function createSession() {
     const session = { id: 'c' + Date.now(), title: 'New chat', updatedAt: Date.now(), messages: [] };
     currentSessionId = session.id;
-    rememberLastSession();
     sessionsRef.child(session.id).set(session);
     userInput.value = '';
     clearReply();
@@ -1935,7 +1912,6 @@
 
   function loadSession(id) {
     currentSessionId = id;
-    rememberLastSession();
     editingIndex = null;
     hideEditBanner();
     pendingAttachments = [];
@@ -1948,57 +1924,21 @@
     closeSidebarOnMobile();
   }
 
-  function showConfirmDialog(title, msg, onConfirm) {
-    const backdrop = document.getElementById('confirm-backdrop');
-    const dialog = document.getElementById('confirm-dialog');
-    document.getElementById('confirm-title').textContent = title;
-    document.getElementById('confirm-msg').textContent = msg;
-    backdrop.classList.add('show');
-    dialog.classList.add('show');
-    const okBtn = document.getElementById('confirm-ok');
-    const cancelBtn = document.getElementById('confirm-cancel');
-    function close() {
-      backdrop.classList.remove('show');
-      dialog.classList.remove('show');
-      okBtn.removeEventListener('click', onOk);
-      cancelBtn.removeEventListener('click', onCancel);
-      backdrop.removeEventListener('click', onCancel);
-    }
-    function onOk() { close(); onConfirm(); }
-    function onCancel() { close(); }
-    okBtn.addEventListener('click', onOk);
-    cancelBtn.addEventListener('click', onCancel);
-    backdrop.addEventListener('click', onCancel);
-  }
-
   function deleteSession(id, evt) {
     evt.stopPropagation();
-    const s = sessions.find(x => x.id === id);
-    showConfirmDialog('Delete chat?', (s && s.title ? '"' + s.title + '"' : 'Yeh chat') + ' permanently delete ho jayegi.', () => {
-      try { localStorage.removeItem('zamirDraft_' + id); } catch (_) {}
-      sessionsRef.child(id).remove();
-      if (currentSessionId === id) {
-        const remaining = sessions.filter(s2 => s2.id !== id);
-        if (remaining.length > 0) {
-          currentSessionId = remaining[0].id;
-          rememberLastSession();
-          renderCurrentSession();
-          renderHistoryList();
-          // Sidebar stays open; no closeSidebarOnMobile() call here so the
-          // user can keep deleting more chats without reopening the menu.
-        } else {
-          createSession();
-        }
+    try { localStorage.removeItem('zamirDraft_' + id); } catch (_) {}
+    sessionsRef.child(id).remove();
+    if (currentSessionId === id) {
+      const remaining = sessions.filter(s => s.id !== id);
+      if (remaining.length > 0) {
+        loadSession(remaining[0].id);
       } else {
-        // Deleting a chat you're not currently viewing shouldn't move or
-        // rescroll the sidebar list at all.
-        renderHistoryList();
+        createSession();
       }
-    });
+    }
   }
 
   function renderHistoryList() {
-    const prevScroll = historyList.scrollTop;
     if (sessions.length === 0) {
       historyList.innerHTML = '<div class="empty-history">Koi chat history nahi hai</div>';
       return;
@@ -2045,7 +1985,6 @@
         startRename(btn.closest('.history-item'), btn.dataset.id);
       });
     });
-    historyList.scrollTop = prevScroll;
   }
 
   function startRename(item, id) {
@@ -2080,15 +2019,46 @@
     chatContainer.appendChild(d);
   }
 
-  function renderCurrentSession() {
+  /* Scroll anchor: delete/undo ke baad user ki scroll position wahi rahe */
+  function captureAnchor(op, at) {
+    var cr = chatContainer.getBoundingClientRect();
+    var rows = chatContainer.querySelectorAll('.row[data-index]');
+    for (var k = 0; k < rows.length; k++) {
+      var i = parseInt(rows[k].dataset.index, 10);
+      if (i < 0 || (op === 'del' && i === at)) continue;
+      var b = rows[k].getBoundingClientRect();
+      if (b.bottom > cr.top + 4) {
+        var n = op === 'del' ? (i > at ? i - 1 : i) : op === 'ins' ? (i >= at ? i + 1 : i) : i;
+        return { idx: i, newIdx: n, off: b.top - cr.top, st: chatContainer.scrollTop };
+      }
+    }
+    return { idx: null, newIdx: null, off: 0, st: chatContainer.scrollTop };
+  }
+  function restoreAnchor(a) {
+    chatContainer.style.scrollBehavior = 'auto';
+    var row = a.idx !== null ? chatContainer.querySelector('.row[data-index="' + a.newIdx + '"]') : null;
+    if (row) {
+      var cr = chatContainer.getBoundingClientRect();
+      chatContainer.scrollTop += row.getBoundingClientRect().top - cr.top - a.off;
+    } else chatContainer.scrollTop = a.st;
+    setTimeout(function () { chatContainer.style.scrollBehavior = ''; }, 60);
+  }
+  function renderCurrentSession(anchor) {
+    if (!anchor && Date.now() < holdScrollUntil) anchor = captureAnchor('none', -1);
     const session = getCurrentSession();
     chatContainer.innerHTML = '';
     if (!session || !session.messages || session.messages.length === 0) {
       renderHero();
       return;
     }
-    session.messages.forEach((msg, idx) => appendMessageDOM(msg, idx));
-    scrollToBottom();
+    if (anchor) scrollLock = true;
+    try {
+      session.messages.forEach((msg, idx) => appendMessageDOM(msg, idx));
+    } finally { scrollLock = false; }
+    if (anchor) {
+      chatContainer.querySelectorAll('.row, .row .avatar').forEach(function (e) { e.style.animation = 'none'; });
+      restoreAnchor(anchor);
+    } else scrollToBottom();
   }
 
   function updateSessionTitle(session) {
@@ -2987,6 +2957,7 @@
   }
 
   function scrollToBottom() {
+    if (scrollLock) return;
     chatContainer.scrollTop = chatContainer.scrollHeight;
   }
 
@@ -3219,23 +3190,18 @@
     const sess = getCurrentSession();
     if (!sess || !sess.messages || !sess.messages[idx]) return;
     const sid = sess.id;
-    // Remember exactly where the user was looking so deleting a message
-    // (e.g. the very first one) keeps them right there — it never jumps
-    // down to the bottom of the chat, so they can keep deleting more
-    // from the same spot.
-    const prevScrollTop = chatContainer.scrollTop;
-    const wasAtBottom = (chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight) < 40;
+    const anchor = captureAnchor('del', idx);
     const removed = sess.messages.splice(idx, 1)[0];
-    saveSession(sess); renderCurrentSession();
-    if (!wasAtBottom) {
-      chatContainer.scrollTop = prevScrollTop;
-      requestAnimationFrame(() => { chatContainer.scrollTop = prevScrollTop; });
-    }
+    holdScrollUntil = Date.now() + 1500;
+    saveSession(sess); renderCurrentSession(anchor);
     toast('Message delete hua', 'Undo', () => {
       const ss = getCurrentSession(); if (!ss || ss.id !== sid) return;
       if (!ss.messages) ss.messages = [];
-      ss.messages.splice(Math.min(idx, ss.messages.length), 0, removed);
-      saveSession(ss); renderCurrentSession();
+      const pos = Math.min(idx, ss.messages.length);
+      const a2 = captureAnchor('ins', pos);
+      ss.messages.splice(pos, 0, removed);
+      holdScrollUntil = Date.now() + 1500;
+      saveSession(ss); renderCurrentSession(a2);
     }, 5000);
   }
 
@@ -3320,10 +3286,9 @@
       clearTimeout(lpTimer);
       gs.mode = (Math.abs(dx) > Math.abs(dy) * 1.4) ? 'swipe' : 'scroll';
       if (gs.mode === 'swipe') {
-        // Both swipe directions now mean "reply" — swipe can never delete.
         const h = document.createElement('div');
-        h.className = 'swipe-hint';
-        h.innerHTML = ICON_REPLY;
+        h.className = 'swipe-hint' + (dx < 0 ? ' del' : '');
+        h.innerHTML = dx < 0 ? ICON_TRASH : ICON_REPLY;
         h.style[dx < 0 ? 'right' : 'left'] = '8px';
         gs.row.appendChild(h); gs.hint = h;
       }
@@ -3347,8 +3312,8 @@
       const row = gs.row, dx = gs.dx, idx = parseInt(row.dataset.index, 10);
       resetGesture(true);
       const sess = getCurrentSession(); const m = sess && sess.messages && sess.messages[idx];
-      // Swipe either left or right now only replies — never deletes.
-      if (m && Math.abs(dx) > SWIPE_TRIGGER) setReply(m);
+      if (m && dx > SWIPE_TRIGGER) setReply(m);
+      else if (m && dx < -SWIPE_TRIGGER) setTimeout(() => deleteMessage(idx), 180);
       return;
     }
     gs = null;
