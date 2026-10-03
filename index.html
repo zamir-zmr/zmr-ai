@@ -1189,6 +1189,89 @@
   html[data-theme="light"] .model-name{color:#C2410C}
   .msg-actions button{color:var(--pill-fg-dim)}
   .msg-actions button:hover{background:var(--pill-hover);color:var(--pill-fg)}
+
+  /* ===== v8: dropdown cards, pro effects, always-on glowing input ===== */
+  select[hidden]{display:none !important}
+  .dd-btn{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:112px;background:var(--surface-2);border:1px solid var(--border);color:var(--text);border-radius:12px;padding:8px 10px 8px 12px;font-family:'Manrope',sans-serif;font-weight:700;font-size:12.5px;cursor:pointer;transition:border-color .2s,box-shadow .25s,transform .15s}
+  .dd-btn:hover,.dd-btn.open{border-color:var(--accent)}
+  .dd-btn.open{box-shadow:0 0 0 3px rgba(255,138,61,.16)}
+  .dd-btn:active{transform:scale(.97)}
+  .dd-btn svg{width:16px;height:16px;flex-shrink:0;transition:rotate .35s cubic-bezier(.3,1.3,.5,1)}
+  .dd-btn.open svg{rotate:180deg}
+  .dd-panel{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .42s cubic-bezier(.2,.8,.2,1),opacity .3s ease}
+  .dd-panel.open{grid-template-rows:1fr;opacity:1}
+  .dd-inner{overflow:hidden;min-height:0}
+  .dd-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:10px 10px 14px}
+  .dd-grid.list{grid-template-columns:1fr;gap:6px}
+  .dd-opt{display:flex;flex-direction:column;gap:7px;text-align:left;background:var(--surface-2);border:1.5px solid var(--border);color:var(--text);border-radius:12px;padding:8px;cursor:pointer;font-family:'Manrope',sans-serif;transition:border-color .2s,background .2s,scale .2s cubic-bezier(.3,1.4,.5,1)}
+  .dd-grid.list .dd-opt{flex-direction:row;align-items:center;padding:11px 12px}
+  .dd-opt:active{scale:.97}
+  .dd-opt.active{border-color:var(--accent);background:var(--accent-dim)}
+  .dd-panel.open .dd-opt{animation:tile-in .4s both;animation-delay:calc(var(--i,0) * 40ms + 110ms)}
+  .dd-lbl{display:flex;align-items:center;justify-content:space-between;width:100%;font-weight:700;font-size:12.5px}
+  .dd-chk{opacity:0;scale:.3;color:var(--accent);font-weight:800;transition:opacity .2s,scale .3s cubic-bezier(.3,1.5,.5,1)}
+  .dd-opt.active .dd-chk{opacity:1;scale:1}
+  .dd-prev{display:block;position:relative;width:100%;height:46px;border-radius:9px;background:var(--bg);border:1px solid var(--border);overflow:hidden}
+  .pv{position:absolute;inset:0;display:block;overflow:hidden}
+  .pv i{position:absolute;display:block}
+  .pv em{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-style:normal;color:var(--text-dim)}
+  .pv-orbs i{width:40px;height:40px;border-radius:50%;background:radial-gradient(circle,rgba(255,138,61,.75),transparent 70%);animation:pv-orb 5s ease-in-out infinite alternate}
+  .pv-orbs i:nth-child(2){left:62%;top:30%;background:radial-gradient(circle,rgba(91,124,255,.75),transparent 70%);animation-delay:-2.5s}
+  .pv-aurora i{left:-20%;width:140%;height:24px;background:radial-gradient(ellipse at center,rgba(87,214,141,.75),transparent 68%);animation:pv-aur 6s ease-in-out infinite alternate}
+  .pv-aurora i:nth-child(1){top:-4px}.pv-aurora i:nth-child(2){top:20px;background:radial-gradient(ellipse at center,rgba(139,92,246,.75),transparent 68%);animation-delay:-3s}
+  .pv-bubbles i{bottom:-12px;border:1px solid rgba(255,255,255,.55);border-radius:50%;animation:pv-up 3.2s linear infinite}
+  .pv-bubbles i:nth-child(1){left:14%;width:10px;height:10px}.pv-bubbles i:nth-child(2){left:46%;width:16px;height:16px;animation-delay:-1.2s}.pv-bubbles i:nth-child(3){left:76%;width:8px;height:8px;animation-delay:-2.2s}
+  .pv-stars i,.pv-fireflies i,.pv-snow i{width:3px;height:3px;border-radius:50%;background:#fff}
+  .pv-stars i{animation:twinkle 2.4s ease-in-out infinite}
+  .pv-stars i:nth-child(1){left:10%;top:18%}.pv-stars i:nth-child(2){left:30%;top:60%;animation-delay:-.6s}.pv-stars i:nth-child(3){left:48%;top:24%;animation-delay:-1.1s}.pv-stars i:nth-child(4){left:66%;top:68%;animation-delay:-1.6s}.pv-stars i:nth-child(5){left:82%;top:30%;animation-delay:-.3s}.pv-stars i:nth-child(6){left:92%;top:72%;animation-delay:-2s}
+  .pv-fireflies i{background:#FFD66B;box-shadow:0 0 8px 2px rgba(255,200,80,.7);animation:pv-ff 4.5s ease-in-out infinite}
+  .pv-fireflies i:nth-child(1){left:20%;top:55%}.pv-fireflies i:nth-child(2){left:55%;top:30%;animation-delay:-1.6s}.pv-fireflies i:nth-child(3){left:80%;top:60%;animation-delay:-3s}
+  .pv-snow i{top:-6px;animation:pv-fall 3s linear infinite}
+  .pv-snow i:nth-child(1){left:12%}.pv-snow i:nth-child(2){left:30%;animation-delay:-1s}.pv-snow i:nth-child(3){left:48%;animation-delay:-2s}.pv-snow i:nth-child(4){left:64%;animation-delay:-.5s}.pv-snow i:nth-child(5){left:80%;animation-delay:-1.5s}.pv-snow i:nth-child(6){left:92%;animation-delay:-2.4s}
+  @keyframes pv-orb{to{transform:translate(26px,10px) scale(1.25)}}
+  @keyframes pv-aur{from{transform:translateX(-8%) rotate(-4deg)}to{transform:translateX(8%) rotate(4deg)}}
+  @keyframes pv-up{0%{transform:translateY(0);opacity:0}15%{opacity:.9}100%{transform:translateY(-62px);opacity:0}}
+  @keyframes pv-ff{0%,100%{transform:translate(0,0);opacity:.2}50%{transform:translate(14px,-10px);opacity:1}}
+  @keyframes pv-fall{0%{transform:translateY(0);opacity:0}15%{opacity:1}100%{transform:translateY(56px);opacity:.2}}
+  .pvm{display:flex;align-items:center;padding:0 12px}
+  .pvm b{display:block;width:68%;height:20px;background:var(--surface);border:1px solid var(--border);border-radius:10px 10px 10px 4px}
+  .pvm-slide b{animation:pvl-slide 2.6s ease-in-out infinite}.pvm-pop b{animation:pvl-pop 2.6s ease-in-out infinite}.pvm-fade b{animation:pvl-fade 2.6s ease-in-out infinite}
+  .pvm-bounce b{animation:pvl-bounce 2.6s ease-in-out infinite}.pvm-zoom b{animation:pvl-zoom 2.6s ease-in-out infinite}.pvm-flip b{animation:pvl-flip 2.6s ease-in-out infinite}
+  @keyframes pvl-slide{0%{opacity:0;transform:translateX(-18px)}20%,78%{opacity:1;transform:none}92%,100%{opacity:0}}
+  @keyframes pvl-pop{0%{opacity:0;transform:scale(.5)}14%{opacity:1;transform:scale(1.1)}22%,78%{opacity:1;transform:none}92%,100%{opacity:0}}
+  @keyframes pvl-fade{0%{opacity:0;filter:blur(4px)}22%,78%{opacity:1;filter:none}92%,100%{opacity:0}}
+  @keyframes pvl-bounce{0%{opacity:0;transform:translateY(22px)}14%{opacity:1;transform:translateY(-5px)}22%,78%{opacity:1;transform:none}92%,100%{opacity:0}}
+  @keyframes pvl-zoom{0%{opacity:0;transform:scale(.75)}20%,78%{opacity:1;transform:none}92%,100%{opacity:0}}
+  @keyframes pvl-flip{0%{opacity:0;transform:perspective(200px) rotateX(-60deg)}20%,78%{opacity:1;transform:none}92%,100%{opacity:0}}
+
+  /* pro background effects (inside fx-layer, visible over wallpapers) */
+  body::before,body::after{display:none !important}
+  .fx-o{position:absolute;border-radius:50%;will-change:transform;animation:orb-drift ease-in-out infinite alternate}
+  @keyframes orb-drift{0%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(var(--ox),var(--oy),0) scale(1.18)}100%{transform:translate3d(calc(var(--ox) * -.6),calc(var(--oy) * .7),0) scale(.95)}}
+  .fx-a{position:absolute;left:-30%;width:160%;height:42%;border-radius:50%;background:radial-gradient(ellipse at center,var(--ac),transparent 68%);will-change:transform;animation:aurora-flow ease-in-out infinite alternate}
+  @keyframes aurora-flow{0%{transform:translate3d(-6%,0,0) rotate(-6deg) scaleY(.9)}50%{transform:translate3d(4%,8%,0) rotate(2deg) scaleY(1.15)}100%{transform:translate3d(8%,-6%,0) rotate(7deg) scaleY(1)}}
+  .fx-b{position:absolute;bottom:-90px;border-radius:50%;border:1px solid rgba(255,255,255,.28);background:radial-gradient(circle at 30% 28%,rgba(255,255,255,.34),rgba(255,255,255,.06) 45%,rgba(255,138,61,.07));box-shadow:inset 0 0 8px rgba(255,255,255,.12);will-change:transform;animation:bubble-up linear infinite}
+  html[data-theme="light"] .fx-b{border-color:rgba(242,113,28,.35);background:radial-gradient(circle at 30% 28%,rgba(255,255,255,.75),rgba(242,113,28,.09))}
+  @keyframes bubble-up{0%{transform:translate3d(0,0,0) scale(.85);opacity:0}8%{opacity:.8}30%{transform:translate3d(calc(var(--dx) * .6),-35vh,0) scale(.95)}60%{transform:translate3d(calc(var(--dx) * -.4),-70vh,0) scale(1.02)}92%{opacity:.5}100%{transform:translate3d(var(--dx),-112vh,0) scale(1.1);opacity:0}}
+  .fx-s{position:absolute;border-radius:50%;background:var(--fx-star);animation:twinkle ease-in-out infinite}
+  @keyframes twinkle{0%,100%{opacity:.12;transform:scale(.7)}50%{opacity:.95;transform:scale(1.25)}}
+  .fx-sh{position:absolute;width:110px;height:1.5px;background:linear-gradient(90deg,transparent,var(--fx-star));opacity:0;animation:shoot 12s linear infinite}
+  @keyframes shoot{0%{opacity:0;transform:translate3d(0,0,0) rotate(28deg)}1.5%{opacity:.95}7%{opacity:0;transform:translate3d(300px,160px,0) rotate(28deg)}100%{opacity:0}}
+  .fx-f{position:absolute;width:5px;height:5px;border-radius:50%;background:#FFD66B;box-shadow:0 0 10px 3px rgba(255,200,80,.65);animation:firefly ease-in-out infinite}
+  @keyframes firefly{0%{transform:translate3d(0,0,0);opacity:0}12%{opacity:.95}30%{transform:translate3d(calc(var(--dx) * .5),calc(var(--dy) * -.4),0)}50%{transform:translate3d(var(--dx),var(--dy),0);opacity:.35}70%{opacity:.95;transform:translate3d(calc(var(--dx) * .4),calc(var(--dy) * .9),0)}88%{opacity:.8}100%{transform:translate3d(calc(var(--dx) * -.3),calc(var(--dy) * .2),0);opacity:0}}
+  .fx-n{position:absolute;top:-12px;border-radius:50%;background:#fff;will-change:transform;animation:snow-fall linear infinite}
+  html[data-theme="light"] .fx-n{background:#8fb3ff}
+  @keyframes snow-fall{0%{transform:translate3d(0,0,0);opacity:0}8%{opacity:.85}50%{transform:translate3d(var(--dx),55vh,0)}100%{transform:translate3d(calc(var(--dx) * -.5),112vh,0);opacity:.2}}
+
+  /* always-on glowing input ring */
+  #chat-form{isolation:isolate;border-color:rgba(255,255,255,.10)}
+  #chat-form::before{inset:-2.5px;border-radius:16.5px;padding:2.5px;background:conic-gradient(from var(--ang,0deg),#FF8A3D,#FF6EA8,#8B5CF6,#5B7CFF,#2DD4BF,#57D68D,#FFC15A,#FF8A3D);opacity:1;animation:ang-spin 3.2s linear infinite;z-index:1}
+  #chat-form::after{content:'';position:absolute;inset:-4px;border-radius:19px;background:conic-gradient(from var(--ang,0deg),#FF8A3D,#FF6EA8,#8B5CF6,#5B7CFF,#2DD4BF,#57D68D,#FFC15A,#FF8A3D);filter:blur(11px);opacity:.55;z-index:-1;pointer-events:none;animation:ang-spin 3.2s linear infinite;transition:opacity .35s}
+  #chat-form:focus-within::before{animation:ang-spin 2.4s linear infinite}
+  #chat-form:focus-within::after{opacity:.9;animation:ang-spin 2.4s linear infinite}
+  html[data-theme="light"] #chat-form::after{opacity:.4}
+  html[data-theme="light"] #chat-form{border-color:rgba(27,32,48,.08)}
+  html[data-anim="light"] #chat-form::after{animation:none !important}
 </style>
 </head>
 <body>
@@ -1320,22 +1403,26 @@
 <div class="sheet-backdrop" id="settings-backdrop"></div>
 <div class="sheet" id="settings-sheet" role="dialog" aria-label="Settings">
   <div class="sheet-title"><span>Settings</span><button type="button" class="icon-btn" id="settings-close" aria-label="Close">✕</button></div>
+  <div class="set-section">AI model</div>
+  <div class="set-row dd-row"><div class="set-label">Default model<div class="set-hint">Naye sawaal isi AI se jayenge</div></div><button type="button" class="dd-btn" data-dd="set-model"><span class="dd-cur"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button><select id="set-model" hidden></select></div>
+  <div class="dd-panel" id="dd-set-model"><div class="dd-inner"><div class="dd-grid list"></div></div></div>
   <div class="set-section">Look</div>
   <div class="set-row"><div class="set-label">Theme</div><div class="seg" data-key="theme"><button type="button" data-v="dark">Dark</button><button type="button" data-v="light">Light</button></div></div>
   <div class="set-row"><div class="set-label">Font size</div><div class="seg" data-key="fontSize"><button type="button" data-v="13">S</button><button type="button" data-v="14.5">M</button><button type="button" data-v="16.5">L</button><button type="button" data-v="18">XL</button></div></div>
-  <div class="set-row"><div class="set-label">Chat wallpaper<div class="set-hint">100+ wallpapers aur apni photos</div></div><button type="button" class="wp-open" id="wp-open"><span class="wp-open-thumb" id="wp-open-thumb"></span><span id="wp-open-name">None</span><span>›</span></button></div>
+  <div class="set-row"><div class="set-label">Chat wallpaper<div class="set-hint">100+ wallpapers, dono phones par sync</div></div><button type="button" class="wp-open" id="wp-open"><span class="wp-open-thumb" id="wp-open-thumb"></span><span id="wp-open-name">None</span><span>›</span></button></div>
   <div class="set-section">Animations</div>
   <div class="set-row"><div class="set-label">Animations</div><div class="seg" data-key="anim"><button type="button" data-v="off">Off</button><button type="button" data-v="light">Light</button><button type="button" data-v="full">Full</button></div></div>
-  <div class="set-row"><div class="set-label">Message style</div><select class="set-select" id="set-msganim"><option value="slide">Slide</option><option value="pop">Pop</option><option value="fade">Fade</option><option value="bounce">Bounce</option><option value="zoom">Zoom</option><option value="flip">Flip</option></select></div>
-  <div class="set-row"><div class="set-label">Background effect</div><select class="set-select" id="set-bgfx"><option value="orbs">Glow orbs</option><option value="bubbles">Bubbles</option><option value="stars">Stars</option><option value="fireflies">Fireflies</option><option value="none">None</option></select></div>
+  <div class="set-row dd-row"><div class="set-label">Message style</div><button type="button" class="dd-btn" data-dd="set-msganim"><span class="dd-cur"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button><select id="set-msganim" hidden></select></div>
+  <div class="dd-panel" id="dd-set-msganim"><div class="dd-inner"><div class="dd-grid"></div></div></div>
+  <div class="set-row dd-row"><div class="set-label">Background effect</div><button type="button" class="dd-btn" data-dd="set-bgfx"><span class="dd-cur"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button><select id="set-bgfx" hidden></select></div>
+  <div class="dd-panel" id="dd-set-bgfx"><div class="dd-inner"><div class="dd-grid"></div></div></div>
   <div class="set-row"><div class="set-label">Send animation</div><label class="switch"><input type="checkbox" id="set-sendfx"><span></span></label></div>
   <div class="anim-demo"><div class="demo-in" id="anim-demo">Namaste! Yeh message animation ka preview hai ✨</div></div>
   <div class="set-section">Chat</div>
   <div class="set-row"><div class="set-label">Auto-scroll</div><label class="switch"><input type="checkbox" id="set-autoscroll"><span></span></label></div>
   <div class="set-row"><div class="set-label">Sounds</div><label class="switch"><input type="checkbox" id="set-sound"><span></span></label></div>
-  <div class="set-row"><div class="set-label">Default model</div><select class="set-select" id="set-model"><option value="gemini1">Ai 1</option><option value="gemini2">Ai 2</option><option value="gemini3">Ai 3</option><option value="gemini4">Ai 4</option><option value="gemini5">Ai 5</option></select></div>
   <div class="set-row"><div class="set-label">Default voice</div><button type="button" class="set-btn" id="set-voice-btn"></button></div>
-  <div class="set-note">Theme, font size, sounds, wallpaper aur animations sirf is phone/browser par save hote hain. Firebase se sync nahi hote, isliye aap aur aapki wife alag-alag rakh sakte hain.</div>
+  <div class="set-note">Chat wallpaper aap dono ke phone par sync hota hai: jo ek lagaye, doosre ko bhi dikhta hai. Theme, font size, sounds aur animations sirf isi phone par save hote hain.</div>
 </div>
 <div class="sheet-backdrop" id="wp-backdrop"></div>
 <div class="sheet wp-sheet" id="wp-sheet" role="dialog" aria-label="Chat wallpaper">
@@ -3072,6 +3159,7 @@
   }
   function openSettings() {
     syncSettingsUI();
+    ddCloseAll(null);
     Array.prototype.forEach.call(setSheet.children, function (c, i) { c.style.setProperty('--i', i); });
     setSheet.classList.add('show'); setBackdrop.classList.add('show');
     setTimeout(playDemo, 350);
@@ -3449,29 +3537,40 @@
   var WP_CATS = [['all', 'All'], ['gradient', 'Gradient'], ['mesh', 'Mesh'], ['pattern', 'Pattern'], ['solid', 'Solid'], ['mine', 'My photos']];
   var wpTab = 'all';
 
-  /* --- IndexedDB for my own photos (stays on this device only) --- */
+  /* --- Wallpaper: Firebase se shared (dono phones), IndexedDB sirf local cache --- */
+  var wallpaperRef = db.ref('geminiChatApp/settings/wallpaper');
+  var wpLibRef = db.ref('geminiChatApp/settings/wallpaperLib');
+  var wpDataRef = db.ref('geminiChatApp/settings/wallpaperData');
+  var wpDataMem = {}, wpPushT = null, wpMigrateP = null;
   var wpDbP = null;
   function wpOpen() {
     if (!wpDbP) wpDbP = new Promise(function (res, rej) {
       try {
-        var r = indexedDB.open('zamirLocal', 1);
-        r.onupgradeneeded = function () { r.result.createObjectStore('wallpapers', { keyPath: 'id' }); };
+        var r = indexedDB.open('zamirLocal', 2);
+        r.onupgradeneeded = function () {
+          var d = r.result;
+          if (!d.objectStoreNames.contains('wallpapers')) d.createObjectStore('wallpapers', { keyPath: 'id' });
+          if (!d.objectStoreNames.contains('wpcache')) d.createObjectStore('wpcache', { keyPath: 'id' });
+        };
         r.onsuccess = function () { res(r.result); };
         r.onerror = function () { rej(r.error); };
       } catch (e) { rej(e); }
     });
     return wpDbP;
   }
-  function wpTx(mode, fn) {
-    return wpOpen().then(function (db) {
+  function wpTx(store, mode, fn) {
+    return wpOpen().then(function (d) {
       return new Promise(function (res, rej) {
-        var tx = db.transaction('wallpapers', mode), req = fn(tx.objectStore('wallpapers'));
+        var tx = d.transaction(store, mode), req = fn(tx.objectStore(store));
         tx.oncomplete = function () { res(req ? req.result : undefined); };
         tx.onerror = function () { rej(tx.error); };
         tx.onabort = function () { rej(tx.error); };
       });
     });
   }
+  function wpCacheGet(id) { return wpTx('wpcache', 'readonly', function (st) { return st.get(id); }).then(function (r) { return r ? r.data : null; }).catch(function () { return null; }); }
+  function wpCachePut(id, data) { return wpTx('wpcache', 'readwrite', function (st) { return st.put({ id: id, data: data }); }).catch(function () {}); }
+  function wpCacheDel(id) { return wpTx('wpcache', 'readwrite', function (st) { return st.delete(id); }).catch(function () {}); }
   function resizeToDataUrl(img, max, q, limit) {
     var iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
     var sc = Math.min(1, max / Math.max(iw, ih));
@@ -3484,21 +3583,76 @@
   function imgFromSrc(src) {
     return new Promise(function (res, rej) { var i = new Image(); i.onload = function () { res(i); }; i.onerror = rej; i.src = src; });
   }
-  function loadCustomWps() {
-    return wpTx('readonly', function (st) { return st.getAll(); }).then(function (all) {
-      customWps = (all || []).sort(function (a, b) { return b.t - a.t; });
-    }).then(function () {
-      var legacy = null; try { legacy = localStorage.getItem(WP_KEY); } catch (_) {}
-      if (!legacy) return;
-      return imgFromSrc(legacy).then(function (img) {
-        var it = { id: 'u_legacy', data: legacy, thumb: resizeToDataUrl(img, 240, 0.7, 0), t: Date.now() };
-        return wpTx('readwrite', function (st) { return st.put(it); }).then(function () {
-          customWps.unshift(it);
-          if (settings.wallpaper === 'custom') { settings.wallpaper = 'u_legacy'; saveSettings(); }
-          try { localStorage.removeItem(WP_KEY); } catch (_) {}
-        });
-      }).catch(function () { try { localStorage.removeItem(WP_KEY); } catch (_) {} });
-    }).catch(function () { customWps = []; });
+  function ensureWpData(it) {
+    if (wpDataMem[it.id]) return Promise.resolve(wpDataMem[it.id]);
+    return wpCacheGet(it.id).then(function (d) {
+      if (d) { wpDataMem[it.id] = d; return d; }
+      return wpDataRef.child(it.id).once('value').then(function (sn) {
+        var v = sn.val(); if (v) { wpDataMem[it.id] = v; wpCachePut(it.id, v); } return v;
+      });
+    }).catch(function () { return null; });
+  }
+  function pushWpShared() {
+    clearTimeout(wpPushT);
+    wpPushT = setTimeout(function () {
+      wallpaperRef.set({ id: settings.wallpaper || 'none', dim: settings.wpDim, move: !!settings.wpMove, t: Date.now() }).catch(function () {});
+    }, 350);
+  }
+  function syncWpControls() {
+    var d = document.getElementById('wp-dim'); if (!d) return;
+    d.value = Math.round((settings.wpDim || 0) * 100);
+    document.getElementById('wp-dim-val').textContent = d.value + '%';
+    document.getElementById('wp-move').checked = !!settings.wpMove;
+  }
+  /* purani local (is phone ki) photos ko shared library me daal do */
+  function shrinkData(data) {
+    if (data.length < 800000) return Promise.resolve(data);
+    return imgFromSrc(data).then(function (img) { return resizeToDataUrl(img, 1280, 0.7, 650000); }).catch(function () { return data; });
+  }
+  function migrateLocalWallpapers() {
+    var jobs = [];
+    var legacy = null; try { legacy = localStorage.getItem(WP_KEY); } catch (_) {}
+    var up = function (it) {
+      return shrinkData(it.data).then(function (data) {
+        return wpDataRef.child(it.id).set(data).then(function () {
+          return (it.thumb ? Promise.resolve(it.thumb) : imgFromSrc(data).then(function (im) { return resizeToDataUrl(im, 200, 0.6, 0); }));
+        }).then(function (thumb) {
+          return wpLibRef.child(it.id).set({ thumb: thumb, t: it.t || Date.now() });
+        }).then(function () { wpDataMem[it.id] = data; wpCachePut(it.id, data); });
+      });
+    };
+    if (legacy) {
+      jobs.push(up({ id: 'u_legacy', data: legacy, t: Date.now() }).then(function () {
+        if (settings.wallpaper === 'custom') { settings.wallpaper = 'u_legacy'; saveSettings(); }
+        try { localStorage.removeItem(WP_KEY); } catch (_) {}
+      }).catch(function () {}));
+    }
+    jobs.push(wpTx('wallpapers', 'readonly', function (st) { return st.getAll(); }).then(function (all) {
+      return Promise.all((all || []).map(function (it) {
+        return up(it).then(function () { return wpTx('wallpapers', 'readwrite', function (st) { return st.delete(it.id); }); }).catch(function () {});
+      }));
+    }).catch(function () {}));
+    return Promise.all(jobs);
+  }
+  function initSharedWallpapers() {
+    wpMigrateP = migrateLocalWallpapers();
+    wpLibRef.on('value', function (snap) {
+      var v = snap.val() || {};
+      customWps = Object.keys(v).map(function (id) { return { id: id, thumb: v[id].thumb || '', t: v[id].t || 0 }; }).sort(function (a, b) { return b.t - a.t; });
+      applyWallpaper(true);
+      if (wpSheet.classList.contains('show')) { renderWpTabs(); renderWpTiles(); }
+    });
+    wallpaperRef.on('value', function (snap) {
+      var v = snap.val();
+      if (!v) {
+        wpMigrateP.then(function () { if ((settings.wallpaper || 'none') !== 'none') pushWpShared(); });
+        return;
+      }
+      var id = v.id || 'none', dim = (v.dim != null ? v.dim : settings.wpDim), mv = !!v.move;
+      if (settings.wallpaper === id && settings.wpDim === dim && !!settings.wpMove === mv) return;
+      settings.wallpaper = id; settings.wpDim = dim; settings.wpMove = mv; saveSettings();
+      applyWallpaper(); syncWpControls();
+    });
   }
 
   function wpFind(id) {
@@ -3507,14 +3661,14 @@
     return null;
   }
   function wpIsCustom(it) { return !!it && it.id.indexOf('u_') === 0; }
-  function wpCss(it) { return wpIsCustom(it) ? 'url("' + it.data + '") center/cover no-repeat' : it.css; }
+  function wpCss(it) { return wpIsCustom(it) ? 'url("' + (wpDataMem[it.id] || it.thumb) + '") center/cover no-repeat' : it.css; }
   function wpThumbCss(it) { return wpIsCustom(it) ? 'url("' + it.thumb + '") center/cover no-repeat' : it.css; }
   function wpName(it) {
     if (!wpIsCustom(it)) return it.name;
     var n = customWps.indexOf(it); return 'Photo ' + (customWps.length - n);
   }
 
-  function applyWallpaper() {
+  function applyWallpaper(noFade) {
     var el = document.getElementById('wallpaper');
     var id = settings.wallpaper || 'none';
     if (WP_LEGACY[id]) { id = WP_LEGACY[id]; settings.wallpaper = id; saveSettings(); }
@@ -3525,8 +3679,11 @@
       el.style.display = 'block';
       el.style.background = wpCss(it);
       if (settings.wpMove && (it.cat === 'gradient' || it.cat === 'mesh')) { el.style.backgroundSize = '300% 300%'; el.classList.add('wp-move'); }
+      if (wpIsCustom(it) && !wpDataMem[it.id]) {
+        ensureWpData(it).then(function (d) { if (d && settings.wallpaper === it.id) applyWallpaper(true); });
+      }
     }
-    el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
+    if (!noFade) { el.style.animation = 'none'; void el.offsetWidth; el.style.animation = ''; }
     document.documentElement.style.setProperty('--wp-dim', settings.wpDim);
     updateWpUi();
   }
@@ -3549,7 +3706,7 @@
       b.dataset.tab = c[0]; b.textContent = c[1] + ' ' + n; box.appendChild(b);
     });
     document.getElementById('wp-hint').textContent = (wpTab === 'all' || wpTab === 'mine')
-      ? 'Apni photo par long press = delete. Default wallpapers delete nahi hote.' : 'Tap karke lagayein. Dimming se text saaf rakhein.';
+      ? 'Wallpaper dono phones par sync hota hai. Apni photo par long press = delete.' : 'Tap karke lagayein. Dimming se text saaf rakhein.';
   }
   function mkTile(it, idx) {
     var b = document.createElement('button'); b.type = 'button'; b.className = 'wp-tile'; b.dataset.id = it.id;
@@ -3578,9 +3735,7 @@
   var wpSheet = document.getElementById('wp-sheet'), wpBackdrop = document.getElementById('wp-backdrop');
   function openWpSheet() {
     closeSettings();
-    document.getElementById('wp-dim').value = Math.round((settings.wpDim || 0) * 100);
-    document.getElementById('wp-dim-val').textContent = Math.round((settings.wpDim || 0) * 100) + '%';
-    document.getElementById('wp-move').checked = !!settings.wpMove;
+    syncWpControls();
     renderWpTabs(); renderWpTiles();
     wpSheet.classList.add('show'); wpBackdrop.classList.add('show');
   }
@@ -3595,8 +3750,9 @@
     settings.wpDim = parseInt(e.target.value, 10) / 100; saveSettings();
     document.documentElement.style.setProperty('--wp-dim', settings.wpDim);
     document.getElementById('wp-dim-val').textContent = e.target.value + '%';
+    pushWpShared();
   });
-  document.getElementById('wp-move').addEventListener('change', function (e) { settings.wpMove = e.target.checked; saveSettings(); applyWallpaper(); });
+  document.getElementById('wp-move').addEventListener('change', function (e) { settings.wpMove = e.target.checked; saveSettings(); applyWallpaper(); pushWpShared(); });
 
   /* confirm dialog */
   function confirmDlg(title, msg, okLabel) {
@@ -3610,17 +3766,17 @@
     });
   }
   function deleteCustomWp(id) {
-    wpTx('readwrite', function (st) { return st.delete(id); }).then(function () {
-      customWps = customWps.filter(function (c) { return c.id !== id; });
-      if (settings.wallpaper === id) { settings.wallpaper = 'none'; saveSettings(); }
-      applyWallpaper(); renderWpTabs(); renderWpTiles(); toast('Wallpaper delete ho gaya');
+    Promise.all([wpLibRef.child(id).remove(), wpDataRef.child(id).remove()]).then(function () {
+      delete wpDataMem[id]; wpCacheDel(id);
+      if (settings.wallpaper === id) { settings.wallpaper = 'none'; saveSettings(); applyWallpaper(); pushWpShared(); }
+      toast('Wallpaper delete ho gaya');
     }).catch(function () { toast('Delete nahi ho paya'); });
   }
   function wpLongPress(tile) {
     var id = tile.dataset.id;
     if (id === 'add') return;
     if (id.indexOf('u_') === 0) {
-      confirmDlg('Ye wallpaper delete karein?', 'Ye photo sirf is phone se hata di jayegi.', 'Delete').then(function (ok) { if (ok) deleteCustomWp(id); });
+      confirmDlg('Ye wallpaper delete karein?', 'Ye photo dono phones se hat jayegi.', 'Delete').then(function (ok) { if (ok) deleteCustomWp(id); });
     } else {
       tile.classList.remove('shake'); void tile.offsetWidth; tile.classList.add('shake');
       setTimeout(function () { tile.classList.remove('shake'); }, 500);
@@ -3643,7 +3799,7 @@
     if (wpLpFired) { wpLpFired = false; return; }
     var id = t.dataset.id;
     if (id === 'add') { wpFile.click(); return; }
-    settings.wallpaper = id; saveSettings(); applyWallpaper();
+    settings.wallpaper = id; saveSettings(); applyWallpaper(); pushWpShared();
   });
   wpFile.addEventListener('change', function () {
     var files = Array.prototype.slice.call(wpFile.files || []); wpFile.value = '';
@@ -3652,17 +3808,20 @@
   async function addWallpaperFiles(files) {
     var added = 0, lastId = null, failed = 0;
     for (var k = 0; k < files.length; k++) {
-      if (customWps.length >= 40) { toast('Max 40 photos tak add ho sakti hain'); break; }
+      if (customWps.length >= 30) { toast('Max 30 photos tak add ho sakti hain'); break; }
       try {
         var img = await loadImageFromFile(files[k]);
-        var it = { id: 'u_' + Date.now() + '_' + k, data: resizeToDataUrl(img, 1400, 0.72, 1200000), thumb: resizeToDataUrl(img, 240, 0.7, 0), t: Date.now() + k };
-        await wpTx('readwrite', function (st) { return st.put(it); });
-        customWps.unshift(it); lastId = it.id; added++;
+        var id = 'u_' + Date.now() + '_' + k + Math.random().toString(36).slice(2, 5);
+        var data = resizeToDataUrl(img, 1280, 0.7, 650000), thumb = resizeToDataUrl(img, 200, 0.6, 0);
+        wpDataMem[id] = data; wpCachePut(id, data);
+        wpDataRef.child(id).set(data).catch(function () { failed++; });
+        wpLibRef.child(id).set({ thumb: thumb, t: Date.now() + k }).catch(function () { failed++; });
+        lastId = id; added++;
       } catch (_) { failed++; }
     }
     if (added) {
       settings.wallpaper = lastId; saveSettings(); wpTab = 'mine';
-      applyWallpaper(); renderWpTabs(); renderWpTiles(); toast(added + ' wallpaper add hua');
+      applyWallpaper(); renderWpTabs(); renderWpTiles(); pushWpShared(); toast(added + ' wallpaper add hua');
     } else if (failed) toast('Photo save nahi ho payi');
   }
 
@@ -3676,21 +3835,28 @@
     var L = document.getElementById('fx-layer'); if (!L) return;
     L.innerHTML = '';
     var t = settings.bgFx;
-    if (settings.anim !== 'full' || t === 'none' || t === 'orbs') return;
-    var n = t === 'stars' ? 40 : t === 'bubbles' ? 16 : 20, frag = document.createDocumentFragment();
-    for (var i = 0; i < n; i++) {
-      var e = document.createElement('i'), r = Math.random;
-      if (t === 'bubbles') {
-        var sz = 14 + r() * 46; e.className = 'fx-b';
-        e.style.cssText = 'width:' + sz + 'px;height:' + sz + 'px;left:' + (r() * 100) + '%;--dx:' + (r() * 60 - 30) + 'px;animation-duration:' + (12 + r() * 14) + 's;animation-delay:-' + (r() * 20) + 's';
-      } else if (t === 'stars') {
-        var z = 1 + r() * 2.2; e.className = 'fx-s';
-        e.style.cssText = 'width:' + z + 'px;height:' + z + 'px;left:' + (r() * 100) + '%;top:' + (r() * 100) + '%;animation-duration:' + (2 + r() * 4) + 's;animation-delay:-' + (r() * 6) + 's';
-      } else {
-        e.className = 'fx-f';
-        e.style.cssText = 'left:' + (r() * 100) + '%;top:' + (r() * 100) + '%;--dx:' + (r() * 120 - 60) + 'px;--dy:' + (r() * 120 - 60) + 'px;animation-duration:' + (7 + r() * 8) + 's;animation-delay:-' + (r() * 10) + 's';
-      }
-      frag.appendChild(e);
+    if (settings.anim !== 'full' || t === 'none') return;
+    var r = Math.random, frag = document.createDocumentFragment();
+    function mk(cls, css) { var e = document.createElement('i'); e.className = cls; e.style.cssText = css; frag.appendChild(e); }
+    var i;
+    if (t === 'orbs') {
+      [['-22%','-12%','rgba(255,138,61,.34)',62,34],['52%','48%','rgba(91,124,255,.30)',56,40],['6%','66%','rgba(255,110,168,.24)',50,46]].forEach(function (o, k) {
+        mk('fx-o', 'left:' + o[0] + ';top:' + o[1] + ';width:' + o[3] + 'vmax;height:' + o[3] + 'vmax;background:radial-gradient(circle,' + o[2] + ' 0,transparent 66%);--ox:' + (k % 2 ? -11 : 11) + 'vmax;--oy:' + (k === 1 ? -9 : 9) + 'vmax;animation-duration:' + o[4] + 's;animation-delay:-' + (k * 9) + 's');
+      });
+    } else if (t === 'aurora') {
+      [['4%','rgba(87,214,141,.50)',20],['30%','rgba(91,124,255,.50)',26],['58%','rgba(255,110,168,.40)',32]].forEach(function (a, k) {
+        mk('fx-a', 'top:' + a[0] + ';--ac:' + a[1] + ';animation-duration:' + a[2] + 's;animation-delay:-' + (k * 7) + 's');
+      });
+    } else if (t === 'bubbles') {
+      for (i = 0; i < 16; i++) { var sz = 10 + r() * 44; mk('fx-b', 'width:' + sz + 'px;height:' + sz + 'px;left:' + (r() * 100) + '%;--dx:' + (r() * 70 - 35) + 'px;animation-duration:' + (16 + r() * 16) + 's;animation-delay:-' + (r() * 26) + 's'); }
+    } else if (t === 'stars') {
+      for (i = 0; i < 46; i++) { var z = 1 + r() * 1.6; mk('fx-s', 'width:' + z + 'px;height:' + z + 'px;left:' + (r() * 100) + '%;top:' + (r() * 100) + '%;' + (z > 2 ? 'box-shadow:0 0 6px var(--fx-star);' : '') + 'animation-duration:' + (2.5 + r() * 4.5) + 's;animation-delay:-' + (r() * 7) + 's'); }
+      mk('fx-sh', 'left:' + (5 + r() * 25) + '%;top:' + (4 + r() * 18) + '%;animation-delay:-2s');
+      mk('fx-sh', 'left:' + (35 + r() * 25) + '%;top:' + (14 + r() * 20) + '%;animation-duration:15s;animation-delay:-9s');
+    } else if (t === 'snow') {
+      for (i = 0; i < 34; i++) { var f = 2 + r() * 3.5; mk('fx-n', 'width:' + f + 'px;height:' + f + 'px;left:' + (r() * 100) + '%;opacity:' + (0.45 + r() * 0.5) + ';--dx:' + (r() * 60 - 30) + 'px;animation-duration:' + (11 + r() * 13) + 's;animation-delay:-' + (r() * 22) + 's'); }
+    } else {
+      for (i = 0; i < 20; i++) mk('fx-f', 'left:' + (r() * 100) + '%;top:' + (r() * 100) + '%;--dx:' + (r() * 120 - 60) + 'px;--dy:' + (r() * 120 - 60) + 'px;animation-duration:' + (8 + r() * 9) + 's;animation-delay:-' + (r() * 12) + 's');
     }
     L.appendChild(frag);
   }
@@ -3700,11 +3866,64 @@
   }
   function syncExtraUI() {
     if (!v5Ready) return;
+    ddRefreshAll();
     document.getElementById('set-msganim').value = settings.msgAnim;
     document.getElementById('set-bgfx').value = settings.bgFx;
     document.getElementById('set-sendfx').checked = !!settings.sendFx;
     updateWpUi();
   }
+  /* custom dropdown cards (native select ki jagah) */
+  function fxPrev(v) {
+    var n = { orbs: 2, aurora: 2, bubbles: 3, stars: 6, fireflies: 3, snow: 6 }[v] || 0, h = '';
+    if (!n) return '<span class="pv pv-none"><em>—</em></span>';
+    for (var k = 0; k < n; k++) h += '<i></i>';
+    return '<span class="pv pv-' + v + '">' + h + '</span>';
+  }
+  function msgPrev(v) { return '<span class="pv pvm pvm-' + v + '"><b></b></span>'; }
+  var DD_CONF = {
+    'set-model': { opts: [['gemini1', 'Ai 1'], ['gemini2', 'Ai 2'], ['gemini3', 'Ai 3'], ['gemini4', 'Ai 4'], ['gemini5', 'Ai 5']] },
+    'set-msganim': { prev: msgPrev, opts: [['slide', 'Slide'], ['pop', 'Pop'], ['fade', 'Fade'], ['bounce', 'Bounce'], ['zoom', 'Zoom'], ['flip', 'Flip']] },
+    'set-bgfx': { prev: fxPrev, opts: [['orbs', 'Glow orbs'], ['aurora', 'Aurora'], ['bubbles', 'Bubbles'], ['stars', 'Stars'], ['fireflies', 'Fireflies'], ['snow', 'Snow'], ['none', 'None']] }
+  };
+  function ddBuild(id) {
+    var c = DD_CONF[id], sel = document.getElementById(id), grid = document.querySelector('#dd-' + id + ' .dd-grid');
+    sel.innerHTML = c.opts.map(function (o) { return '<option value="' + o[0] + '">' + o[1] + '</option>'; }).join('');
+    grid.innerHTML = '';
+    c.opts.forEach(function (o, i) {
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'dd-opt'; b.dataset.v = o[0]; b.style.setProperty('--i', i);
+      b.innerHTML = (c.prev ? '<span class="dd-prev">' + c.prev(o[0]) + '</span>' : '') + '<span class="dd-lbl"><span>' + o[1] + '</span><span class="dd-chk">✓</span></span>';
+      grid.appendChild(b);
+    });
+  }
+  function ddRefresh(id) {
+    var c = DD_CONF[id], sel = document.getElementById(id), cur = sel.value;
+    var btn = document.querySelector('.dd-btn[data-dd="' + id + '"]');
+    var o = c.opts.filter(function (x) { return x[0] === cur; })[0] || c.opts[0];
+    if (btn) btn.querySelector('.dd-cur').textContent = o[1];
+    document.querySelectorAll('#dd-' + id + ' .dd-opt').forEach(function (b) { b.classList.toggle('active', b.dataset.v === o[0]); });
+  }
+  function ddRefreshAll() { Object.keys(DD_CONF).forEach(function (id) { if (document.getElementById(id) && document.getElementById(id).options.length) ddRefresh(id); }); }
+  function ddCloseAll(except) {
+    document.querySelectorAll('.dd-panel.open').forEach(function (p) { if (p.id !== except) p.classList.remove('open'); });
+    document.querySelectorAll('.dd-btn.open').forEach(function (b) { if ('dd-' + b.dataset.dd !== except) b.classList.remove('open'); });
+  }
+  document.getElementById('settings-sheet').addEventListener('click', function (e) {
+    var btn = e.target.closest('.dd-btn');
+    if (btn) {
+      var pid = 'dd-' + btn.dataset.dd, panel = document.getElementById(pid), willOpen = !panel.classList.contains('open');
+      ddCloseAll(willOpen ? pid : null);
+      panel.classList.toggle('open', willOpen); btn.classList.toggle('open', willOpen);
+      if (willOpen) setTimeout(function () { panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, 220);
+      return;
+    }
+    var opt = e.target.closest('.dd-opt');
+    if (opt) {
+      var panelEl = opt.closest('.dd-panel'), id = panelEl.id.replace(/^dd-/, ''), sel = document.getElementById(id);
+      sel.value = opt.dataset.v; sel.dispatchEvent(new Event('change')); ddRefresh(id);
+      setTimeout(function () { panelEl.classList.remove('open'); var b = document.querySelector('.dd-btn[data-dd="' + id + '"]'); if (b) b.classList.remove('open'); }, 180);
+    }
+  });
+  Object.keys(DD_CONF).forEach(ddBuild);
   document.getElementById('set-msganim').addEventListener('change', function (e) { settings.msgAnim = e.target.value; saveSettings(); applyAnim(); playDemo(); });
   document.getElementById('set-bgfx').addEventListener('change', function (e) { settings.bgFx = e.target.value; saveSettings(); applyAnim(); });
   document.getElementById('set-sendfx').addEventListener('change', function (e) { settings.sendFx = e.target.checked; saveSettings(); });
@@ -3744,7 +3963,7 @@
     applyAnim();
     applyWallpaper();
     syncExtraUI();
-    loadCustomWps().then(function () { applyWallpaper(); });
+    initSharedWallpapers();
   }
   initV6();
   initBirthdayBanner();
