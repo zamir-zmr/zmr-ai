@@ -910,13 +910,6 @@
   #scroll-bottom-btn:hover{border-color:var(--accent);color:var(--accent)}
   #scroll-bottom-btn svg{width:20px;height:20px}
 
-  /* token counter */
-  #token-bar{max-width:760px;margin:0 auto 8px;display:flex;align-items:center;gap:10px;font-family:'Manrope',sans-serif;font-weight:600;font-size:11.5px;color:var(--text-dim);padding:0 4px}
-  .tok-track{flex:1;height:5px;border-radius:6px;background:var(--surface-2);overflow:hidden;min-width:40px}
-  .tok-fill{height:100%;width:0;border-radius:6px;background:linear-gradient(90deg,#57D68D,#8BE0A8);transition:width 700ms cubic-bezier(.2,.8,.2,1),background 400ms}
-  #token-bar.warn .tok-fill{background:linear-gradient(90deg,var(--accent),#FFC15A)}
-  #token-bar.danger .tok-fill{background:#FF6E6E}
-  #tok-text{white-space:nowrap;order:-1}
 
   /* sheets (settings + share) */
   .sheet-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:69;backdrop-filter:blur(3px)}
@@ -996,12 +989,65 @@
   .set-input{width:100px;text-align:right;background:var(--surface-2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:8px 10px;font-family:'Manrope',sans-serif;font-weight:600;font-size:13px;outline:none;transition:border-color .15s,box-shadow .15s}
   .set-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,138,61,.15)}
 
-  /* token bar v3 */
-  #tok-text{order:0}
-  .live-dot{width:7px;height:7px;border-radius:50%;background:var(--text-dim);flex-shrink:0;transition:background .3s}
-  #token-bar.live .live-dot{background:#57D68D;animation:pulse-dot 1s ease-out infinite}
-  #token-bar:not(.has-limit) .tok-track{display:none}
-  #token-bar.live .tok-fill{background-size:200% 100%;animation:shimmer 1.2s linear infinite}
+
+  /* ===== v5: wallpaper, bday, reply, long-press, swipe ===== */
+  main{position:relative;z-index:1}
+  .row{position:relative;touch-action:pan-y}
+  @media (hover:none){.row .bubble{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}}
+  .row.pressed .bubble{box-shadow:0 0 0 2px var(--accent),0 8px 24px rgba(0,0,0,.25);transition:box-shadow .2s}
+  #wallpaper{position:absolute;inset:0;z-index:0;pointer-events:none;background-size:cover;background-position:center;background-repeat:no-repeat;animation:fade-in .6s both}
+  #wallpaper::after{content:'';position:absolute;inset:0;background:rgba(14,17,22,.58)}
+  html[data-theme="light"] #wallpaper::after{background:rgba(244,246,250,.62)}
+  .wp-aurora{background:linear-gradient(135deg,#1e3a5f,#4b2e83 50%,#0f766e)}
+  .wp-sunset{background:linear-gradient(160deg,#ff7e5f,#feb47b 45%,#6a3093)}
+  .wp-ocean{background:linear-gradient(180deg,#0f2027,#203a43 50%,#2c5364)}
+  .wp-forest{background:linear-gradient(160deg,#134e5e,#71b280)}
+  .wp-rose{background:linear-gradient(150deg,#ee9ca7,#ffdde1 55%,#c9a7f5)}
+  .wp-dots{background-color:var(--bg);background-image:radial-gradient(circle at 1px 1px,rgba(255,138,61,.40) 1.3px,transparent 0);background-size:22px 22px}
+  #wallpaper.wp-dots::after{display:none}
+  .set-col{flex-direction:column;align-items:flex-start}
+  .wp-grid{display:flex;gap:10px;flex-wrap:wrap;width:100%}
+  .wp-sw{width:46px;height:46px;border-radius:13px;border:2px solid var(--border);cursor:pointer;background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:16px;padding:0;transition:transform .25s cubic-bezier(.3,1.4,.5,1),border-color .2s}
+  .wp-sw:hover{transform:translateY(-2px)}
+  .wp-sw.active{border-color:var(--accent);transform:scale(1.1);box-shadow:0 0 0 3px rgba(255,138,61,.2)}
+  .wp-sw.wp-none,.wp-sw.wp-add{background:var(--surface-2)}
+
+  /* birthday banner + confetti */
+  #bday-banner{display:none;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:linear-gradient(120deg,var(--accent-dim),rgba(91,124,255,.18));border:1px solid rgba(255,138,61,.35);position:relative;z-index:3;width:calc(100% - 24px);max-width:876px;margin:10px auto 0;flex-shrink:0}
+  #bday-banner.show{display:flex;animation:drop-in 520ms cubic-bezier(.2,.9,.25,1.1) both}
+  .bday-emoji{font-size:26px;animation:bday-bounce 1.6s ease-in-out infinite}
+  @keyframes bday-bounce{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-5px) rotate(6deg)}}
+  .bday-text{flex:1;min-width:0;font-family:'Manrope',sans-serif;font-weight:700;font-size:13.5px;color:var(--text);line-height:1.35}
+  .bday-go{background:var(--accent);color:#1A0E00;border:none;border-radius:10px;font-family:'Manrope',sans-serif;font-weight:700;font-size:12.5px;padding:8px 12px;cursor:pointer;flex-shrink:0;transition:transform .15s}
+  .bday-go:active{transform:scale(.94)}
+  .bday-x{background:transparent;border:none;color:var(--text-dim);cursor:pointer;font-size:15px;padding:4px;flex-shrink:0}
+  #confetti{position:fixed;inset:0;pointer-events:none;z-index:250;overflow:hidden}
+  .confetti{position:absolute;top:-16px;width:9px;height:14px;border-radius:2px;opacity:.95;animation:confetti-fall linear forwards}
+  @keyframes confetti-fall{to{transform:translate(var(--dx,0),108vh) rotate(720deg);opacity:.7}}
+
+  /* reply banner + quote */
+  #reply-banner{max-width:760px;margin:0 auto 8px;display:none;align-items:center;gap:10px;background:var(--surface-2);border:1px solid var(--border);border-left:3px solid var(--accent);padding:7px 10px;border-radius:10px;font-size:12.5px}
+  #reply-banner.active{display:flex;animation:rise-up 260ms cubic-bezier(.2,.9,.25,1) both}
+  #reply-banner .rb-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+  #reply-banner b{font-family:'Manrope',sans-serif;color:var(--accent);font-size:11.5px}
+  #reply-banner span{color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #reply-banner button{background:transparent;border:none;color:var(--text-dim);cursor:pointer;font-size:15px}
+  .reply-quote{border-left:3px solid var(--accent);background:rgba(255,138,61,.1);border-radius:6px;padding:5px 8px;margin-bottom:7px;font-size:12.5px;color:var(--text-dim);white-space:normal;display:flex;flex-direction:column}
+  .reply-quote b{font-family:'Manrope',sans-serif;color:var(--accent);font-size:11px}
+  .star-mark{position:absolute;top:-8px;right:-4px;color:#FFC15A;font-size:15px;animation:pop .4s both;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
+  .bubble{position:relative}
+
+  /* swipe hint */
+  .swipe-hint{position:absolute;top:50%;width:34px;height:34px;border-radius:50%;background:var(--accent-dim);color:var(--accent);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none}
+  .swipe-hint.del{background:rgba(255,110,110,.18);color:#FF6E6E}
+  .swipe-hint svg{width:17px;height:17px}
+
+  /* message menu */
+  .msg-preview{margin:2px 8px 8px;padding:9px 12px;background:var(--surface-2);border-radius:12px;font-size:13px;color:var(--text-dim);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap}
+  .sheet .attach-menu-item.danger{color:#FF6E6E}
+  .sheet .attach-menu-item.danger svg{color:#FF6E6E}
+  #toast .toast-act{background:transparent;border:none;color:var(--accent);font-weight:700;font-size:13px;margin-left:12px;cursor:pointer;padding:0}
+  #toast.act{pointer-events:auto}
 </style>
 </head>
 <body>
@@ -1030,6 +1076,7 @@
 </aside>
 
 <div id="main-col">
+  <div id="wallpaper" style="display:none"></div>
   <header>
     <button id="menu-btn" type="button" title="Chat history">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
@@ -1060,6 +1107,13 @@
     </button>
   </header>
 
+  <div id="bday-banner">
+    <span class="bday-emoji" id="bday-emoji">🎂</span>
+    <span class="bday-text" id="bday-text"></span>
+    <button type="button" class="bday-go" id="bday-go">Wish likho</button>
+    <button type="button" class="bday-x" id="bday-x" aria-label="Close">✕</button>
+  </div>
+
   <main id="chat-container"></main>
 
   <footer>
@@ -1068,17 +1122,17 @@
       <button type="button" id="cancel-edit-btn">Cancel</button>
     </div>
 
+    <div id="reply-banner">
+      <div class="rb-main"><b id="rb-who"></b><span id="rb-text"></span></div>
+      <button type="button" id="cancel-reply-btn" aria-label="Cancel reply">✕</button>
+    </div>
+
     <div id="attach-preview-bar"></div>
 
     <button type="button" id="scroll-bottom-btn" title="Neeche jaayein" aria-label="Scroll to bottom">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
     </button>
 
-    <div id="token-bar" title="Aaj ka real usage (Gemini API se)">
-      <span class="live-dot"></span>
-      <span id="tok-text">Aaj: 0 tokens</span>
-      <div class="tok-track"><div class="tok-fill" id="tok-fill"></div></div>
-    </div>
 
     <form id="chat-form">
       <button type="button" id="attach-btn" class="icon-btn" title="Attach">
@@ -1130,10 +1184,22 @@
   <div class="set-row"><div class="set-label">Sounds</div><label class="switch"><input type="checkbox" id="set-sound"><span></span></label></div>
   <div class="set-row"><div class="set-label">Default model</div><select class="set-select" id="set-model"><option value="gemini1">Ai 1</option><option value="gemini2">Ai 2</option><option value="gemini3">Ai 3</option><option value="gemini4">Ai 4</option><option value="gemini5">Ai 5</option></select></div>
   <div class="set-row"><div class="set-label">Default voice</div><button type="button" class="set-btn" id="set-voice-btn"></button></div>
-  <div class="set-row"><div class="set-label">Aaj ka usage (real)<div class="set-hint" id="set-usage">—</div></div><button type="button" class="set-btn" id="set-reset-tokens">Reset</button></div>
-  <div class="set-row"><div class="set-label">Token limit / din<div class="set-hint">AI Studio ke Rate limits page se dekhkar daalein. Khaali = sirf real usage dikhega.</div></div><input type="number" inputmode="numeric" min="0" class="set-input" id="set-tok-limit" placeholder="—"></div>
-  <div class="set-row"><div class="set-label">Requests limit / din<div class="set-hint">Optional. Quota Pacific time midnight par reset hota hai.</div></div><input type="number" inputmode="numeric" min="0" class="set-input" id="set-req-limit" placeholder="—"></div>
+  <div class="set-row set-col"><div class="set-label">Chat wallpaper</div><div class="wp-grid" id="wp-grid"></div></div>
 </div>
+<input type="file" id="wp-file" accept="image/*" hidden>
+
+<div class="sheet-backdrop" id="msg-backdrop"></div>
+<div class="sheet" id="msg-sheet" role="dialog" aria-label="Message options">
+  <div class="msg-preview" id="msg-preview"></div>
+  <button type="button" class="attach-menu-item" id="mm-copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><span>Copy</span></button>
+  <button type="button" class="attach-menu-item" id="mm-share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg><span>Share</span></button>
+  <button type="button" class="attach-menu-item" id="mm-reply"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 0 0-4-4H4"></path></svg><span>Reply</span></button>
+  <button type="button" class="attach-menu-item" id="mm-star"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg><span id="mm-star-label">Star</span></button>
+  <button type="button" class="attach-menu-item" id="mm-edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg><span>Edit</span></button>
+  <button type="button" class="attach-menu-item danger" id="mm-delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg><span>Delete</span></button>
+  <button type="button" id="mm-cancel" style="width:100%;margin-top:6px;background:var(--surface-2);border:none;color:var(--text-dim);font-weight:600;font-size:14.5px;padding:12px;border-radius:10px;cursor:pointer">Cancel</button>
+</div>
+<div id="confetti"></div>
 
 <div class="sheet-backdrop" id="share-backdrop"></div>
 <div class="sheet" id="share-sheet" role="dialog" aria-label="Share reply">
@@ -1276,66 +1342,11 @@
     setTimeout(() => { setAppHeight(); scrollToBottom(); }, 200);
   });
 
-  /* ---------------- Settings + REAL usage counter (v3) ----------------
-     Tokens Gemini API ke usageMetadata se aate hain (real). Agar kisi
-     response me usageMetadata na mile to estimate hota hai aur "~" dikhta hai. */
+  /* ---------------- Settings ---------------- */
   const SETTINGS_KEY = 'zamirSettings';
-  const settings = Object.assign({ theme: 'dark', fontSize: 14.5, autoScroll: true, sound: true, dailyTokenLimit: 0, dailyReqLimit: 0 },
+  const settings = Object.assign({ theme: 'dark', fontSize: 14.5, autoScroll: true, sound: true, wallpaper: 'none' },
     (() => { try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch (_) { return {}; } })());
   function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (_) {} }
-
-  const TOK_KEY = 'zamirUsageV3';
-  // Google AI Studio daily quota Pacific time midnight par reset hota hai.
-  const dayKey = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
-  function getTok() {
-    try { const t = JSON.parse(localStorage.getItem(TOK_KEY) || 'null'); if (t && t.date === dayKey()) return t; } catch (_) {}
-    return { date: dayKey(), tokens: 0, input: 0, output: 0, reqs: 0, est: false };
-  }
-  function estTok(s) { return (s || '').length / 4; }
-  function estInputTokens(h) {
-    let n = 0;
-    (h || []).forEach(m => (m.parts || []).forEach(p => { if (p.text) n += estTok(p.text); else if (p.inline_data) n += 258; }));
-    return n;
-  }
-  let inflight = null;
-  function commitUsage(rq) {
-    const t = getTok();
-    t.tokens += rq.input + rq.output; t.input += rq.input; t.output += rq.output; t.reqs += 1;
-    if (!rq.real) t.est = true;
-    try { localStorage.setItem(TOK_KEY, JSON.stringify(t)); } catch (_) {}
-  }
-  let shownTok = 0, tokRaf = null;
-  function renderTokenBar() {
-    const bar = document.getElementById('token-bar'); if (!bar) return;
-    const t = getTok();
-    const used = Math.round(t.tokens + (inflight ? inflight.input + inflight.output : 0));
-    const reqs = t.reqs + (inflight ? 1 : 0);
-    const tl = settings.dailyTokenLimit || 0, rl = settings.dailyReqLimit || 0;
-    let pct = 0;
-    if (tl > 0) pct = used / tl * 100;
-    if (rl > 0) pct = Math.max(pct, reqs / rl * 100);
-    bar.classList.toggle('has-limit', tl > 0 || rl > 0);
-    bar.classList.toggle('live', !!inflight);
-    bar.classList.toggle('warn', pct >= 70 && pct < 90);
-    bar.classList.toggle('danger', pct >= 90);
-    document.getElementById('tok-fill').style.width = Math.min(100, pct) + '%';
-    const tilde = (t.est || (inflight && !inflight.real)) ? '~' : '';
-    const from = shownTok, start = performance.now();
-    cancelAnimationFrame(tokRaf);
-    const step = now => {
-      const k = Math.min(1, (now - start) / 450);
-      const v = Math.round(from + (used - from) * (1 - Math.pow(1 - k, 3)));
-      shownTok = v;
-      let txt = 'Aaj: ' + tilde + v.toLocaleString() + ' tokens • ' + reqs + ' req';
-      if (tl > 0) txt += ' • ' + Math.max(0, tl - v).toLocaleString() + ' baki';
-      else if (rl > 0) txt += ' • ' + Math.max(0, rl - reqs) + ' req baki';
-      document.getElementById('tok-text').textContent = txt;
-      if (k < 1) tokRaf = requestAnimationFrame(step);
-    };
-    tokRaf = requestAnimationFrame(step);
-    const su = document.getElementById('set-usage');
-    if (su) su.textContent = tilde + used.toLocaleString() + ' tokens (in ' + Math.round(t.input).toLocaleString() + ' / out ' + Math.round(t.output).toLocaleString() + ') • ' + reqs + ' requests';
-  }
 
   /* ---------------- State ---------------- */
   let sessions = [];                      // array of { id, title, updatedAt, messages:[{role,text,attachments}] }
@@ -1691,6 +1702,7 @@
       } else {
         currentSessionId = sessions[0].id;
         renderCurrentSession();
+        restoreDraft();
       }
     } else {
       // Live update from this device or a friend using the same app
@@ -1720,6 +1732,8 @@
     const session = { id: 'c' + Date.now(), title: 'New chat', updatedAt: Date.now(), messages: [] };
     currentSessionId = session.id;
     sessionsRef.child(session.id).set(session);
+    userInput.value = '';
+    clearReply();
     renderCurrentSession();
     closeSidebarOnMobile();
   }
@@ -1732,11 +1746,14 @@
     renderPreviewBar();
     renderHistoryList();
     renderCurrentSession();
+    clearReply();
+    restoreDraft();
     closeSidebarOnMobile();
   }
 
   function deleteSession(id, evt) {
     evt.stopPropagation();
+    try { localStorage.removeItem('zamirDraft_' + id); } catch (_) {}
     sessionsRef.child(id).remove();
     if (currentSessionId === id) {
       const remaining = sessions.filter(s => s.id !== id);
@@ -2321,6 +2338,7 @@
     pendingAttachments = [];
     renderPreviewBar();
     userInput.value = '';
+    clearDraft();
     sendBtn.disabled = true;
     sendLabel.textContent = '...';
     keepFocus();
@@ -2333,6 +2351,7 @@
 
     if (!session.messages) session.messages = [];
     const userMsg = { role: 'user', text: promptText, attachments: attachmentsForThisMessage, createdAt: Date.now() };
+    if (replyTo) { userMsg.replyTo = { role: replyTo.role, text: replyTo.text }; clearReply(); }
     session.messages.push(userMsg);
     updateSessionTitle(session);
     saveSession(session);
@@ -2342,7 +2361,7 @@
 
     const apiHistory = buildApiHistory(session);
 
-    const cacheKey = attachmentsForThisMessage.length === 0 ? (session.id + '|' + promptText.toLowerCase()) : null;
+    const cacheKey = (attachmentsForThisMessage.length === 0 && !userMsg.replyTo) ? (session.id + '|' + promptText.toLowerCase()) : null;
     if (cacheKey && responseCache.has(cacheKey)) {
       const cached = responseCache.get(cacheKey);
       const aiMsg = { role: 'ai', text: cached, attachments: [], createdAt: Date.now(), model: selectedModel };
@@ -2450,7 +2469,7 @@
 
     return messages.map((m, i) => {
       const parts = [];
-      if (m.text) parts.push({ text: m.text });
+      if (m.text || m.replyTo) parts.push({ text: (m.replyTo ? '[Replying to ' + (m.replyTo.role === 'user' ? 'my' : 'your') + ' earlier message: "' + m.replyTo.text + '"]\n' : '') + (m.text || '') });
 
       const hasAttachments = (m.attachments || []).length > 0;
       if (hasAttachments && i === lastAttachmentIndex) {
@@ -2547,7 +2566,6 @@
   }
 
   async function streamGemini(apiHistory, onChunk, retriesLeft = 2, isRetry = false) {
-    const rq = { input: estInputTokens(apiHistory), output: 0, real: false };
     let response;
     try {
       response = await fetch(getStreamUrl(), {
@@ -2584,9 +2602,6 @@
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let buffer = '';
-    inflight = rq; renderTokenBar();
-    let finished = false;
-    try {
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -2602,26 +2617,10 @@
         if (!jsonStr || jsonStr === '[DONE]') continue;
         try {
           const parsed = JSON.parse(jsonStr);
-          const um = parsed.usageMetadata;
-          if (um) {
-            rq.real = true;
-            if (um.promptTokenCount != null) rq.input = um.promptTokenCount;
-            const out = (um.totalTokenCount != null)
-              ? um.totalTokenCount - (um.promptTokenCount != null ? um.promptTokenCount : rq.input)
-              : (um.candidatesTokenCount || 0) + (um.thoughtsTokenCount || 0);
-            rq.output = Math.max(0, out);
-          }
           const piece = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (piece) { if (!rq.real) rq.output += estTok(piece); onChunk(piece); }
-          renderTokenBar();
+          if (piece) onChunk(piece);
         } catch (_) {}
       }
-    }
-    finished = true;
-    } finally {
-      inflight = null;
-      if (finished || rq.output > 0) commitUsage(rq);
-      renderTokenBar();
     }
   }
 
@@ -2675,7 +2674,7 @@
       <div class="avatar ${isUser ? 'user' : 'ai'}"${modelLabel ? ` title="${escapeHtml(modelLabel)}"` : ''}>${avatarText}</div>
       <div class="msg-wrap">
         ${modelNameHtml}
-        <div class="bubble">${imagesHtml}<span class="msg-text">${bubbleTextHtml}</span></div>
+        <div class="bubble">${msg.starred ? '<span class="star-mark">★</span>' : ''}${msg.replyTo ? '<div class="reply-quote"><b>' + (msg.replyTo.role === 'user' ? 'You' : 'AI') + '</b>' + escapeHtml(msg.replyTo.text || '') + '</div>' : ''}${imagesHtml}<span class="msg-text">${bubbleTextHtml}</span></div>
         ${editBtnHtml}
         ${aiActionsHtml}
       </div>
@@ -2820,12 +2819,20 @@
 
   /* ===================== v2 features wiring ===================== */
   let toastTimer;
-  function toast(m) {
+  function toast(m, actLabel, actFn, ms) {
     const el = document.getElementById('toast');
     el.classList.remove('show'); void el.offsetWidth;
-    el.textContent = m; el.classList.add('show');
+    el.textContent = m;
+    el.classList.toggle('act', !!actFn);
+    if (actFn) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'toast-act'; b.textContent = actLabel || 'Undo';
+      b.addEventListener('click', () => { el.classList.remove('show', 'act'); clearTimeout(toastTimer); actFn(); });
+      el.appendChild(b);
+    }
+    el.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove('show'), 1800);
+    toastTimer = setTimeout(() => el.classList.remove('show', 'act'), ms || 1800);
   }
 
   /* Theme */
@@ -2855,10 +2862,8 @@
     document.getElementById('set-autoscroll').checked = !!settings.autoScroll;
     document.getElementById('set-sound').checked = !!soundOn;
     document.getElementById('set-model').value = selectedModel;
-    document.getElementById('set-tok-limit').value = settings.dailyTokenLimit || '';
-    document.getElementById('set-req-limit').value = settings.dailyReqLimit || '';
-    renderTokenBar();
     document.getElementById('set-voice-btn').textContent = voiceSelectLabel.textContent;
+    renderWpGrid();
   }
   function openSettings() { syncSettingsUI(); setSheet.classList.add('show'); setBackdrop.classList.add('show'); }
   function closeSettings() { setSheet.classList.remove('show'); setBackdrop.classList.remove('show'); }
@@ -2879,9 +2884,6 @@
   if (!soundOn) soundIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line>';
   document.getElementById('set-model').addEventListener('change', e => { modelSelectBtn.value = e.target.value; modelSelectBtn.dispatchEvent(new Event('change')); toast('Default model set'); });
   document.getElementById('set-voice-btn').addEventListener('click', () => { closeSettings(); openVoiceSheet(); });
-  document.getElementById('set-tok-limit').addEventListener('input', e => { settings.dailyTokenLimit = Math.max(0, parseInt(e.target.value, 10) || 0); saveSettings(); renderTokenBar(); });
-  document.getElementById('set-req-limit').addEventListener('input', e => { settings.dailyReqLimit = Math.max(0, parseInt(e.target.value, 10) || 0); saveSettings(); renderTokenBar(); });
-  document.getElementById('set-reset-tokens').addEventListener('click', () => { try { localStorage.removeItem(TOK_KEY); } catch (_) {} renderTokenBar(); toast('Aaj ka counter reset ho gaya'); });
 
   /* Scroll-to-bottom button */
   const sbBtn = document.getElementById('scroll-bottom-btn');
@@ -2927,7 +2929,7 @@
     s.style.cssText = 'width:' + d + 'px;height:' + d + 'px;left:' + (e.clientX - r.left - d / 2) + 'px;top:' + (e.clientY - r.top - d / 2) + 'px';
     b.appendChild(s); setTimeout(() => s.remove(), 600);
   });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeSettings(); closeShare(); } });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeSettings(); closeShare(); closeMsgMenu(); } });
 
   (function () {
     const sp = document.getElementById('splash');
@@ -2938,8 +2940,275 @@
 
   applyTheme(settings.theme, false);
   applyFont();
-  renderTokenBar();
-  setInterval(renderTokenBar, 60000);
+
+  /* ===================== v5 features ===================== */
+
+  /* 68 — Draft auto-save (per chat) */
+  function draftKey() { return 'zamirDraft_' + (currentSessionId || 'x'); }
+  function restoreDraft() {
+    if (editingIndex !== null) return;
+    try { userInput.value = localStorage.getItem(draftKey()) || ''; } catch (_) {}
+  }
+  function clearDraft() { try { localStorage.removeItem(draftKey()); } catch (_) {} }
+  let draftT = null;
+  userInput.addEventListener('input', () => {
+    clearTimeout(draftT);
+    draftT = setTimeout(() => {
+      if (editingIndex !== null) return;
+      try {
+        const v = userInput.value;
+        if (v.trim()) localStorage.setItem(draftKey(), v); else localStorage.removeItem(draftKey());
+      } catch (_) {}
+    }, 250);
+  });
+
+  /* 73 — Chat wallpaper */
+  const WP_KEY = 'zamirWallpaperCustom';
+  const WP_LIST = ['aurora', 'sunset', 'ocean', 'forest', 'rose', 'dots'];
+  const wpFile = document.getElementById('wp-file');
+  function getCustomWp() { try { return localStorage.getItem(WP_KEY); } catch (_) { return null; } }
+  function renderWpGrid() {
+    const grid = document.getElementById('wp-grid'); if (!grid) return;
+    const cur = settings.wallpaper || 'none', custom = getCustomWp();
+    let h = '<button type="button" class="wp-sw wp-none' + (cur === 'none' ? ' active' : '') + '" data-wp="none" aria-label="No wallpaper">✕</button>';
+    WP_LIST.forEach(n => { h += '<button type="button" class="wp-sw wp-' + n + (cur === n ? ' active' : '') + '" data-wp="' + n + '" aria-label="' + n + '"></button>'; });
+    if (custom) h += '<button type="button" class="wp-sw' + (cur === 'custom' ? ' active' : '') + '" data-wp="custom" aria-label="My photo" style="background-image:url(\'' + custom + '\')"></button>';
+    h += '<button type="button" class="wp-sw wp-add" data-wp="add" aria-label="Upload photo">＋</button>';
+    grid.innerHTML = h;
+  }
+  function applyWallpaper() {
+    const el = document.getElementById('wallpaper'); const w = settings.wallpaper || 'none';
+    el.className = ''; el.style.backgroundImage = '';
+    if (w === 'none') el.style.display = 'none';
+    else if (w === 'custom') {
+      const d = getCustomWp();
+      if (d) { el.style.display = 'block'; el.style.backgroundImage = 'url("' + d + '")'; } else el.style.display = 'none';
+    } else { el.style.display = 'block'; el.classList.add('wp-' + w); }
+    el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
+    renderWpGrid();
+  }
+  async function setCustomWallpaper(file) {
+    try {
+      const img = await loadImageFromFile(file);
+      const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+      const sc = Math.min(1, 1400 / Math.max(iw, ih));
+      const c = document.createElement('canvas'); c.width = Math.round(iw * sc); c.height = Math.round(ih * sc);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      let q = 0.72, data = c.toDataURL('image/jpeg', q);
+      while (data.length > 1200000 && q > 0.35) { q -= 0.1; data = c.toDataURL('image/jpeg', q); }
+      localStorage.setItem(WP_KEY, data);
+      settings.wallpaper = 'custom'; saveSettings(); applyWallpaper(); toast('Wallpaper set ho gaya');
+    } catch (_) { toast('Wallpaper save nahi ho paya'); }
+  }
+  document.getElementById('wp-grid').addEventListener('click', (e) => {
+    const b = e.target.closest('.wp-sw'); if (!b) return;
+    const v = b.dataset.wp;
+    if (v === 'add') { wpFile.click(); return; }
+    settings.wallpaper = v; saveSettings(); applyWallpaper();
+  });
+  wpFile.addEventListener('change', async () => { const f = wpFile.files && wpFile.files[0]; wpFile.value = ''; if (f) await setCustomWallpaper(f); });
+
+  /* Reply state */
+  let replyTo = null;
+  const replyBanner = document.getElementById('reply-banner');
+  function setReply(m) {
+    replyTo = { role: m.role, text: ((m.text || '').trim() || '[photo]').slice(0, 140) };
+    document.getElementById('rb-who').textContent = 'Reply to ' + (m.role === 'user' ? 'You' : 'AI');
+    document.getElementById('rb-text').textContent = replyTo.text;
+    replyBanner.classList.add('active'); keepFocus();
+  }
+  function clearReply() { replyTo = null; replyBanner.classList.remove('active'); }
+  document.getElementById('cancel-reply-btn').addEventListener('click', () => { clearReply(); keepFocus(); });
+
+  /* Delete message (with undo) */
+  function deleteMessage(idx) {
+    if (isSending) { toast('Jawab aane ke baad try karein'); return; }
+    const sess = getCurrentSession();
+    if (!sess || !sess.messages || !sess.messages[idx]) return;
+    const sid = sess.id;
+    const removed = sess.messages.splice(idx, 1)[0];
+    saveSession(sess); renderCurrentSession();
+    toast('Message delete hua', 'Undo', () => {
+      const ss = getCurrentSession(); if (!ss || ss.id !== sid) return;
+      if (!ss.messages) ss.messages = [];
+      ss.messages.splice(Math.min(idx, ss.messages.length), 0, removed);
+      saveSession(ss); renderCurrentSession();
+    }, 5000);
+  }
+
+  /* 76 — Long-press / right-click menu */
+  const msgSheet = document.getElementById('msg-sheet');
+  const msgBackdrop = document.getElementById('msg-backdrop');
+  let menuIdx = null, menuRow = null;
+  function openMsgMenu(row) {
+    if (menuIdx !== null) return;
+    const idx = parseInt(row.dataset.index, 10);
+    const sess = getCurrentSession(); const m = sess && sess.messages && sess.messages[idx];
+    if (!m) return;
+    menuIdx = idx; menuRow = row; row.classList.add('pressed');
+    document.getElementById('msg-preview').textContent = (m.text || '[photo]').slice(0, 160);
+    document.getElementById('mm-star-label').textContent = m.starred ? 'Unstar' : 'Star';
+    document.getElementById('mm-edit').style.display = m.role === 'user' ? 'flex' : 'none';
+    msgSheet.classList.add('show'); msgBackdrop.classList.add('show');
+  }
+  function closeMsgMenu() {
+    msgSheet.classList.remove('show'); msgBackdrop.classList.remove('show');
+    if (menuRow) menuRow.classList.remove('pressed');
+    menuIdx = null; menuRow = null;
+  }
+  function menuMsg() { const sess = getCurrentSession(); return sess && sess.messages ? sess.messages[menuIdx] : null; }
+  msgBackdrop.addEventListener('click', closeMsgMenu);
+  document.getElementById('mm-cancel').addEventListener('click', closeMsgMenu);
+  document.getElementById('mm-copy').addEventListener('click', () => {
+    const m = menuMsg(); closeMsgMenu(); if (!m) return;
+    navigator.clipboard.writeText(m.text || '').then(() => toast('Copied')).catch(() => {});
+  });
+  document.getElementById('mm-share').addEventListener('click', () => { const m = menuMsg(); closeMsgMenu(); if (m) openShare(m.text || ''); });
+  document.getElementById('mm-reply').addEventListener('click', () => { const m = menuMsg(); closeMsgMenu(); if (m) setReply(m); });
+  document.getElementById('mm-edit').addEventListener('click', () => { const i = menuIdx; closeMsgMenu(); if (i !== null && !isSending) startEdit(i); });
+  document.getElementById('mm-delete').addEventListener('click', () => { const i = menuIdx; closeMsgMenu(); if (i !== null) deleteMessage(i); });
+  document.getElementById('mm-star').addEventListener('click', () => {
+    const sess = getCurrentSession(); const row = menuRow; const m = menuMsg();
+    closeMsgMenu(); if (!sess || !m) return;
+    m.starred = !m.starred; if (!m.starred) delete m.starred;
+    saveSession(sess);
+    if (row) {
+      const bub = row.querySelector('.bubble'); const old = bub.querySelector('.star-mark');
+      if (m.starred && !old) { const st = document.createElement('span'); st.className = 'star-mark'; st.textContent = '★'; bub.prepend(st); }
+      else if (!m.starred && old) old.remove();
+    }
+    toast(m.starred ? 'Star lagaya ★' : 'Star hataya');
+  });
+
+  /* 75 + 76 — Touch gestures: swipe right = reply, swipe left = delete, long-press = menu */
+  const ICON_REPLY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 0 0-4-4H4"></path></svg>';
+  const ICON_TRASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg>';
+  const SWIPE_TRIGGER = 80;
+  let gs = null, lpTimer = null;
+  function msgRowOf(t) {
+    const r = t && t.closest ? t.closest('.row') : null; if (!r) return null;
+    return parseInt(r.dataset.index, 10) >= 0 ? r : null;
+  }
+  function resetGesture(animate) {
+    clearTimeout(lpTimer);
+    if (gs && gs.row) {
+      const row = gs.row, hint = gs.hint;
+      if (animate) {
+        row.style.transition = 'translate .28s cubic-bezier(.2,.9,.25,1.1)'; row.style.translate = '0 0';
+        setTimeout(() => { row.style.transition = ''; row.style.translate = ''; }, 300);
+      } else { row.style.translate = ''; }
+      if (hint) hint.remove();
+    }
+    gs = null;
+  }
+  chatContainer.addEventListener('touchstart', (e) => {
+    resetGesture(false);
+    if (e.touches.length !== 1) return;
+    const row = msgRowOf(e.target); if (!row) return;
+    if (e.target.closest('button,a,input,textarea,pre')) return;
+    const t = e.touches[0];
+    gs = { row, x: t.clientX, y: t.clientY, mode: null, fired: false, hint: null, dx: 0 };
+    lpTimer = setTimeout(() => { if (gs && !gs.mode) { gs.fired = true; openMsgMenu(row); } }, 480);
+  }, { passive: true });
+  chatContainer.addEventListener('touchmove', (e) => {
+    if (!gs || gs.fired) return;
+    const t = e.touches[0]; const dx = t.clientX - gs.x, dy = t.clientY - gs.y;
+    if (!gs.mode && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
+      clearTimeout(lpTimer);
+      gs.mode = (Math.abs(dx) > Math.abs(dy) * 1.4) ? 'swipe' : 'scroll';
+      if (gs.mode === 'swipe') {
+        const h = document.createElement('div');
+        h.className = 'swipe-hint' + (dx < 0 ? ' del' : '');
+        h.innerHTML = dx < 0 ? ICON_TRASH : ICON_REPLY;
+        h.style[dx < 0 ? 'right' : 'left'] = '8px';
+        gs.row.appendChild(h); gs.hint = h;
+      }
+    }
+    if (gs.mode === 'swipe') {
+      if (e.cancelable) e.preventDefault();
+      const x = Math.max(-100, Math.min(100, dx * 0.7)); gs.dx = dx;
+      gs.row.style.translate = x + 'px 0';
+      if (gs.hint) {
+        const p = Math.max(0, Math.min(1, (Math.abs(x) - 26) / 30));
+        gs.hint.style.translate = (-x) + 'px -50%';
+        gs.hint.style.opacity = p;
+        gs.hint.style.scale = 0.6 + 0.5 * p;
+      }
+    }
+  }, { passive: false });
+  function endGesture() {
+    clearTimeout(lpTimer);
+    if (!gs) return;
+    if (gs.mode === 'swipe') {
+      const row = gs.row, dx = gs.dx, idx = parseInt(row.dataset.index, 10);
+      resetGesture(true);
+      const sess = getCurrentSession(); const m = sess && sess.messages && sess.messages[idx];
+      if (m && dx > SWIPE_TRIGGER) setReply(m);
+      else if (m && dx < -SWIPE_TRIGGER) setTimeout(() => deleteMessage(idx), 180);
+      return;
+    }
+    gs = null;
+  }
+  chatContainer.addEventListener('touchend', endGesture);
+  chatContainer.addEventListener('touchcancel', () => resetGesture(true));
+  chatContainer.addEventListener('contextmenu', (e) => {
+    const r = msgRowOf(e.target); if (!r) return;
+    e.preventDefault(); if (!gs || !gs.fired) openMsgMenu(r);
+  });
+
+  /* 62 — Family birthday reminder */
+  const FAMILY_BDAYS = [
+    { name: 'Zamir', rel: 'Husband', m: 3, d: 17 },
+    { name: 'Rahima', rel: 'Wife', m: 1, d: 1 },
+    { name: 'Zaina Praveen', rel: 'Beti', m: 5, d: 24 }
+  ];
+  function daysToBday(m, d) {
+    const n = new Date(); const t = new Date(n.getFullYear(), n.getMonth(), n.getDate());
+    let x = new Date(n.getFullYear(), m - 1, d); if (x < t) x = new Date(n.getFullYear() + 1, m - 1, d);
+    return Math.round((x - t) / 86400000);
+  }
+  function launchConfetti() {
+    const box = document.getElementById('confetti'); const cols = ['#FF8A3D', '#FFC15A', '#57D68D', '#5B7CFF', '#FF6EA8', '#B58CFF'];
+    for (let i = 0; i < 46; i++) {
+      const c = document.createElement('i'); c.className = 'confetti';
+      c.style.left = Math.random() * 100 + '%'; c.style.background = cols[i % cols.length];
+      c.style.setProperty('--dx', (Math.random() * 80 - 40) + 'px');
+      c.style.animationDuration = (3 + Math.random() * 2.5) + 's'; c.style.animationDelay = (Math.random() * 1.2) + 's';
+      box.appendChild(c);
+    }
+    setTimeout(() => { box.innerHTML = ''; }, 7500);
+  }
+  function initBirthdayBanner() {
+    let best = null;
+    FAMILY_BDAYS.forEach(b => { const dd = daysToBday(b.m, b.d); if (dd <= 7 && (!best || dd < best.dd)) best = Object.assign({ dd }, b); });
+    if (!best) return;
+    const today = new Date().toLocaleDateString('en-CA');
+    const dkey = today + '|' + best.name;
+    try { if (localStorage.getItem('zamirBdayDismiss') === dkey) return; } catch (_) {}
+    const banner = document.getElementById('bday-banner');
+    document.getElementById('bday-emoji').textContent = best.dd === 0 ? '🎂' : '🎈';
+    document.getElementById('bday-text').textContent = best.dd === 0
+      ? 'Aaj ' + best.name + ' (' + best.rel + ') ka birthday hai! 🎉'
+      : best.name + ' (' + best.rel + ') ka birthday ' + (best.dd === 1 ? 'kal hai' : best.dd + ' din mein hai');
+    document.getElementById('bday-go').textContent = best.dd === 0 ? 'Wish likho' : 'Wish taiyar karo';
+    setTimeout(() => banner.classList.add('show'), 1400);
+    if (best.dd === 0) {
+      let seen = null; try { seen = localStorage.getItem('zamirConfetti'); } catch (_) {}
+      if (seen !== dkey) { try { localStorage.setItem('zamirConfetti', dkey); } catch (_) {} setTimeout(launchConfetti, 1500); }
+    }
+    document.getElementById('bday-x').addEventListener('click', () => {
+      banner.classList.remove('show'); try { localStorage.setItem('zamirBdayDismiss', dkey); } catch (_) {}
+    });
+    document.getElementById('bday-go').addEventListener('click', () => {
+      if (isSending) return;
+      banner.classList.remove('show'); try { localStorage.setItem('zamirBdayDismiss', dkey); } catch (_) {}
+      userInput.value = best.name + ' (' + best.rel + ') ke birthday ke liye ek pyaari Hinglish birthday wish aur choti si shayari likho.';
+      if (chatForm.requestSubmit) chatForm.requestSubmit(); else chatForm.dispatchEvent(new Event('submit', { cancelable: true }));
+    });
+  }
+
+  applyWallpaper();
+  initBirthdayBanner();
 </script>
 </body>
 </html>
