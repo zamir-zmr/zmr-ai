@@ -368,6 +368,27 @@
     padding:10px 4px 4px;
   }
 
+  #confirm-backdrop{
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:300;
+  }
+  #confirm-backdrop.show{ display:block; animation:fade-in 160ms ease both; }
+  #confirm-dialog{
+    display:none; position:fixed; left:50%; top:50%; transform:translate(-50%,-50%);
+    width:min(320px, 86vw); background:var(--surface); border:1px solid var(--border);
+    border-radius:16px; padding:20px; z-index:301; box-shadow:0 20px 60px rgba(0,0,0,.4);
+  }
+  #confirm-dialog.show{ display:block; animation:sheet-spring 260ms cubic-bezier(.2,.9,.25,1.05) both; }
+  .confirm-title{ font-weight:700; font-size:16px; color:var(--text); margin-bottom:8px; }
+  .confirm-msg{ font-size:13.5px; color:var(--text-dim); line-height:1.5; margin-bottom:18px; }
+  .confirm-actions{ display:flex; justify-content:flex-end; gap:10px; }
+  .confirm-actions button{
+    padding:9px 16px; border-radius:10px; font-weight:600; font-size:13.5px; cursor:pointer; border:1px solid var(--border);
+    background:var(--surface-2); color:var(--text);
+  }
+  #confirm-ok{ background:#E5484D; border-color:#E5484D; color:#fff; }
+  #confirm-ok:hover{ background:#c93f43; }
+  #confirm-cancel:hover{ background:var(--border); }
+
   #voice-sheet-backdrop{
     display:none;
     position:fixed; inset:0;
@@ -539,7 +560,14 @@
     margin-top:4px;
     opacity:0;
     transition:opacity 140ms ease;
+    background:rgba(0,0,0,0.38);
+    backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);
+    border-radius:10px;
+    padding:3px;
+    width:fit-content;
   }
+  html[data-theme="light"] .msg-actions{ background:rgba(255,255,255,0.72); }
 
   .row:hover .msg-actions{ opacity:1; }
 
@@ -1286,6 +1314,15 @@
   <button type="button" id="attach-menu-cancel">Cancel</button>
 </div>
 
+<div id="confirm-backdrop"></div>
+<div id="confirm-dialog">
+  <div class="confirm-title" id="confirm-title">Delete chat?</div>
+  <div class="confirm-msg" id="confirm-msg">Yeh chat permanently delete ho jayegi.</div>
+  <div class="confirm-actions">
+    <button type="button" id="confirm-cancel">Cancel</button>
+    <button type="button" id="confirm-ok">Delete</button>
+  </div>
+</div>
 <div id="voice-sheet-backdrop"></div>
 <div id="voice-sheet">
   <div class="voice-sheet-title">Choose a voice</div>
@@ -1845,7 +1882,9 @@
       if (sessions.length === 0) {
         createSession();
       } else {
-        currentSessionId = sessions[0].id;
+        let lastId = null;
+        try { lastId = localStorage.getItem('zamirLastSessionId'); } catch (_) {}
+        currentSessionId = (lastId && sessions.find(s => s.id === lastId)) ? lastId : sessions[0].id;
         renderCurrentSession();
         restoreDraft();
       }
@@ -1873,9 +1912,14 @@
   }
 
   /* ---------------- Session management ---------------- */
+  function rememberLastSession() {
+    try { localStorage.setItem('zamirLastSessionId', currentSessionId || ''); } catch (_) {}
+  }
+
   function createSession() {
     const session = { id: 'c' + Date.now(), title: 'New chat', updatedAt: Date.now(), messages: [] };
     currentSessionId = session.id;
+    rememberLastSession();
     sessionsRef.child(session.id).set(session);
     userInput.value = '';
     clearReply();
@@ -1886,6 +1930,7 @@
 
   function loadSession(id) {
     currentSessionId = id;
+    rememberLastSession();
     editingIndex = null;
     hideEditBanner();
     pendingAttachments = [];
@@ -1898,21 +1943,57 @@
     closeSidebarOnMobile();
   }
 
+  function showConfirmDialog(title, msg, onConfirm) {
+    const backdrop = document.getElementById('confirm-backdrop');
+    const dialog = document.getElementById('confirm-dialog');
+    document.getElementById('confirm-title').textContent = title;
+    document.getElementById('confirm-msg').textContent = msg;
+    backdrop.classList.add('show');
+    dialog.classList.add('show');
+    const okBtn = document.getElementById('confirm-ok');
+    const cancelBtn = document.getElementById('confirm-cancel');
+    function close() {
+      backdrop.classList.remove('show');
+      dialog.classList.remove('show');
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      backdrop.removeEventListener('click', onCancel);
+    }
+    function onOk() { close(); onConfirm(); }
+    function onCancel() { close(); }
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+    backdrop.addEventListener('click', onCancel);
+  }
+
   function deleteSession(id, evt) {
     evt.stopPropagation();
-    try { localStorage.removeItem('zamirDraft_' + id); } catch (_) {}
-    sessionsRef.child(id).remove();
-    if (currentSessionId === id) {
-      const remaining = sessions.filter(s => s.id !== id);
-      if (remaining.length > 0) {
-        loadSession(remaining[0].id);
+    const s = sessions.find(x => x.id === id);
+    showConfirmDialog('Delete chat?', (s && s.title ? '"' + s.title + '"' : 'Yeh chat') + ' permanently delete ho jayegi.', () => {
+      try { localStorage.removeItem('zamirDraft_' + id); } catch (_) {}
+      sessionsRef.child(id).remove();
+      if (currentSessionId === id) {
+        const remaining = sessions.filter(s2 => s2.id !== id);
+        if (remaining.length > 0) {
+          currentSessionId = remaining[0].id;
+          rememberLastSession();
+          renderCurrentSession();
+          renderHistoryList();
+          // Sidebar stays open; no closeSidebarOnMobile() call here so the
+          // user can keep deleting more chats without reopening the menu.
+        } else {
+          createSession();
+        }
       } else {
-        createSession();
+        // Deleting a chat you're not currently viewing shouldn't move or
+        // rescroll the sidebar list at all.
+        renderHistoryList();
       }
-    }
+    });
   }
 
   function renderHistoryList() {
+    const prevScroll = historyList.scrollTop;
     if (sessions.length === 0) {
       historyList.innerHTML = '<div class="empty-history">Koi chat history nahi hai</div>';
       return;
@@ -1959,6 +2040,7 @@
         startRename(btn.closest('.history-item'), btn.dataset.id);
       });
     });
+    historyList.scrollTop = prevScroll;
   }
 
   function startRename(item, id) {
