@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI Chat Assistant</title>
+<meta name="theme-color" content="#0E1116" id="meta-theme">
+<script>try{var __s=JSON.parse(localStorage.getItem('zamirSettings')||'{}');document.documentElement.setAttribute('data-theme',__s.theme||'dark');}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -831,6 +833,112 @@
   button[type="submit"]:hover:not(:disabled){ background:#FF9A57; }
   button[type="submit"]:active:not(:disabled){ transform:scale(0.96); }
   button:disabled{ opacity:0.55; cursor:default; }
+
+  /* ===== v2: light theme, animations, pin/rename, settings, share, tokens ===== */
+  html[data-theme="light"]{color-scheme:light;--bg:#F4F6FA;--surface:#FFFFFF;--surface-2:#EDF0F6;--sidebar:#FFFFFF;--border:#DDE2EC;--text:#1B2030;--text-dim:#667085;--accent:#F2711C;--accent-dim:#FFE8D6;--user-bubble:#E4EAF6;--error:#FDE8E8;--error-text:#B42318}
+  html[data-theme="light"] .icon-btn:hover,html[data-theme="light"] #menu-btn:hover,html[data-theme="light"] #sound-toggle:hover{background:rgba(0,0,0,.06)}
+  html[data-theme="light"] .msg-text code{background:rgba(0,0,0,.07)}
+  html[data-theme="light"] .msg-text pre{background:rgba(0,0,0,.06)}
+  html[data-theme="light"] .avatar.ai{border-color:rgba(242,113,28,.3)}
+  .theme-anim,.theme-anim *{transition:background-color .4s ease,color .4s ease,border-color .4s ease !important}
+  .bubble{font-size:var(--fs,14.5px)}
+
+  @keyframes fade-in{from{opacity:0}to{opacity:1}}
+  @keyframes drop-in{from{opacity:0;transform:translateY(-100%)}to{opacity:1;transform:none}}
+  @keyframes rise-up{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:none}}
+  @keyframes msg-in-left{from{opacity:0;transform:translate(-16px,10px) scale(.96)}to{opacity:1;transform:none}}
+  @keyframes msg-in-right{from{opacity:0;transform:translate(16px,10px) scale(.96)}to{opacity:1;transform:none}}
+  @keyframes pop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.12);opacity:1}100%{transform:scale(1)}}
+  @keyframes item-in{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
+  @keyframes sheet-spring{from{opacity:0;transform:translateY(40px) scale(.98)}to{opacity:1;transform:none}}
+  @keyframes ripple{to{transform:scale(1);opacity:0}}
+  @keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(255,138,61,0)}50%{box-shadow:0 0 18px 2px rgba(255,138,61,.35)}}
+  @keyframes toast-in{from{opacity:0;transform:translate(-50%,16px) scale(.95)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
+
+  header{animation:drop-in 520ms cubic-bezier(.2,.8,.2,1) both}
+  footer{animation:rise-up 560ms 80ms cubic-bezier(.2,.8,.2,1) both}
+  .sidebar-top,.sidebar-label{animation:fade-in 600ms 150ms both}
+  .brand-mark{animation:glow 4s ease-in-out infinite}
+  .row.ai{animation:msg-in-left 420ms cubic-bezier(.2,.9,.25,1) both}
+  .row.user{animation:msg-in-right 380ms cubic-bezier(.2,.9,.25,1) both}
+  .row .avatar{animation:pop 450ms 80ms cubic-bezier(.3,1.4,.5,1) both}
+  .bubble{transition:box-shadow 200ms ease}
+  .row.ai:hover .bubble{box-shadow:0 4px 18px rgba(0,0,0,.12)}
+  .history-item{animation:item-in 380ms cubic-bezier(.2,.8,.2,1) both;transition:background 120ms ease,color 120ms ease,transform 180ms ease}
+  .history-item:nth-child(2){animation-delay:30ms}.history-item:nth-child(3){animation-delay:60ms}.history-item:nth-child(4){animation-delay:90ms}.history-item:nth-child(5){animation-delay:120ms}.history-item:nth-child(6){animation-delay:150ms}.history-item:nth-child(7){animation-delay:180ms}.history-item:nth-child(8){animation-delay:210ms}
+  .history-item:hover{transform:translateX(3px)}
+  #new-chat-btn{transition:background 140ms ease,border-color 140ms ease,transform 180ms ease}
+  #new-chat-btn:hover{transform:translateY(-1px)}
+  #new-chat-btn svg{transition:transform 300ms cubic-bezier(.3,1.4,.5,1)}
+  #new-chat-btn:hover svg{transform:rotate(90deg)}
+  button[type="submit"]:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 16px rgba(255,138,61,.35)}
+  .icon-btn:hover{transform:scale(1.08)}
+  .ai-actions button{transition:background 140ms ease,color 140ms ease,transform 160ms ease}
+  .ai-actions button:hover{transform:translateY(-1px) scale(1.08)}
+  .ai-actions button:active{transform:scale(.9)}
+  #attach-menu-backdrop.show,#voice-sheet-backdrop.show,#sidebar-backdrop.show{animation:fade-in 220ms ease both}
+  #attach-menu.show,#voice-sheet.show{animation:sheet-spring 360ms cubic-bezier(.2,.9,.25,1.05) both}
+
+  .rip{position:relative;overflow:hidden}
+  .ripple{position:absolute;border-radius:50%;background:currentColor;opacity:.2;transform:scale(0);animation:ripple .6s ease-out forwards;pointer-events:none}
+
+  /* sidebar top: theme button */
+  .sidebar-top{display:flex;gap:8px;align-items:center}
+  #new-chat-btn{flex:1;width:auto}
+  #theme-btn{border:1px solid var(--border);background:var(--surface-2);width:40px;height:40px}
+  #theme-btn svg{transition:transform 500ms cubic-bezier(.3,1.4,.5,1)}
+  #theme-btn:hover svg{transform:rotate(40deg)}
+  #settings-btn svg{transition:transform 400ms ease}
+  #settings-btn:hover svg{transform:rotate(60deg)}
+  @media (max-width:420px){header{padding:12px 10px;gap:6px}}
+
+  /* pin + rename */
+  .hist-group{font-family:'Manrope',sans-serif;font-weight:700;font-size:10.5px;color:var(--text-dim);padding:8px 10px 4px}
+  .pin-mark{width:12px;height:12px;color:var(--accent);flex-shrink:0;animation:pop 400ms both}
+  .history-act{background:transparent;border:none;color:inherit;opacity:0;cursor:pointer;padding:2px;display:flex;flex-shrink:0;transition:opacity 120ms ease,transform 160ms ease}
+  .history-act svg{width:14px;height:14px}
+  .history-item:hover .history-act,.history-item.active .history-act{opacity:.7}
+  .history-act:hover{opacity:1 !important;transform:scale(1.15)}
+  .history-act.on{color:var(--accent);opacity:1}
+  @media (hover:none){.history-act,.history-delete{opacity:.55}}
+  .history-item input.rename-input{flex:1;min-width:0;background:var(--surface);border:1px solid var(--accent);border-radius:6px;padding:3px 6px;font-size:13px;color:var(--text);outline:none;box-shadow:0 0 0 3px rgba(255,138,61,.15)}
+
+  /* scroll to bottom */
+  footer{position:sticky}
+  #scroll-bottom-btn{position:absolute;top:-56px;right:18px;width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.25);opacity:0;transform:translateY(12px) scale(.7);pointer-events:none;transition:opacity 240ms ease,transform 320ms cubic-bezier(.3,1.4,.5,1),border-color 140ms ease}
+  #scroll-bottom-btn.show{opacity:1;transform:none;pointer-events:auto}
+  #scroll-bottom-btn:hover{border-color:var(--accent);color:var(--accent)}
+  #scroll-bottom-btn svg{width:20px;height:20px}
+
+  /* token counter */
+  #token-bar{max-width:760px;margin:0 auto 8px;display:flex;align-items:center;gap:10px;font-family:'Manrope',sans-serif;font-weight:600;font-size:11.5px;color:var(--text-dim);padding:0 4px}
+  .tok-track{flex:1;height:5px;border-radius:6px;background:var(--surface-2);overflow:hidden;min-width:40px}
+  .tok-fill{height:100%;width:0;border-radius:6px;background:linear-gradient(90deg,#57D68D,#8BE0A8);transition:width 700ms cubic-bezier(.2,.8,.2,1),background 400ms}
+  #token-bar.warn .tok-fill{background:linear-gradient(90deg,var(--accent),#FFC15A)}
+  #token-bar.danger .tok-fill{background:#FF6E6E}
+  #tok-text{white-space:nowrap;order:-1}
+
+  /* sheets (settings + share) */
+  .sheet-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:69;backdrop-filter:blur(3px)}
+  .sheet-backdrop.show{display:block;animation:fade-in 220ms ease both}
+  .sheet{display:none;position:fixed;left:0;right:0;bottom:0;z-index:70;background:var(--surface);border:1px solid var(--border);border-bottom:none;border-radius:20px 20px 0 0;padding:8px;max-width:480px;margin:0 auto;box-shadow:0 -10px 40px rgba(0,0,0,.4);max-height:88vh;overflow-y:auto}
+  .sheet.show{display:block;animation:sheet-spring 380ms cubic-bezier(.2,.9,.25,1.05) both}
+  .sheet-title{display:flex;align-items:center;justify-content:space-between;font-family:'Manrope',sans-serif;font-weight:700;font-size:16px;padding:8px 10px 10px}
+  .set-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 10px;border-top:1px solid var(--border);animation:fade-in 400ms both}
+  .set-label{font-size:14px;color:var(--text)}
+  .seg{display:flex;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:3px;gap:2px}
+  .seg button{background:transparent;border:none;color:var(--text-dim);font-family:'Manrope',sans-serif;font-weight:700;font-size:12.5px;padding:6px 11px;border-radius:9px;cursor:pointer;transition:background 220ms ease,color 220ms ease}
+  .seg button.active{background:var(--accent);color:#1A0E00}
+  .switch{position:relative;width:46px;height:26px;flex-shrink:0}
+  .switch input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer;z-index:2}
+  .switch span{position:absolute;inset:0;background:var(--border);border-radius:20px;transition:background 250ms ease}
+  .switch span::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.4);transition:transform 320ms cubic-bezier(.3,1.4,.5,1)}
+  .switch input:checked+span{background:var(--accent)}
+  .switch input:checked+span::after{transform:translateX(20px)}
+  .set-select,.set-btn{background:var(--surface-2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:7px 10px;font-family:'Manrope',sans-serif;font-weight:600;font-size:12.5px;cursor:pointer;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:border-color 140ms ease}
+  .set-select:hover,.set-btn:hover{border-color:var(--accent)}
+  #toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--surface-2);color:var(--text);border:1px solid var(--border);padding:9px 16px;border-radius:20px;font-size:13px;z-index:90;opacity:0;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+  #toast.show{opacity:1;animation:toast-in 300ms cubic-bezier(.2,.9,.25,1.1) both}
 </style>
 </head>
 <body>
@@ -842,6 +950,9 @@
     <button id="new-chat-btn" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
       New chat
+    </button>
+    <button id="theme-btn" type="button" class="icon-btn" title="Light / Dark theme" aria-label="Toggle theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
     </button>
   </div>
   <div class="sidebar-label">
@@ -880,6 +991,9 @@
     <button id="sound-toggle" type="button" title="Sound on/off">
       <svg id="sound-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
     </button>
+    <button id="settings-btn" type="button" class="icon-btn" title="Settings" aria-label="Settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+    </button>
   </header>
 
   <main id="chat-container"></main>
@@ -891,6 +1005,15 @@
     </div>
 
     <div id="attach-preview-bar"></div>
+
+    <button type="button" id="scroll-bottom-btn" title="Neeche jaayein" aria-label="Scroll to bottom">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+    </button>
+
+    <div id="token-bar" title="Aaj ke estimated tokens">
+      <span id="tok-text">Aaj: 0 used</span>
+      <div class="tok-track"><div class="tok-fill" id="tok-fill"></div></div>
+    </div>
 
     <form id="chat-form">
       <button type="button" id="attach-btn" class="icon-btn" title="Attach">
@@ -932,6 +1055,32 @@
   <div class="voice-sheet-title">Choose a voice</div>
   <div id="voice-option-list"></div>
 </div>
+
+<div class="sheet-backdrop" id="settings-backdrop"></div>
+<div class="sheet" id="settings-sheet" role="dialog" aria-label="Settings">
+  <div class="sheet-title"><span>Settings</span><button type="button" class="icon-btn" id="settings-close" aria-label="Close">✕</button></div>
+  <div class="set-row"><div class="set-label">Theme</div><div class="seg" data-key="theme"><button type="button" data-v="dark">Dark</button><button type="button" data-v="light">Light</button></div></div>
+  <div class="set-row"><div class="set-label">Font size</div><div class="seg" data-key="fontSize"><button type="button" data-v="13">S</button><button type="button" data-v="14.5">M</button><button type="button" data-v="16.5">L</button><button type="button" data-v="18">XL</button></div></div>
+  <div class="set-row"><div class="set-label">Auto-scroll</div><label class="switch"><input type="checkbox" id="set-autoscroll"><span></span></label></div>
+  <div class="set-row"><div class="set-label">Sounds</div><label class="switch"><input type="checkbox" id="set-sound"><span></span></label></div>
+  <div class="set-row"><div class="set-label">Default model</div><select class="set-select" id="set-model"><option value="gemini1">Ai 1</option><option value="gemini2">Ai 2</option><option value="gemini3">Ai 3</option><option value="gemini4">Ai 4</option><option value="gemini5">Ai 5</option></select></div>
+  <div class="set-row"><div class="set-label">Default voice</div><button type="button" class="set-btn" id="set-voice-btn"></button></div>
+  <div class="set-row"><div class="set-label">Daily token limit</div><select class="set-select" id="set-limit"><option value="10000">10,000</option><option value="25000">25,000</option><option value="50000">50,000</option><option value="100000">100,000</option><option value="250000">250,000</option></select></div>
+  <div class="set-row"><div class="set-label">Aaj ka token counter</div><button type="button" class="set-btn" id="set-reset-tokens">Reset</button></div>
+</div>
+
+<div class="sheet-backdrop" id="share-backdrop"></div>
+<div class="sheet" id="share-sheet" role="dialog" aria-label="Share reply">
+  <div class="sheet-title"><span>Reply share karein</span></div>
+  <button type="button" class="attach-menu-item" id="share-whatsapp">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg><span>WhatsApp</span></button>
+  <button type="button" class="attach-menu-item" id="share-system">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg><span>Share (system sheet)</span></button>
+  <button type="button" class="attach-menu-item" id="share-copy">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><span>Copy text</span></button>
+  <button type="button" id="share-cancel" style="width:100%;margin-top:6px;background:var(--surface-2);border:none;color:var(--text-dim);font-weight:600;font-size:14.5px;padding:12px;border-radius:10px;cursor:pointer">Cancel</button>
+</div>
+<div id="toast"></div>
 
 <script>
   /* ---------------- Firebase setup ---------------- */
@@ -1061,13 +1210,56 @@
     setTimeout(() => { setAppHeight(); scrollToBottom(); }, 200);
   });
 
+  /* ---------------- Settings + token counter (v2) ---------------- */
+  const SETTINGS_KEY = 'zamirSettings';
+  const settings = Object.assign({ theme: 'dark', fontSize: 14.5, autoScroll: true, sound: true, tokenLimit: 50000 },
+    (() => { try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch (_) { return {}; } })());
+  function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (_) {} }
+
+  const TOK_KEY = 'zamirTokens';
+  const dayKey = () => new Date().toLocaleDateString('en-CA');
+  function getTok() {
+    try { const t = JSON.parse(localStorage.getItem(TOK_KEY) || 'null'); if (t && t.date === dayKey()) return t; } catch (_) {}
+    return { date: dayKey(), used: 0, sent: 0, recv: 0 };
+  }
+  function estTok(s) { return (s || '').length / 4; }
+  function estInputTokens(h) {
+    let n = 0;
+    (h || []).forEach(m => (m.parts || []).forEach(p => { if (p.text) n += estTok(p.text); else if (p.inline_data) n += 258; }));
+    return n;
+  }
+  function addTokens(n, kind) {
+    const t = getTok(); t.used += n; t[kind] = (t[kind] || 0) + n;
+    try { localStorage.setItem(TOK_KEY, JSON.stringify(t)); } catch (_) {}
+    renderTokenBar();
+  }
+  let shownTok = 0, tokRaf = null;
+  function renderTokenBar() {
+    const bar = document.getElementById('token-bar'); if (!bar) return;
+    const limit = settings.tokenLimit, used = Math.round(getTok().used);
+    const pct = Math.min(100, used / limit * 100);
+    document.getElementById('tok-fill').style.width = pct + '%';
+    bar.classList.toggle('warn', pct >= 70 && pct < 90);
+    bar.classList.toggle('danger', pct >= 90);
+    const from = shownTok, start = performance.now();
+    cancelAnimationFrame(tokRaf);
+    const step = now => {
+      const k = Math.min(1, (now - start) / 500);
+      const v = Math.round(from + (used - from) * (1 - Math.pow(1 - k, 3)));
+      shownTok = v;
+      document.getElementById('tok-text').textContent = 'Aaj: ' + v.toLocaleString() + ' used • ' + Math.max(0, limit - v).toLocaleString() + ' baki';
+      if (k < 1) tokRaf = requestAnimationFrame(step);
+    };
+    tokRaf = requestAnimationFrame(step);
+  }
+
   /* ---------------- State ---------------- */
   let sessions = [];                      // array of { id, title, updatedAt, messages:[{role,text,attachments}] }
   let currentSessionId = null;
   let isSending = false;
   let pendingAttachments = [];
   let editingIndex = null;
-  let soundOn = true;
+  let soundOn = settings.sound !== false;
   let firebaseReady = false;
   const responseCache = new Map();
 
@@ -1458,14 +1650,28 @@
       historyList.innerHTML = '<div class="empty-history">Koi chat history nahi hai</div>';
       return;
     }
-    historyList.innerHTML = sessions.map(s => `
+    const pinSvg = (fill) => '<svg viewBox="0 0 24 24" fill="' + (fill ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"></path><path d="M9 3h6l-1 7 3 3H7l3-3z"></path></svg>';
+    const ordered = sessions.slice().sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
+    const anyPinned = ordered.some(s => s.pinned);
+    let html = '', last = null;
+    ordered.forEach(s => {
+      const isPin = !!s.pinned;
+      if (anyPinned && last !== isPin) html += '<div class="hist-group">' + (isPin ? 'Pinned' : 'Recent') + '</div>';
+      last = isPin;
+      html += `
       <div class="history-item ${s.id === currentSessionId ? 'active' : ''}" data-id="${s.id}">
+        ${isPin ? '<span class="pin-mark">' + pinSvg(true) + '</span>' : ''}
         <span class="history-title">${escapeHtml(s.title || 'New chat')}</span>
+        <button class="history-act history-pin ${isPin ? 'on' : ''}" data-id="${s.id}" title="${isPin ? 'Unpin' : 'Pin'}">${pinSvg(isPin)}</button>
+        <button class="history-act history-rename" data-id="${s.id}" title="Rename">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"></path></svg>
+        </button>
         <button class="history-delete" data-id="${s.id}" title="Delete">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>
         </button>
-      </div>
-    `).join('');
+      </div>`;
+    });
+    historyList.innerHTML = html;
 
     historyList.querySelectorAll('.history-item').forEach(item => {
       item.addEventListener('click', () => loadSession(item.dataset.id));
@@ -1473,6 +1679,42 @@
     historyList.querySelectorAll('.history-delete').forEach(btn => {
       btn.addEventListener('click', (e) => deleteSession(btn.dataset.id, e));
     });
+    historyList.querySelectorAll('.history-pin').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const s = sessions.find(x => x.id === btn.dataset.id);
+        if (s) sessionsRef.child(s.id).update({ pinned: !s.pinned });
+      });
+    });
+    historyList.querySelectorAll('.history-rename').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        startRename(btn.closest('.history-item'), btn.dataset.id);
+      });
+    });
+  }
+
+  function startRename(item, id) {
+    const s = sessions.find(x => x.id === id);
+    const span = item && item.querySelector('.history-title');
+    if (!s || !span) return;
+    const inp = document.createElement('input');
+    inp.type = 'text'; inp.className = 'rename-input'; inp.maxLength = 60; inp.value = s.title || '';
+    span.replaceWith(inp);
+    inp.focus(); inp.select();
+    let done = false;
+    const commit = (save) => {
+      if (done) return; done = true;
+      const v = inp.value.trim();
+      if (save && v && v !== s.title) sessionsRef.child(id).update({ title: v });
+      else renderHistoryList();
+    };
+    inp.addEventListener('click', e => e.stopPropagation());
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') commit(true);
+      else if (e.key === 'Escape') commit(false);
+    });
+    inp.addEventListener('blur', () => commit(true));
   }
 
   function renderCurrentSession() {
@@ -2190,7 +2432,9 @@
     return { localString, timeZone, isoString: now.toISOString() };
   }
 
-  async function streamGemini(apiHistory, onChunk, retriesLeft = 2) {
+  async function streamGemini(apiHistory, onChunkRaw, retriesLeft = 2, isRetry = false) {
+    const onChunk = (c) => { addTokens(estTok(c), 'recv'); onChunkRaw(c); };
+    if (!isRetry) addTokens(estInputTokens(apiHistory), 'sent');
     let response;
     try {
       response = await fetch(getStreamUrl(), {
@@ -2201,7 +2445,7 @@
     } catch (networkErr) {
       if (retriesLeft > 0) {
         await new Promise(res => setTimeout(res, 300));
-        return streamGemini(apiHistory, onChunk, retriesLeft - 1);
+        return streamGemini(apiHistory, onChunkRaw, retriesLeft - 1, true);
       }
       throw networkErr;
     }
@@ -2217,7 +2461,7 @@
       }
       if ((response.status === 503 || response.status === 429) && retriesLeft > 0) {
         await new Promise(res => setTimeout(res, 300));
-        return streamGemini(apiHistory, onChunk, retriesLeft - 1);
+        return streamGemini(apiHistory, onChunkRaw, retriesLeft - 1, true);
       }
       const err = new Error(errMsg);
       err.status = response.status;
@@ -2279,6 +2523,9 @@
           <button type="button" class="regen-btn" title="Regenerate" aria-label="Regenerate response">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
           </button>
+          <button type="button" class="share-btn" title="Share" aria-label="Share response">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+          </button>
         </div>
         <span class="msg-time">${formatRelativeTime(msg.createdAt)}</span>
       </div>` : '';
@@ -2336,6 +2583,7 @@
       });
 
       regenBtn.addEventListener('click', () => regenerateResponse(row.dataset.index, regenBtn));
+      row.querySelector('.share-btn').addEventListener('click', () => openShare(row.querySelector('.msg-text').textContent || ''));
     }
 
     chatContainer.appendChild(row);
@@ -2348,7 +2596,7 @@
     bubble.classList.toggle('error', isError);
     const textSpan = bubble.querySelector('.msg-text');
     if (textSpan) textSpan.innerHTML = isError ? escapeHtml(text) : renderMarkdown(text);
-    scrollToBottom();
+    if (settings.autoScroll) scrollToBottom();
   }
 
   function appendTypingIndicator() {
@@ -2435,6 +2683,119 @@
     if (diffDay < 30) return diffDay + (diffDay === 1 ? ' day ago' : ' days ago');
     return new Date(ts).toLocaleDateString();
   }
+
+  /* ===================== v2 features wiring ===================== */
+  let toastTimer;
+  function toast(m) {
+    const el = document.getElementById('toast');
+    el.classList.remove('show'); void el.offsetWidth;
+    el.textContent = m; el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 1800);
+  }
+
+  /* Theme */
+  const SUN = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+  const MOON = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+  const themeBtn = document.getElementById('theme-btn');
+  function applyTheme(t, animate) {
+    if (animate) { document.body.classList.add('theme-anim'); setTimeout(() => document.body.classList.remove('theme-anim'), 450); }
+    document.documentElement.setAttribute('data-theme', t);
+    settings.theme = t; saveSettings();
+    themeBtn.querySelector('svg').innerHTML = t === 'dark' ? SUN : MOON;
+    const m = document.getElementById('meta-theme'); if (m) m.content = t === 'dark' ? '#0E1116' : '#F4F6FA';
+    syncSettingsUI();
+  }
+  themeBtn.addEventListener('click', () => applyTheme(settings.theme === 'dark' ? 'light' : 'dark', true));
+
+  function applyFont() { document.documentElement.style.setProperty('--fs', settings.fontSize + 'px'); }
+
+  /* Settings panel */
+  const setSheet = document.getElementById('settings-sheet');
+  const setBackdrop = document.getElementById('settings-backdrop');
+  function syncSettingsUI() {
+    document.querySelectorAll('#settings-sheet .seg').forEach(seg => {
+      const cur = String(settings[seg.dataset.key]);
+      seg.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.v === cur));
+    });
+    document.getElementById('set-autoscroll').checked = !!settings.autoScroll;
+    document.getElementById('set-sound').checked = !!soundOn;
+    document.getElementById('set-model').value = selectedModel;
+    document.getElementById('set-limit').value = String(settings.tokenLimit);
+    document.getElementById('set-voice-btn').textContent = voiceSelectLabel.textContent;
+  }
+  function openSettings() { syncSettingsUI(); setSheet.classList.add('show'); setBackdrop.classList.add('show'); }
+  function closeSettings() { setSheet.classList.remove('show'); setBackdrop.classList.remove('show'); }
+  document.getElementById('settings-btn').addEventListener('click', openSettings);
+  document.getElementById('settings-close').addEventListener('click', closeSettings);
+  setBackdrop.addEventListener('click', closeSettings);
+
+  document.querySelectorAll('#settings-sheet .seg').forEach(seg => {
+    seg.addEventListener('click', (e) => {
+      const b = e.target.closest('button'); if (!b) return;
+      if (seg.dataset.key === 'theme') applyTheme(b.dataset.v, true);
+      else { settings.fontSize = parseFloat(b.dataset.v); saveSettings(); applyFont(); syncSettingsUI(); }
+    });
+  });
+  document.getElementById('set-autoscroll').addEventListener('change', e => { settings.autoScroll = e.target.checked; saveSettings(); });
+  document.getElementById('set-sound').addEventListener('change', e => { if (e.target.checked !== soundOn) soundToggle.click(); });
+  soundToggle.addEventListener('click', () => { settings.sound = soundOn; saveSettings(); document.getElementById('set-sound').checked = soundOn; });
+  if (!soundOn) soundIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line>';
+  document.getElementById('set-model').addEventListener('change', e => { modelSelectBtn.value = e.target.value; modelSelectBtn.dispatchEvent(new Event('change')); toast('Default model set'); });
+  document.getElementById('set-voice-btn').addEventListener('click', () => { closeSettings(); openVoiceSheet(); });
+  document.getElementById('set-limit').addEventListener('change', e => { settings.tokenLimit = parseInt(e.target.value, 10); saveSettings(); renderTokenBar(); });
+  document.getElementById('set-reset-tokens').addEventListener('click', () => { try { localStorage.removeItem(TOK_KEY); } catch (_) {} renderTokenBar(); toast('Aaj ka counter reset ho gaya'); });
+
+  /* Scroll-to-bottom button */
+  const sbBtn = document.getElementById('scroll-bottom-btn');
+  function updateScrollBtn() {
+    const d = chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight;
+    sbBtn.classList.toggle('show', d > 240);
+  }
+  chatContainer.addEventListener('scroll', updateScrollBtn, { passive: true });
+  new MutationObserver(updateScrollBtn).observe(chatContainer, { childList: true, subtree: true, characterData: true });
+  sbBtn.addEventListener('click', () => chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' }));
+
+  /* Share reply */
+  const shareSheet = document.getElementById('share-sheet');
+  const shareBackdrop = document.getElementById('share-backdrop');
+  let shareTextValue = '';
+  function openShare(text) {
+    shareTextValue = (text || '').trim(); if (!shareTextValue) return;
+    document.getElementById('share-system').style.display = navigator.share ? 'flex' : 'none';
+    shareSheet.classList.add('show'); shareBackdrop.classList.add('show');
+  }
+  function closeShare() { shareSheet.classList.remove('show'); shareBackdrop.classList.remove('show'); }
+  shareBackdrop.addEventListener('click', closeShare);
+  document.getElementById('share-cancel').addEventListener('click', closeShare);
+  document.getElementById('share-whatsapp').addEventListener('click', () => {
+    window.open('https://wa.me/?text=' + encodeURIComponent(shareTextValue.slice(0, 3500)), '_blank');
+    closeShare();
+  });
+  document.getElementById('share-system').addEventListener('click', () => {
+    closeShare();
+    navigator.share({ text: shareTextValue }).catch(() => {});
+  });
+  document.getElementById('share-copy').addEventListener('click', () => {
+    navigator.clipboard.writeText(shareTextValue).then(() => toast('Copied')).catch(() => {});
+    closeShare();
+  });
+
+  /* Ripple + Esc + init */
+  document.querySelectorAll('#new-chat-btn,button[type="submit"],.set-btn,.attach-menu-item,#attach-menu-cancel').forEach(b => b.classList.add('rip'));
+  document.addEventListener('pointerdown', (e) => {
+    const b = e.target.closest('.rip'); if (!b) return;
+    const r = b.getBoundingClientRect(), d = Math.max(r.width, r.height) * 2;
+    const s = document.createElement('span'); s.className = 'ripple';
+    s.style.cssText = 'width:' + d + 'px;height:' + d + 'px;left:' + (e.clientX - r.left - d / 2) + 'px;top:' + (e.clientY - r.top - d / 2) + 'px';
+    b.appendChild(s); setTimeout(() => s.remove(), 600);
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeSettings(); closeShare(); } });
+
+  applyTheme(settings.theme, false);
+  applyFont();
+  renderTokenBar();
+  setInterval(renderTokenBar, 60000);
 </script>
 </body>
 </html>
