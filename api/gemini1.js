@@ -1,5 +1,5 @@
 // api/gemini1.js
-const MODEL = 'gemini-flash-lite-latest';
+const MODEL = process.env.GEMINI_MODEL_1 || 'gemini-flash-lite-latest';
 
 // Family birthdays (month is 1-12)
 const FAMILY_BIRTHDAYS = [
@@ -126,4 +126,4 @@ export default async function handler(req, res) {
   } catch (err) {
     res.status(502).json({ error: { message: 'Failed to reach Gemini API', detail: err.message } });
   }
-                                  }
+}
