@@ -1332,6 +1332,8 @@
 <div class="sheet-backdrop" id="settings-backdrop"></div>
 <div class="sheet" id="settings-sheet" role="dialog" aria-label="Settings">
   <div class="sheet-title"><span>Settings</span><button type="button" class="icon-btn" id="settings-close" aria-label="Close">✕</button></div>
+  <div class="set-section">AI Model</div>
+  <div class="set-row"><div class="set-label">Default model</div><select class="set-select" id="set-model"><option value="gemini1">Ai 1</option><option value="gemini2">Ai 2</option><option value="gemini3">Ai 3</option><option value="gemini4">Ai 4</option><option value="gemini5">Ai 5</option></select></div>
   <div class="set-section">Look</div>
   <div class="set-row"><div class="set-label">Theme</div><div class="seg" data-key="theme"><button type="button" data-v="dark">Dark</button><button type="button" data-v="light">Light</button></div></div>
   <div class="set-row"><div class="set-label">Font size</div><div class="seg" data-key="fontSize"><button type="button" data-v="13">S</button><button type="button" data-v="14.5">M</button><button type="button" data-v="16.5">L</button><button type="button" data-v="18">XL</button></div></div>
@@ -1345,7 +1347,6 @@
   <div class="set-section">Chat</div>
   <div class="set-row"><div class="set-label">Auto-scroll</div><label class="switch"><input type="checkbox" id="set-autoscroll"><span></span></label></div>
   <div class="set-row"><div class="set-label">Sounds</div><label class="switch"><input type="checkbox" id="set-sound"><span></span></label></div>
-  <div class="set-row"><div class="set-label">Default model</div><select class="set-select" id="set-model"><option value="gemini1">Ai 1</option><option value="gemini2">Ai 2</option><option value="gemini3">Ai 3</option><option value="gemini4">Ai 4</option><option value="gemini5">Ai 5</option></select></div>
   <div class="set-row"><div class="set-label">Default voice</div><button type="button" class="set-btn" id="set-voice-btn"></button></div>
   <div class="set-note">Theme, font size, sounds, wallpaper aur animations sirf is phone/browser par save hote hain. Firebase se sync nahi hote, isliye aap aur aapki wife alag-alag rakh sakte hain.</div>
 </div>
@@ -3214,8 +3215,15 @@
     const sess = getCurrentSession();
     if (!sess || !sess.messages || !sess.messages[idx]) return;
     const sid = sess.id;
+    // Remember exactly where the user was looking so deleting a message
+    // (e.g. the very first one) keeps them right there — it never jumps
+    // down to the bottom of the chat, so they can keep deleting more
+    // from the same spot.
+    const prevScrollTop = chatContainer.scrollTop;
+    const wasAtBottom = (chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight) < 40;
     const removed = sess.messages.splice(idx, 1)[0];
     saveSession(sess); renderCurrentSession();
+    if (!wasAtBottom) chatContainer.scrollTop = prevScrollTop;
     toast('Message delete hua', 'Undo', () => {
       const ss = getCurrentSession(); if (!ss || ss.id !== sid) return;
       if (!ss.messages) ss.messages = [];
@@ -3305,9 +3313,10 @@
       clearTimeout(lpTimer);
       gs.mode = (Math.abs(dx) > Math.abs(dy) * 1.4) ? 'swipe' : 'scroll';
       if (gs.mode === 'swipe') {
+        // Both swipe directions now mean "reply" — swipe can never delete.
         const h = document.createElement('div');
-        h.className = 'swipe-hint' + (dx < 0 ? ' del' : '');
-        h.innerHTML = dx < 0 ? ICON_TRASH : ICON_REPLY;
+        h.className = 'swipe-hint';
+        h.innerHTML = ICON_REPLY;
         h.style[dx < 0 ? 'right' : 'left'] = '8px';
         gs.row.appendChild(h); gs.hint = h;
       }
@@ -3331,8 +3340,8 @@
       const row = gs.row, dx = gs.dx, idx = parseInt(row.dataset.index, 10);
       resetGesture(true);
       const sess = getCurrentSession(); const m = sess && sess.messages && sess.messages[idx];
-      if (m && dx > SWIPE_TRIGGER) setReply(m);
-      else if (m && dx < -SWIPE_TRIGGER) setTimeout(() => deleteMessage(idx), 180);
+      // Swipe either left or right now only replies — never deletes.
+      if (m && Math.abs(dx) > SWIPE_TRIGGER) setReply(m);
       return;
     }
     gs = null;
