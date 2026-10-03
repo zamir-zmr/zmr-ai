@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI Chat Assistant</title>
 <meta name="theme-color" content="#0E1116" id="meta-theme">
-<script>try{var __s=JSON.parse(localStorage.getItem('zamirSettings')||'{}');document.documentElement.setAttribute('data-theme',__s.theme||'dark');}catch(e){}</script>
+<script>try{var __s=JSON.parse(localStorage.getItem('zamirSettings')||'{}');var __d=document.documentElement;__d.setAttribute('data-theme',__s.theme||'dark');__d.setAttribute('data-anim',__s.anim||'full');__d.setAttribute('data-msg',__s.msgAnim||'slide');__d.setAttribute('data-bg',__s.bgFx||'orbs');__d.style.setProperty('--wp-dim',(__s.wpDim!=null?__s.wpDim:0.55));}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -1048,6 +1048,122 @@
   .sheet .attach-menu-item.danger svg{color:#FF6E6E}
   #toast .toast-act{background:transparent;border:none;color:var(--accent);font-weight:700;font-size:13px;margin-left:12px;cursor:pointer;padding:0}
   #toast.act{pointer-events:auto}
+
+  /* ===== v6: wallpapers (100+), animation settings, polish ===== */
+  #wallpaper::after{background:rgba(14,17,22,var(--wp-dim,.55))}
+  html[data-theme="light"] #wallpaper::after{background:rgba(244,246,250,var(--wp-dim,.6))}
+  #wallpaper.wp-move{animation:fade-in .6s both,wp-drift 26s ease-in-out .6s infinite}
+  @keyframes wp-drift{0%{background-position:0% 30%}50%{background-position:100% 70%}100%{background-position:0% 30%}}
+  html[data-bg]:not([data-bg="orbs"]) body::before,html[data-bg]:not([data-bg="orbs"]) body::after{display:none}
+  #fx-layer{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;--fx-star:#fff}
+  html[data-theme="light"] #fx-layer{--fx-star:#F2711C}
+  .fx-b{position:absolute;bottom:-80px;border-radius:50%;border:1px solid rgba(255,255,255,.22);background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.30),rgba(255,138,61,.08));animation:bubble-up linear infinite}
+  .fx-s{position:absolute;border-radius:50%;background:var(--fx-star);animation:twinkle ease-in-out infinite}
+  .fx-f{position:absolute;width:5px;height:5px;border-radius:50%;background:#FFD66B;box-shadow:0 0 10px 3px rgba(255,200,80,.65);animation:firefly ease-in-out infinite}
+  @keyframes bubble-up{0%{transform:translate(0,0) scale(.8);opacity:0}10%{opacity:.9}90%{opacity:.6}100%{transform:translate(var(--dx,0),-115vh) scale(1.1);opacity:0}}
+  @keyframes twinkle{0%,100%{opacity:.12;transform:scale(.7)}50%{opacity:.95;transform:scale(1.3)}}
+  @keyframes firefly{0%{transform:translate(0,0);opacity:0}15%{opacity:1}50%{transform:translate(var(--dx),var(--dy));opacity:.55}85%{opacity:1}100%{transform:translate(calc(var(--dx) * -.5),calc(var(--dy) * -1));opacity:0}}
+
+  /* animation levels */
+  html[data-anim="off"] *,html[data-anim="off"] *::before,html[data-anim="off"] *::after{animation-duration:.001ms !important;animation-delay:0s !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;scroll-behavior:auto !important}
+  html[data-anim="off"] #splash{display:none}
+  html[data-anim="light"] body::before,html[data-anim="light"] body::after,html[data-anim="light"] .brand-mark,html[data-anim="light"] .hero-orb,html[data-anim="light"] .hero-ring,html[data-anim="light"] .hero-title,html[data-anim="light"] .bday-emoji,html[data-anim="light"] .status-dot,html[data-anim="light"] #scroll-bottom-btn svg,html[data-anim="light"] #chat-form::before{animation:none !important}
+  html[data-anim="light"] .row.ai,html[data-anim="light"] .row.user{animation-duration:200ms}
+
+  /* message entrance styles */
+  @keyframes msg-pop{0%{opacity:0;transform:scale(.55)}60%{opacity:1;transform:scale(1.06)}100%{transform:none}}
+  @keyframes msg-fade{from{opacity:0;filter:blur(6px)}to{opacity:1;filter:none}}
+  @keyframes msg-bounce{0%{opacity:0;transform:translateY(46px)}55%{opacity:1;transform:translateY(-10px)}75%{transform:translateY(4px)}100%{transform:none}}
+  @keyframes msg-zoom{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:none}}
+  @keyframes msg-flip{from{opacity:0;transform:perspective(600px) rotateX(-60deg) translateY(10px)}to{opacity:1;transform:none}}
+  html[data-msg="pop"] .row.ai,html[data-msg="pop"] .row.user,html[data-msg="pop"] .demo-in{animation:msg-pop 480ms cubic-bezier(.2,1.1,.3,1) both}
+  html[data-msg="fade"] .row.ai,html[data-msg="fade"] .row.user,html[data-msg="fade"] .demo-in{animation:msg-fade 520ms ease both}
+  html[data-msg="bounce"] .row.ai,html[data-msg="bounce"] .row.user,html[data-msg="bounce"] .demo-in{animation:msg-bounce 640ms cubic-bezier(.3,1,.4,1) both}
+  html[data-msg="zoom"] .row.ai,html[data-msg="zoom"] .row.user,html[data-msg="zoom"] .demo-in{animation:msg-zoom 380ms cubic-bezier(.2,.9,.25,1) both}
+  html[data-msg="flip"] .row.ai,html[data-msg="flip"] .row.user,html[data-msg="flip"] .demo-in{animation:msg-flip 560ms cubic-bezier(.2,.9,.25,1) both;transform-origin:50% 100%}
+  .anim-demo{padding:6px 10px 10px;overflow:hidden}
+  .demo-in{display:inline-block;background:var(--surface-2);border:1px solid var(--border);border-radius:16px 16px 16px 6px;padding:10px 14px;font-size:13.5px;color:var(--text);animation:msg-in-left 420ms cubic-bezier(.2,.9,.25,1) both}
+
+  /* chat polish animations */
+  #send-btn.launch{animation:btn-launch 420ms cubic-bezier(.3,1.4,.5,1)}
+  @keyframes btn-launch{0%{transform:scale(1)}30%{transform:scale(.88)}60%{transform:scale(1.08)}100%{transform:scale(1)}}
+  .send-fly{position:fixed;width:28px;height:28px;z-index:260;pointer-events:none;color:var(--accent);animation:send-fly 760ms cubic-bezier(.3,.7,.3,1) forwards}
+  .send-fly svg{width:100%;height:100%;fill:currentColor;filter:drop-shadow(0 2px 6px rgba(255,138,61,.5))}
+  @keyframes send-fly{0%{opacity:1;transform:translate(0,0) rotate(-10deg) scale(1)}100%{opacity:0;transform:translate(-40px,-150px) rotate(-35deg) scale(.45)}}
+  .row.user.just-sent .bubble{animation:sent-glow 1s ease-out}
+  @keyframes sent-glow{0%{box-shadow:0 0 0 0 rgba(255,138,61,.55)}100%{box-shadow:0 0 0 18px rgba(255,138,61,0)}}
+  .bubble:has(.typing){animation:typing-glow 1.8s ease-in-out infinite}
+  @keyframes typing-glow{0%,100%{box-shadow:0 0 0 0 rgba(255,138,61,0)}50%{box-shadow:0 0 16px 1px rgba(255,138,61,.28)}}
+  .bubble.streaming{animation:stream-glow 1.6s ease-in-out infinite}
+  @keyframes stream-glow{0%,100%{box-shadow:0 0 0 1px rgba(255,138,61,.25),0 0 10px rgba(255,138,61,.06)}50%{box-shadow:0 0 0 1px rgba(255,138,61,.5),0 0 22px rgba(255,138,61,.16)}}
+  @property --ang{syntax:'<angle>';inherits:false;initial-value:0deg}
+  #chat-form{position:relative}
+  #chat-form::before{content:'';position:absolute;inset:-1px;border-radius:15px;padding:1px;background:conic-gradient(from var(--ang),transparent 0 55%,var(--accent) 78%,#5B7CFF 90%,transparent);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:0;transition:opacity .3s;pointer-events:none}
+  #chat-form:focus-within::before{opacity:1;animation:ang-spin 4s linear infinite}
+  @keyframes ang-spin{to{--ang:360deg}}
+  .status-dot:not(.offline){animation:online-pulse 2s ease-out infinite}
+  @keyframes online-pulse{0%{box-shadow:0 0 0 0 rgba(87,214,141,.55)}70%,100%{box-shadow:0 0 0 7px rgba(87,214,141,0)}}
+  main.switching{animation:chat-switch 380ms cubic-bezier(.2,.8,.2,1)}
+  @keyframes chat-switch{from{opacity:0;transform:translateY(12px) scale(.992)}to{opacity:1;transform:none}}
+  #scroll-bottom-btn.show svg{animation:arrow-bob 1.4s ease-in-out infinite}
+  @keyframes arrow-bob{0%,100%{transform:translateY(-1px)}50%{transform:translateY(3px)}}
+  .ai-actions .copy-btn.done{animation:pop .35s both}
+
+  /* settings sections */
+  .set-section{font-family:'Manrope',sans-serif;font-weight:800;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);padding:14px 10px 4px}
+  .set-note{font-size:11.5px;color:var(--text-dim);padding:12px 10px 8px;line-height:1.5;border-top:1px solid var(--border)}
+  .sheet.show>.set-row:nth-of-type(n),.sheet.show>.set-section,.sheet.show>.anim-demo{animation:item-in .42s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0) * 32ms)}
+  .wp-open{display:flex;align-items:center;gap:10px;background:var(--surface-2);border:1px solid var(--border);color:var(--text);border-radius:12px;padding:5px 12px 5px 5px;font-family:'Manrope',sans-serif;font-weight:600;font-size:12.5px;cursor:pointer;transition:border-color .15s,transform .2s}
+  .wp-open:hover{border-color:var(--accent)}
+  .wp-open:active{transform:scale(.97)}
+  .wp-open-thumb{width:34px;height:34px;border-radius:9px;background:var(--surface);background-size:cover;background-position:center;border:1px solid var(--border);flex-shrink:0}
+
+  /* wallpaper picker */
+  #wp-backdrop{z-index:79}
+  .sheet.wp-sheet{z-index:80;height:88vh;max-height:88vh;padding:8px 0 0;overflow:hidden}
+  .sheet.wp-sheet.show{display:flex;flex-direction:column}
+  .wp-sheet .sheet-title{padding:8px 16px 10px;flex-shrink:0}
+  #wp-preview{position:relative;margin:0 12px 10px;height:112px;border-radius:14px;overflow:hidden;border:1px solid var(--border);flex-shrink:0;background:var(--surface-2)}
+  #wp-preview::after{content:'';position:absolute;inset:0;background:rgba(14,17,22,var(--wp-dim,.55))}
+  html[data-theme="light"] #wp-preview::after{background:rgba(244,246,250,var(--wp-dim,.6))}
+  .wp-pv-bub{position:absolute;z-index:2;font-size:12px;padding:6px 10px;border-radius:12px;max-width:70%;color:var(--text)}
+  .wp-pv-ai{left:10px;top:12px;background:var(--surface);border:1px solid var(--border)}
+  .wp-pv-user{right:10px;bottom:12px;background:var(--user-bubble)}
+  .wp-ctl{display:flex;align-items:center;gap:10px;padding:2px 16px 6px;font-size:13px;flex-shrink:0;color:var(--text)}
+  .wp-ctl input[type=range]{flex:1;accent-color:var(--accent)}
+  .wp-ctl .wp-val{min-width:34px;text-align:right;color:var(--text-dim);font-size:12px}
+  .wp-tabs{display:flex;gap:8px;overflow-x:auto;padding:8px 12px 10px;flex-shrink:0;scrollbar-width:none}
+  .wp-tabs::-webkit-scrollbar{display:none}
+  .wp-tab{white-space:nowrap;background:var(--surface-2);border:1px solid var(--border);color:var(--text-dim);border-radius:20px;padding:6px 13px;font-family:'Manrope',sans-serif;font-weight:700;font-size:12px;cursor:pointer;transition:background .22s,color .22s,border-color .22s,transform .2s}
+  .wp-tab:active{transform:scale(.94)}
+  .wp-tab.active{background:var(--accent);color:#1A0E00;border-color:var(--accent)}
+  .wp-hint{font-size:11.5px;color:var(--text-dim);padding:0 16px 6px;flex-shrink:0}
+  #wp-grid2{flex:1;min-height:0;overflow-y:auto;display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:calc((min(100vw,480px) - 54px) / 3);gap:10px;padding:4px 12px 28px;align-content:start;-webkit-overflow-scrolling:touch}
+  .wp-tile{position:relative;width:100%;height:100%;border-radius:12px;border:2px solid var(--border);background-size:cover;background-position:center;cursor:pointer;padding:0;overflow:hidden;color:#fff;font-family:'Manrope',sans-serif;transition:scale .22s cubic-bezier(.3,1.4,.5,1),border-color .2s,box-shadow .2s;animation:tile-in .4s both;animation-delay:calc(var(--i,0) * 14ms);touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  .wp-tile.pressing{scale:.93}
+  .wp-tile.active{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,138,61,.25);scale:1.03}
+  .wp-tile .wp-name{position:absolute;left:0;right:0;bottom:0;padding:14px 3px 4px;font-size:9.5px;font-weight:700;text-align:center;background:linear-gradient(transparent,rgba(0,0,0,.62));text-shadow:0 1px 2px rgba(0,0,0,.5);pointer-events:none}
+  .wp-tile .wp-check{position:absolute;top:5px;right:5px;width:18px;height:18px;border-radius:50%;background:var(--accent);color:#1A0E00;font-size:11px;font-weight:800;display:none;align-items:center;justify-content:center;pointer-events:none}
+  .wp-tile.active .wp-check{display:flex;animation:pop .35s both}
+  .wp-tile.wp-none,.wp-tile.wp-add{background:var(--surface-2);color:var(--text-dim);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:22px}
+  .wp-tile.wp-add{border-style:dashed}
+  .wp-tile .wp-name-in{font-size:10px;font-weight:700}
+  .wp-tile.shake{animation:shake .45s}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+  @keyframes tile-in{from{opacity:0;transform:translateY(10px) scale(.94)}to{opacity:1;transform:none}}
+
+  /* confirm dialog */
+  #dlg-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:129;backdrop-filter:blur(3px)}
+  #dlg-backdrop.show{display:block;animation:fade-in .2s both}
+  #dlg{display:none;position:fixed;left:50%;top:50%;translate:-50% -50%;width:min(86vw,340px);background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:20px;z-index:130;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  #dlg.show{display:block;animation:dlg-in .32s cubic-bezier(.2,1.1,.3,1) both}
+  @keyframes dlg-in{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:none}}
+  .dlg-title{font-family:'Manrope',sans-serif;font-weight:800;font-size:16px;margin-bottom:6px;color:var(--text)}
+  .dlg-msg{font-size:13.5px;color:var(--text-dim);line-height:1.45;margin-bottom:16px}
+  .dlg-row{display:flex;gap:10px}
+  .dlg-row button{flex:1;padding:11px;border-radius:11px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);font-family:'Manrope',sans-serif;font-weight:700;font-size:13.5px;cursor:pointer;transition:transform .15s}
+  .dlg-row button:active{transform:scale(.96)}
+  .dlg-row button.danger{background:#FF6E6E;border-color:#FF6E6E;color:#2A0000}
 </style>
 </head>
 <body>
@@ -1077,6 +1193,7 @@
 
 <div id="main-col">
   <div id="wallpaper" style="display:none"></div>
+  <div id="fx-layer" aria-hidden="true"></div>
   <header>
     <button id="menu-btn" type="button" title="Chat history">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
@@ -1178,15 +1295,36 @@
 <div class="sheet-backdrop" id="settings-backdrop"></div>
 <div class="sheet" id="settings-sheet" role="dialog" aria-label="Settings">
   <div class="sheet-title"><span>Settings</span><button type="button" class="icon-btn" id="settings-close" aria-label="Close">✕</button></div>
+  <div class="set-section">Look</div>
   <div class="set-row"><div class="set-label">Theme</div><div class="seg" data-key="theme"><button type="button" data-v="dark">Dark</button><button type="button" data-v="light">Light</button></div></div>
   <div class="set-row"><div class="set-label">Font size</div><div class="seg" data-key="fontSize"><button type="button" data-v="13">S</button><button type="button" data-v="14.5">M</button><button type="button" data-v="16.5">L</button><button type="button" data-v="18">XL</button></div></div>
+  <div class="set-row"><div class="set-label">Chat wallpaper<div class="set-hint">100+ wallpapers aur apni photos</div></div><button type="button" class="wp-open" id="wp-open"><span class="wp-open-thumb" id="wp-open-thumb"></span><span id="wp-open-name">None</span><span>›</span></button></div>
+  <div class="set-section">Animations</div>
+  <div class="set-row"><div class="set-label">Animations</div><div class="seg" data-key="anim"><button type="button" data-v="off">Off</button><button type="button" data-v="light">Light</button><button type="button" data-v="full">Full</button></div></div>
+  <div class="set-row"><div class="set-label">Message style</div><select class="set-select" id="set-msganim"><option value="slide">Slide</option><option value="pop">Pop</option><option value="fade">Fade</option><option value="bounce">Bounce</option><option value="zoom">Zoom</option><option value="flip">Flip</option></select></div>
+  <div class="set-row"><div class="set-label">Background effect</div><select class="set-select" id="set-bgfx"><option value="orbs">Glow orbs</option><option value="bubbles">Bubbles</option><option value="stars">Stars</option><option value="fireflies">Fireflies</option><option value="none">None</option></select></div>
+  <div class="set-row"><div class="set-label">Send animation</div><label class="switch"><input type="checkbox" id="set-sendfx"><span></span></label></div>
+  <div class="anim-demo"><div class="demo-in" id="anim-demo">Namaste! Yeh message animation ka preview hai ✨</div></div>
+  <div class="set-section">Chat</div>
   <div class="set-row"><div class="set-label">Auto-scroll</div><label class="switch"><input type="checkbox" id="set-autoscroll"><span></span></label></div>
   <div class="set-row"><div class="set-label">Sounds</div><label class="switch"><input type="checkbox" id="set-sound"><span></span></label></div>
   <div class="set-row"><div class="set-label">Default model</div><select class="set-select" id="set-model"><option value="gemini1">Ai 1</option><option value="gemini2">Ai 2</option><option value="gemini3">Ai 3</option><option value="gemini4">Ai 4</option><option value="gemini5">Ai 5</option></select></div>
   <div class="set-row"><div class="set-label">Default voice</div><button type="button" class="set-btn" id="set-voice-btn"></button></div>
-  <div class="set-row set-col"><div class="set-label">Chat wallpaper</div><div class="wp-grid" id="wp-grid"></div></div>
+  <div class="set-note">Theme, font size, sounds, wallpaper aur animations sirf is phone/browser par save hote hain. Firebase se sync nahi hote, isliye aap aur aapki wife alag-alag rakh sakte hain.</div>
 </div>
-<input type="file" id="wp-file" accept="image/*" hidden>
+<div class="sheet-backdrop" id="wp-backdrop"></div>
+<div class="sheet wp-sheet" id="wp-sheet" role="dialog" aria-label="Chat wallpaper">
+  <div class="sheet-title"><span>Chat wallpaper</span><button type="button" class="icon-btn" id="wp-close" aria-label="Close">✕</button></div>
+  <div id="wp-preview"><div class="wp-pv-bub wp-pv-ai">Namaste! Kaise hain aap?</div><div class="wp-pv-bub wp-pv-user">Main theek hoon 😊</div></div>
+  <div class="wp-ctl"><span>Dimming</span><input type="range" id="wp-dim" min="0" max="85" step="5"><span class="wp-val" id="wp-dim-val"></span></div>
+  <div class="wp-ctl"><span>Slow movement</span><label class="switch" style="margin-left:auto"><input type="checkbox" id="wp-move"><span></span></label></div>
+  <div class="wp-tabs" id="wp-tabs"></div>
+  <div class="wp-hint" id="wp-hint"></div>
+  <div id="wp-grid2"></div>
+</div>
+<input type="file" id="wp-file" accept="image/*" multiple hidden>
+<div id="dlg-backdrop"></div>
+<div id="dlg" role="alertdialog"><div class="dlg-title" id="dlg-title"></div><div class="dlg-msg" id="dlg-msg"></div><div class="dlg-row"><button type="button" id="dlg-cancel">Cancel</button><button type="button" class="danger" id="dlg-ok">Delete</button></div></div>
 
 <div class="sheet-backdrop" id="msg-backdrop"></div>
 <div class="sheet" id="msg-sheet" role="dialog" aria-label="Message options">
@@ -1344,11 +1482,14 @@
 
   /* ---------------- Settings ---------------- */
   var WP_KEY = 'zamirWallpaperCustom';
+  var customWps = [], v5Ready = false;
   var WP_LIST = ['aurora', 'sunset', 'ocean', 'forest', 'rose', 'dots'];
   var replyTo = null;
   var replyBanner = document.getElementById('reply-banner');
   const SETTINGS_KEY = 'zamirSettings';
-  const settings = Object.assign({ theme: 'dark', fontSize: 14.5, autoScroll: true, sound: true, wallpaper: 'none' },
+  const settings = Object.assign({ theme: 'dark', fontSize: 14.5, autoScroll: true, sound: true, wallpaper: 'none',
+      anim: (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) ? 'light' : 'full',
+      msgAnim: 'slide', bgFx: 'orbs', sendFx: true, wpDim: 0.55, wpMove: false },
     (() => { try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch (_) { return {}; } })());
   function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (_) {} }
 
@@ -1739,6 +1880,7 @@
     userInput.value = '';
     clearReply();
     renderCurrentSession();
+    chatSwitchFx();
     closeSidebarOnMobile();
   }
 
@@ -1752,6 +1894,7 @@
     renderCurrentSession();
     clearReply();
     restoreDraft();
+    chatSwitchFx();
     closeSidebarOnMobile();
   }
 
@@ -2867,9 +3010,14 @@
     document.getElementById('set-sound').checked = !!soundOn;
     document.getElementById('set-model').value = selectedModel;
     document.getElementById('set-voice-btn').textContent = voiceSelectLabel.textContent;
-    renderWpGrid();
+    syncExtraUI();
   }
-  function openSettings() { syncSettingsUI(); setSheet.classList.add('show'); setBackdrop.classList.add('show'); }
+  function openSettings() {
+    syncSettingsUI();
+    Array.prototype.forEach.call(setSheet.children, function (c, i) { c.style.setProperty('--i', i); });
+    setSheet.classList.add('show'); setBackdrop.classList.add('show');
+    setTimeout(playDemo, 350);
+  }
   function closeSettings() { setSheet.classList.remove('show'); setBackdrop.classList.remove('show'); }
   document.getElementById('settings-btn').addEventListener('click', openSettings);
   document.getElementById('settings-close').addEventListener('click', closeSettings);
@@ -2878,8 +3026,10 @@
   document.querySelectorAll('#settings-sheet .seg').forEach(seg => {
     seg.addEventListener('click', (e) => {
       const b = e.target.closest('button'); if (!b) return;
-      if (seg.dataset.key === 'theme') applyTheme(b.dataset.v, true);
-      else { settings.fontSize = parseFloat(b.dataset.v); saveSettings(); applyFont(); syncSettingsUI(); }
+      const k = seg.dataset.key;
+      if (k === 'theme') applyTheme(b.dataset.v, true);
+      else if (k === 'fontSize') { settings.fontSize = parseFloat(b.dataset.v); saveSettings(); applyFont(); syncSettingsUI(); }
+      else if (k === 'anim') { settings.anim = b.dataset.v; saveSettings(); applyAnim(); syncSettingsUI(); playDemo(); }
     });
   });
   document.getElementById('set-autoscroll').addEventListener('change', e => { settings.autoScroll = e.target.checked; saveSettings(); });
@@ -2933,7 +3083,7 @@
     s.style.cssText = 'width:' + d + 'px;height:' + d + 'px;left:' + (e.clientX - r.left - d / 2) + 'px;top:' + (e.clientY - r.top - d / 2) + 'px';
     b.appendChild(s); setTimeout(() => s.remove(), 600);
   });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeSettings(); closeShare(); closeMsgMenu(); } });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeSettings(); closeShare(); closeMsgMenu(); closeWpSheet(); } });
 
   (function () {
     const sp = document.getElementById('splash');
@@ -2965,50 +3115,6 @@
       } catch (_) {}
     }, 250);
   });
-
-  /* 73 — Chat wallpaper */
-  var wpFile = document.getElementById('wp-file');
-  function getCustomWp() { try { return localStorage.getItem(WP_KEY); } catch (_) { return null; } }
-  function renderWpGrid() {
-    const grid = document.getElementById('wp-grid'); if (!grid) return;
-    const cur = settings.wallpaper || 'none', custom = getCustomWp();
-    let h = '<button type="button" class="wp-sw wp-none' + (cur === 'none' ? ' active' : '') + '" data-wp="none" aria-label="No wallpaper">✕</button>';
-    WP_LIST.forEach(n => { h += '<button type="button" class="wp-sw wp-' + n + (cur === n ? ' active' : '') + '" data-wp="' + n + '" aria-label="' + n + '"></button>'; });
-    if (custom) h += '<button type="button" class="wp-sw' + (cur === 'custom' ? ' active' : '') + '" data-wp="custom" aria-label="My photo" style="background-image:url(\'' + custom + '\')"></button>';
-    h += '<button type="button" class="wp-sw wp-add" data-wp="add" aria-label="Upload photo">＋</button>';
-    grid.innerHTML = h;
-  }
-  function applyWallpaper() {
-    const el = document.getElementById('wallpaper'); const w = settings.wallpaper || 'none';
-    el.className = ''; el.style.backgroundImage = '';
-    if (w === 'none') el.style.display = 'none';
-    else if (w === 'custom') {
-      const d = getCustomWp();
-      if (d) { el.style.display = 'block'; el.style.backgroundImage = 'url("' + d + '")'; } else el.style.display = 'none';
-    } else { el.style.display = 'block'; el.classList.add('wp-' + w); }
-    el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
-    renderWpGrid();
-  }
-  async function setCustomWallpaper(file) {
-    try {
-      const img = await loadImageFromFile(file);
-      const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
-      const sc = Math.min(1, 1400 / Math.max(iw, ih));
-      const c = document.createElement('canvas'); c.width = Math.round(iw * sc); c.height = Math.round(ih * sc);
-      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-      let q = 0.72, data = c.toDataURL('image/jpeg', q);
-      while (data.length > 1200000 && q > 0.35) { q -= 0.1; data = c.toDataURL('image/jpeg', q); }
-      localStorage.setItem(WP_KEY, data);
-      settings.wallpaper = 'custom'; saveSettings(); applyWallpaper(); toast('Wallpaper set ho gaya');
-    } catch (_) { toast('Wallpaper save nahi ho paya'); }
-  }
-  document.getElementById('wp-grid').addEventListener('click', (e) => {
-    const b = e.target.closest('.wp-sw'); if (!b) return;
-    const v = b.dataset.wp;
-    if (v === 'add') { wpFile.click(); return; }
-    settings.wallpaper = v; saveSettings(); applyWallpaper();
-  });
-  wpFile.addEventListener('change', async () => { const f = wpFile.files && wpFile.files[0]; wpFile.value = ''; if (f) await setCustomWallpaper(f); });
 
   /* Reply state */
   function setReply(m) {
@@ -3207,7 +3313,377 @@
     });
   }
 
-  applyWallpaper();
+
+  /* ===================== v6: wallpapers + animation settings (device-local) ===================== */
+  var WP_LEGACY = { aurora: 'g1', sunset: 'g2', ocean: 'g3', forest: 'g4', rose: 'g5', dots: 'p1' };
+
+  function buildWallpapers() {
+    var out = [];
+    var G = [
+      ['Aurora',135,'#1e3a5f','#4b2e83','#0f766e'],['Sunset',160,'#ff7e5f','#feb47b','#6a3093'],['Ocean',180,'#0f2027','#203a43','#2c5364'],
+      ['Forest',160,'#134e5e','#71b280'],['Rose',150,'#ee9ca7','#ffdde1','#c9a7f5'],['Midnight',160,'#0f0c29','#302b63','#24243e'],
+      ['Mango',135,'#ffe259','#ffa751'],['Lavender',135,'#a18cd1','#fbc2eb'],['Peach',135,'#ffecd2','#fcb69f'],['Mint',135,'#84fab0','#8fd3f4'],
+      ['Berry',135,'#8e2de2','#4a00e0'],['Coral',135,'#ff9a9e','#fecfef'],['Emerald',135,'#11998e','#38ef7d'],['Royal',135,'#141e30','#243b55'],
+      ['Fire',160,'#f12711','#f5af19'],['Candy',135,'#ff9ff3','#feca57'],['Deep Sea',160,'#000428','#004e92'],['Twilight',135,'#2b5876','#4e4376'],
+      ['Cherry',135,'#eb3349','#f45c43'],['Lagoon',135,'#43cea2','#185a9d'],['Plum',135,'#41295a','#2f0743'],['Dune',135,'#c79081','#dfa579'],
+      ['Sky',180,'#56ccf2','#2f80ed'],['Spring',135,'#00b09b','#96c93d'],['Dusk',160,'#2c3e50','#fd746c'],['Grape',135,'#7f00ff','#e100ff'],
+      ['Citrus',135,'#f7971e','#ffd200'],['Steel',135,'#485563','#29323c'],['Blush',135,'#f093fb','#f5576c'],['Glacier',135,'#e0eafc','#cfdef3'],
+      ['Jungle',160,'#0b3d0b','#2e8b57'],['Neon',135,'#00c6ff','#0072ff'],['Amber',135,'#ff8008','#ffc837'],['Orchid',135,'#da22ff','#9733ee'],
+      ['Slate',135,'#3a6073','#16222a'],['Honey',135,'#fceabb','#f8b500'],['Pearl',135,'#fdfbfb','#ebedee'],['Ruby',135,'#870000','#190a05'],
+      ['Teal Night',160,'#0f2027','#134e5e','#0f9b8e'],['Magenta',135,'#c33764','#1d2671'],['Lime Fizz',135,'#d4fc79','#96e6a1'],['Ice',135,'#c9d6ff','#e2e2e2'],
+      ['Moon',160,'#232526','#414345'],['Sunrise',160,'#355c7d','#6c5b7b','#c06c84'],['Sorbet',135,'#ffafbd','#ffc3a0'],['Galaxy',135,'#0f0c29','#5b247a','#1bcedf']
+    ];
+    G.forEach(function (g, i) { out.push({ id: 'g' + (i + 1), cat: 'gradient', name: g[0], css: 'linear-gradient(' + g[1] + 'deg,' + g.slice(2).join(',') + ')' }); });
+
+    var M = [
+      ['Dawn','#1a1a2e','#ff8a3d','#5b7cff','#ff6ea8'],['Lagoon Mesh','#0b1d33','#00c6ff','#57d68d','#5b7cff'],['Candy Mesh','#2a1630','#ff6ea8','#ffc15a','#8b5cf6'],
+      ['Forest Mesh','#0d1f17','#57d68d','#2dd4bf','#a3e635'],['Ember','#1c0f0f','#ff5f3d','#ffb347','#c2185b'],['Nebula','#0a0a1f','#7c4dff','#00e5ff','#ff4081'],
+      ['Peach Mesh','#fff1e6','#ff9a8b','#ffd194','#f6a5c0'],['Sky Mesh','#eaf4ff','#7ab8ff','#b8a5ff','#9be7ff'],['Mint Mesh','#eafaf1','#6ee7b7','#93c5fd','#fde68a'],
+      ['Lilac','#f3ecff','#c4a1ff','#ffb3d9','#a5d8ff'],['Tropic','#06302e','#00d4aa','#ffd43b','#ff6b6b'],['Wine Mesh','#240a14','#c2185b','#ff8a65','#6a1b9a'],
+      ['Arctic','#0b2233','#4dd0e1','#e0f7fa','#5c6bc0'],['Citrus Mesh','#2a2200','#ffd600','#ff9100','#76ff03'],['Rose Gold','#2b1a1e','#f7a8b8','#ffcba4','#b76e79'],
+      ['Indigo','#0f1330','#4f46e5','#06b6d4','#a855f7'],['Mocha','#1f1612','#a47551','#e0b88f','#6f4e37'],['Meadow','#102314','#84cc16','#22c55e','#fde047'],
+      ['Twilight Mesh','#150f2e','#6366f1','#f472b6','#fb923c'],['Cloud','#f4f6fa','#cbd5e1','#dbeafe','#fce7f3'],['Sunset Mesh','#2b0f1e','#ff7e5f','#feb47b','#7b2ff7'],
+      ['Deep Teal','#031c1f','#0ea5a4','#134e4a','#38bdf8'],['Bubblegum','#ffe4f1','#ff8ac2','#a78bfa','#7dd3fc'],['Midnight Mesh','#05060f','#1e3a8a','#6d28d9','#0e7490']
+    ];
+    var MP = [[20,15,85,25,40,90],[15,80,80,20,55,45],[80,85,15,30,60,10],[50,10,10,70,90,80],[10,40,90,60,45,95],[70,15,25,85,95,50]];
+    M.forEach(function (m, i) {
+      var q = MP[i % 6];
+      out.push({ id: 'm' + (i + 1), cat: 'mesh', name: m[0],
+        css: 'radial-gradient(at ' + q[0] + '% ' + q[1] + '%,' + m[2] + ' 0,transparent 55%),radial-gradient(at ' + q[2] + '% ' + q[3] + '%,' + m[3] + ' 0,transparent 52%),radial-gradient(at ' + q[4] + '% ' + q[5] + '%,' + m[4] + ' 0,transparent 56%),' + m[1] });
+    });
+
+    var PAT = [
+      ['Dots',24,24,function (c) { return "<circle cx='12' cy='12' r='1.7' fill='" + c + "'/>"; }],
+      ['Grid',32,32,function (c) { return "<path d='M32 0H0V32' fill='none' stroke='" + c + "' stroke-width='1'/>"; }],
+      ['Lines',20,20,function (c) { return "<path d='M-5 5L5 -5M0 20L20 0M15 25L25 15' stroke='" + c + "' stroke-width='1.2'/>"; }],
+      ['Checks',40,40,function (c) { return "<rect width='20' height='20' fill='" + c + "'/><rect x='20' y='20' width='20' height='20' fill='" + c + "'/>"; }],
+      ['Plus',28,28,function (c) { return "<path d='M14 9v10M9 14h10' stroke='" + c + "' stroke-width='1.6' stroke-linecap='round'/>"; }],
+      ['Waves',40,20,function (c) { return "<path d='M0 10Q10 0 20 10T40 10' fill='none' stroke='" + c + "' stroke-width='1.4'/>"; }],
+      ['Zigzag',24,12,function (c) { return "<path d='M0 10L6 2L12 10L18 2L24 10' fill='none' stroke='" + c + "' stroke-width='1.3'/>"; }],
+      ['Triangles',30,26,function (c) { return "<path d='M15 3L27 23H3Z' fill='none' stroke='" + c + "' stroke-width='1.2'/>"; }],
+      ['Rings',36,36,function (c) { return "<circle cx='18' cy='18' r='10' fill='none' stroke='" + c + "' stroke-width='1.3'/>"; }],
+      ['Bricks',40,20,function (c) { return "<path d='M0 .5H40M0 10.5H40M20 .5V10.5M0 10.5V20.5M40 10.5V20.5' fill='none' stroke='" + c + "' stroke-width='1'/>"; }],
+      ['Hatch',16,16,function (c) { return "<path d='M0 0L16 16M16 0L0 16' stroke='" + c + "' stroke-width='.9'/>"; }],
+      ['Sparkle',40,40,function (c) { return "<path d='M20 11L22.2 17.8L29 20L22.2 22.2L20 29L17.8 22.2L11 20L17.8 17.8Z' fill='" + c + "'/>"; }]
+    ];
+    var SCH = [['Night','#0f172a','rgba(255,138,61,.30)'],['Cream','#f5efe6','rgba(194,65,12,.24)']];
+    var pn = 0;
+    SCH.forEach(function (sc) {
+      PAT.forEach(function (pt) {
+        pn++;
+        var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" + pt[1] + "' height='" + pt[2] + "'>" + pt[3](sc[2]) + "</svg>";
+        out.push({ id: 'p' + pn, cat: 'pattern', name: pt[0] + ' ' + sc[0],
+          css: 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '") 0 0/' + pt[1] + 'px ' + pt[2] + 'px repeat,' + sc[1] });
+      });
+    });
+
+    var S = [['Charcoal','#0E1116'],['Navy','#0b1d33'],['Indigo Night','#1b1b2f'],['Pine','#10261f'],['Wine','#2b1a1a'],['Plum Night','#241b35'],
+             ['Cloud','#f4f6fa'],['Cream','#fff4e5'],['Mint Mist','#e8f5e9'],['Blush','#fde8ef'],['Sky','#e7f0ff'],['Lemon','#fff9db']];
+    S.forEach(function (c, i) { out.push({ id: 's' + (i + 1), cat: 'solid', name: c[0], css: c[1] }); });
+    return out;
+  }
+  var WALLPAPERS = buildWallpapers();
+  var WP_CATS = [['all', 'All'], ['gradient', 'Gradient'], ['mesh', 'Mesh'], ['pattern', 'Pattern'], ['solid', 'Solid'], ['mine', 'My photos']];
+  var wpTab = 'all';
+
+  /* --- IndexedDB for my own photos (stays on this device only) --- */
+  var wpDbP = null;
+  function wpOpen() {
+    if (!wpDbP) wpDbP = new Promise(function (res, rej) {
+      try {
+        var r = indexedDB.open('zamirLocal', 1);
+        r.onupgradeneeded = function () { r.result.createObjectStore('wallpapers', { keyPath: 'id' }); };
+        r.onsuccess = function () { res(r.result); };
+        r.onerror = function () { rej(r.error); };
+      } catch (e) { rej(e); }
+    });
+    return wpDbP;
+  }
+  function wpTx(mode, fn) {
+    return wpOpen().then(function (db) {
+      return new Promise(function (res, rej) {
+        var tx = db.transaction('wallpapers', mode), req = fn(tx.objectStore('wallpapers'));
+        tx.oncomplete = function () { res(req ? req.result : undefined); };
+        tx.onerror = function () { rej(tx.error); };
+        tx.onabort = function () { rej(tx.error); };
+      });
+    });
+  }
+  function resizeToDataUrl(img, max, q, limit) {
+    var iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+    var sc = Math.min(1, max / Math.max(iw, ih));
+    var c = document.createElement('canvas'); c.width = Math.max(1, Math.round(iw * sc)); c.height = Math.max(1, Math.round(ih * sc));
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    var d = c.toDataURL('image/jpeg', q);
+    while (limit && d.length > limit && q > 0.35) { q -= 0.1; d = c.toDataURL('image/jpeg', q); }
+    return d;
+  }
+  function imgFromSrc(src) {
+    return new Promise(function (res, rej) { var i = new Image(); i.onload = function () { res(i); }; i.onerror = rej; i.src = src; });
+  }
+  function loadCustomWps() {
+    return wpTx('readonly', function (st) { return st.getAll(); }).then(function (all) {
+      customWps = (all || []).sort(function (a, b) { return b.t - a.t; });
+    }).then(function () {
+      var legacy = null; try { legacy = localStorage.getItem(WP_KEY); } catch (_) {}
+      if (!legacy) return;
+      return imgFromSrc(legacy).then(function (img) {
+        var it = { id: 'u_legacy', data: legacy, thumb: resizeToDataUrl(img, 240, 0.7, 0), t: Date.now() };
+        return wpTx('readwrite', function (st) { return st.put(it); }).then(function () {
+          customWps.unshift(it);
+          if (settings.wallpaper === 'custom') { settings.wallpaper = 'u_legacy'; saveSettings(); }
+          try { localStorage.removeItem(WP_KEY); } catch (_) {}
+        });
+      }).catch(function () { try { localStorage.removeItem(WP_KEY); } catch (_) {} });
+    }).catch(function () { customWps = []; });
+  }
+
+  function wpFind(id) {
+    for (var i = 0; i < WALLPAPERS.length; i++) if (WALLPAPERS[i].id === id) return WALLPAPERS[i];
+    for (var j = 0; j < customWps.length; j++) if (customWps[j].id === id) return customWps[j];
+    return null;
+  }
+  function wpIsCustom(it) { return !!it && it.id.indexOf('u_') === 0; }
+  function wpCss(it) { return wpIsCustom(it) ? 'url("' + it.data + '") center/cover no-repeat' : it.css; }
+  function wpThumbCss(it) { return wpIsCustom(it) ? 'url("' + it.thumb + '") center/cover no-repeat' : it.css; }
+  function wpName(it) {
+    if (!wpIsCustom(it)) return it.name;
+    var n = customWps.indexOf(it); return 'Photo ' + (customWps.length - n);
+  }
+
+  function applyWallpaper() {
+    var el = document.getElementById('wallpaper');
+    var id = settings.wallpaper || 'none';
+    if (WP_LEGACY[id]) { id = WP_LEGACY[id]; settings.wallpaper = id; saveSettings(); }
+    var it = id === 'none' ? null : wpFind(id);
+    el.className = ''; el.style.cssText = '';
+    if (!it) { el.style.display = 'none'; }
+    else {
+      el.style.display = 'block';
+      el.style.background = wpCss(it);
+      if (settings.wpMove && (it.cat === 'gradient' || it.cat === 'mesh')) { el.style.backgroundSize = '300% 300%'; el.classList.add('wp-move'); }
+    }
+    el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
+    document.documentElement.style.setProperty('--wp-dim', settings.wpDim);
+    updateWpUi();
+  }
+  function updateWpUi() {
+    var id = settings.wallpaper || 'none', it = id === 'none' ? null : wpFind(WP_LEGACY[id] || id);
+    var th = document.getElementById('wp-open-thumb'), nm = document.getElementById('wp-open-name');
+    if (th) th.style.background = it ? wpThumbCss(it) : '';
+    if (nm) nm.textContent = it ? wpName(it) : 'None';
+    var pv = document.getElementById('wp-preview');
+    if (pv) pv.style.background = it ? wpCss(it) : '';
+    document.querySelectorAll('#wp-grid2 .wp-tile').forEach(function (t) { t.classList.toggle('active', t.dataset.id === (it ? it.id : 'none')); });
+  }
+
+  function renderWpTabs() {
+    var box = document.getElementById('wp-tabs'); if (!box) return;
+    box.innerHTML = '';
+    WP_CATS.forEach(function (c) {
+      var n = c[0] === 'all' ? WALLPAPERS.length + customWps.length : c[0] === 'mine' ? customWps.length : WALLPAPERS.filter(function (w) { return w.cat === c[0]; }).length;
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'wp-tab' + (wpTab === c[0] ? ' active' : '');
+      b.dataset.tab = c[0]; b.textContent = c[1] + ' ' + n; box.appendChild(b);
+    });
+    document.getElementById('wp-hint').textContent = (wpTab === 'all' || wpTab === 'mine')
+      ? 'Apni photo par long press = delete. Default wallpapers delete nahi hote.' : 'Tap karke lagayein. Dimming se text saaf rakhein.';
+  }
+  function mkTile(it, idx) {
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'wp-tile'; b.dataset.id = it.id;
+    b.style.background = wpThumbCss(it); b.style.setProperty('--i', Math.min(idx, 24));
+    b.innerHTML = '<span class="wp-name"></span><span class="wp-check">✓</span>';
+    b.querySelector('.wp-name').textContent = wpName(it);
+    return b;
+  }
+  function renderWpTiles() {
+    var grid = document.getElementById('wp-grid2'); if (!grid) return;
+    var frag = document.createDocumentFragment(), i = 0, cur = settings.wallpaper || 'none';
+    if (wpTab === 'all' || wpTab === 'mine') {
+      var add = document.createElement('button'); add.type = 'button'; add.className = 'wp-tile wp-add'; add.dataset.id = 'add';
+      add.style.setProperty('--i', 0); add.innerHTML = '<span>＋</span><span class="wp-name-in">Add photo</span>'; frag.appendChild(add);
+      customWps.forEach(function (it) { frag.appendChild(mkTile(it, ++i)); });
+    }
+    if (wpTab === 'all') {
+      var none = document.createElement('button'); none.type = 'button'; none.className = 'wp-tile wp-none'; none.dataset.id = 'none';
+      none.style.setProperty('--i', ++i); none.innerHTML = '<span>✕</span><span class="wp-name-in">None</span><span class="wp-check">✓</span>'; frag.appendChild(none);
+    }
+    WALLPAPERS.forEach(function (w) { if (wpTab === 'all' || w.cat === wpTab) frag.appendChild(mkTile(w, ++i)); });
+    grid.innerHTML = ''; grid.appendChild(frag); grid.scrollTop = 0;
+    updateWpUi();
+  }
+
+  var wpSheet = document.getElementById('wp-sheet'), wpBackdrop = document.getElementById('wp-backdrop');
+  function openWpSheet() {
+    closeSettings();
+    document.getElementById('wp-dim').value = Math.round((settings.wpDim || 0) * 100);
+    document.getElementById('wp-dim-val').textContent = Math.round((settings.wpDim || 0) * 100) + '%';
+    document.getElementById('wp-move').checked = !!settings.wpMove;
+    renderWpTabs(); renderWpTiles();
+    wpSheet.classList.add('show'); wpBackdrop.classList.add('show');
+  }
+  function closeWpSheet() { wpSheet.classList.remove('show'); wpBackdrop.classList.remove('show'); }
+  document.getElementById('wp-open').addEventListener('click', openWpSheet);
+  document.getElementById('wp-close').addEventListener('click', closeWpSheet);
+  wpBackdrop.addEventListener('click', closeWpSheet);
+  document.getElementById('wp-tabs').addEventListener('click', function (e) {
+    var b = e.target.closest('.wp-tab'); if (!b) return; wpTab = b.dataset.tab; renderWpTabs(); renderWpTiles();
+  });
+  document.getElementById('wp-dim').addEventListener('input', function (e) {
+    settings.wpDim = parseInt(e.target.value, 10) / 100; saveSettings();
+    document.documentElement.style.setProperty('--wp-dim', settings.wpDim);
+    document.getElementById('wp-dim-val').textContent = e.target.value + '%';
+  });
+  document.getElementById('wp-move').addEventListener('change', function (e) { settings.wpMove = e.target.checked; saveSettings(); applyWallpaper(); });
+
+  /* confirm dialog */
+  function confirmDlg(title, msg, okLabel) {
+    return new Promise(function (res) {
+      var d = document.getElementById('dlg'), bd = document.getElementById('dlg-backdrop');
+      var ok = document.getElementById('dlg-ok'), cn = document.getElementById('dlg-cancel');
+      document.getElementById('dlg-title').textContent = title; document.getElementById('dlg-msg').textContent = msg; ok.textContent = okLabel || 'OK';
+      d.classList.add('show'); bd.classList.add('show');
+      function done(v) { d.classList.remove('show'); bd.classList.remove('show'); ok.onclick = cn.onclick = bd.onclick = null; res(v); }
+      ok.onclick = function () { done(true); }; cn.onclick = function () { done(false); }; bd.onclick = function () { done(false); };
+    });
+  }
+  function deleteCustomWp(id) {
+    wpTx('readwrite', function (st) { return st.delete(id); }).then(function () {
+      customWps = customWps.filter(function (c) { return c.id !== id; });
+      if (settings.wallpaper === id) { settings.wallpaper = 'none'; saveSettings(); }
+      applyWallpaper(); renderWpTabs(); renderWpTiles(); toast('Wallpaper delete ho gaya');
+    }).catch(function () { toast('Delete nahi ho paya'); });
+  }
+  function wpLongPress(tile) {
+    var id = tile.dataset.id;
+    if (id === 'add') return;
+    if (id.indexOf('u_') === 0) {
+      confirmDlg('Ye wallpaper delete karein?', 'Ye photo sirf is phone se hata di jayegi.', 'Delete').then(function (ok) { if (ok) deleteCustomWp(id); });
+    } else {
+      tile.classList.remove('shake'); void tile.offsetWidth; tile.classList.add('shake');
+      setTimeout(function () { tile.classList.remove('shake'); }, 500);
+      toast('Default wallpaper delete nahi ho sakta 🔒');
+    }
+  }
+  var wpGrid = document.getElementById('wp-grid2'), wpFile = document.getElementById('wp-file');
+  var wpLpT = null, wpLpFired = false, wpLpXY = null;
+  function wpCancelLp() { clearTimeout(wpLpT); wpGrid.querySelectorAll('.pressing').forEach(function (t) { t.classList.remove('pressing'); }); }
+  wpGrid.addEventListener('pointerdown', function (e) {
+    var t = e.target.closest('.wp-tile'); wpLpFired = false; if (!t || t.dataset.id === 'add') return;
+    wpLpXY = { x: e.clientX, y: e.clientY }; t.classList.add('pressing'); clearTimeout(wpLpT);
+    wpLpT = setTimeout(function () { wpLpFired = true; t.classList.remove('pressing'); wpLongPress(t); }, 520);
+  });
+  wpGrid.addEventListener('pointermove', function (e) { if (wpLpXY && (Math.abs(e.clientX - wpLpXY.x) > 10 || Math.abs(e.clientY - wpLpXY.y) > 10)) wpCancelLp(); });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (ev) { wpGrid.addEventListener(ev, wpCancelLp); });
+  wpGrid.addEventListener('contextmenu', function (e) { if (e.target.closest('.wp-tile')) e.preventDefault(); });
+  wpGrid.addEventListener('click', function (e) {
+    var t = e.target.closest('.wp-tile'); if (!t) return;
+    if (wpLpFired) { wpLpFired = false; return; }
+    var id = t.dataset.id;
+    if (id === 'add') { wpFile.click(); return; }
+    settings.wallpaper = id; saveSettings(); applyWallpaper();
+  });
+  wpFile.addEventListener('change', function () {
+    var files = Array.prototype.slice.call(wpFile.files || []); wpFile.value = '';
+    if (files.length) addWallpaperFiles(files);
+  });
+  async function addWallpaperFiles(files) {
+    var added = 0, lastId = null, failed = 0;
+    for (var k = 0; k < files.length; k++) {
+      if (customWps.length >= 40) { toast('Max 40 photos tak add ho sakti hain'); break; }
+      try {
+        var img = await loadImageFromFile(files[k]);
+        var it = { id: 'u_' + Date.now() + '_' + k, data: resizeToDataUrl(img, 1400, 0.72, 1200000), thumb: resizeToDataUrl(img, 240, 0.7, 0), t: Date.now() + k };
+        await wpTx('readwrite', function (st) { return st.put(it); });
+        customWps.unshift(it); lastId = it.id; added++;
+      } catch (_) { failed++; }
+    }
+    if (added) {
+      settings.wallpaper = lastId; saveSettings(); wpTab = 'mine';
+      applyWallpaper(); renderWpTabs(); renderWpTiles(); toast(added + ' wallpaper add hua');
+    } else if (failed) toast('Photo save nahi ho payi');
+  }
+
+  /* --- Animation settings --- */
+  function applyAnim() {
+    var d = document.documentElement;
+    d.setAttribute('data-anim', settings.anim); d.setAttribute('data-msg', settings.msgAnim); d.setAttribute('data-bg', settings.bgFx);
+    buildFx();
+  }
+  function buildFx() {
+    var L = document.getElementById('fx-layer'); if (!L) return;
+    L.innerHTML = '';
+    var t = settings.bgFx;
+    if (settings.anim !== 'full' || t === 'none' || t === 'orbs') return;
+    var n = t === 'stars' ? 40 : t === 'bubbles' ? 16 : 20, frag = document.createDocumentFragment();
+    for (var i = 0; i < n; i++) {
+      var e = document.createElement('i'), r = Math.random;
+      if (t === 'bubbles') {
+        var sz = 14 + r() * 46; e.className = 'fx-b';
+        e.style.cssText = 'width:' + sz + 'px;height:' + sz + 'px;left:' + (r() * 100) + '%;--dx:' + (r() * 60 - 30) + 'px;animation-duration:' + (12 + r() * 14) + 's;animation-delay:-' + (r() * 20) + 's';
+      } else if (t === 'stars') {
+        var z = 1 + r() * 2.2; e.className = 'fx-s';
+        e.style.cssText = 'width:' + z + 'px;height:' + z + 'px;left:' + (r() * 100) + '%;top:' + (r() * 100) + '%;animation-duration:' + (2 + r() * 4) + 's;animation-delay:-' + (r() * 6) + 's';
+      } else {
+        e.className = 'fx-f';
+        e.style.cssText = 'left:' + (r() * 100) + '%;top:' + (r() * 100) + '%;--dx:' + (r() * 120 - 60) + 'px;--dy:' + (r() * 120 - 60) + 'px;animation-duration:' + (7 + r() * 8) + 's;animation-delay:-' + (r() * 10) + 's';
+      }
+      frag.appendChild(e);
+    }
+    L.appendChild(frag);
+  }
+  function playDemo() {
+    var d = document.getElementById('anim-demo'); if (!d) return;
+    d.classList.remove('demo-in'); void d.offsetWidth; d.classList.add('demo-in');
+  }
+  function syncExtraUI() {
+    if (!v5Ready) return;
+    document.getElementById('set-msganim').value = settings.msgAnim;
+    document.getElementById('set-bgfx').value = settings.bgFx;
+    document.getElementById('set-sendfx').checked = !!settings.sendFx;
+    updateWpUi();
+  }
+  document.getElementById('set-msganim').addEventListener('change', function (e) { settings.msgAnim = e.target.value; saveSettings(); applyAnim(); playDemo(); });
+  document.getElementById('set-bgfx').addEventListener('change', function (e) { settings.bgFx = e.target.value; saveSettings(); applyAnim(); });
+  document.getElementById('set-sendfx').addEventListener('change', function (e) { settings.sendFx = e.target.checked; saveSettings(); });
+
+  function chatSwitchFx() {
+    if (settings.anim === 'off') return;
+    chatContainer.classList.remove('switching'); void chatContainer.offsetWidth; chatContainer.classList.add('switching');
+    setTimeout(function () { chatContainer.classList.remove('switching'); }, 420);
+  }
+
+  /* send animation (plane + glow on the new bubble) */
+  var sendFxPending = false;
+  sendBtn.addEventListener('click', function () {
+    if (settings.anim === 'off' || !settings.sendFx) return;
+    if (!userInput.value.trim()) return;
+    var r = sendBtn.getBoundingClientRect(), f = document.createElement('div');
+    f.className = 'send-fly';
+    f.innerHTML = '<svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>';
+    f.style.left = (r.left + r.width / 2 - 14) + 'px'; f.style.top = (r.top + r.height / 2 - 14) + 'px';
+    document.body.appendChild(f); setTimeout(function () { f.remove(); }, 800);
+    sendBtn.classList.remove('launch'); void sendBtn.offsetWidth; sendBtn.classList.add('launch');
+    sendFxPending = true; setTimeout(function () { sendFxPending = false; }, 1200);
+  });
+  new MutationObserver(function (muts) {
+    if (!sendFxPending) return;
+    muts.forEach(function (m) {
+      m.addedNodes.forEach(function (n) {
+        if (n.nodeType === 1 && n.classList.contains('row') && n.classList.contains('user')) {
+          n.classList.add('just-sent'); setTimeout(function () { n.classList.remove('just-sent'); }, 1100); sendFxPending = false;
+        }
+      });
+    });
+  }).observe(chatContainer, { childList: true });
+
+  function initV6() {
+    v5Ready = true;
+    applyAnim();
+    applyWallpaper();
+    syncExtraUI();
+    loadCustomWps().then(function () { applyWallpaper(); });
+  }
+  initV6();
   initBirthdayBanner();
 </script>
 </body>
