@@ -1997,10 +1997,7 @@
       const cachedRow = appendMessageDOM(aiMsg, session.messages.length - 1);
       playReceiveSound();
       if (liveModeActive) speakInLiveMode(cached);
-      else speakText(cached, {
-        onStart: () => { const b = cachedRow.querySelector('.speak-btn'); if (b) b.classList.add('speaking'); },
-        onEnd: () => { const b = cachedRow.querySelector('.speak-btn'); if (b) b.classList.remove('speaking'); }
-      });
+      // Normal chat: awaaz sirf speaker button dabane par aayegi (auto-speak band).
       finishSend();
       return;
     }
@@ -2054,10 +2051,7 @@
       if (cacheKey) responseCache.set(cacheKey, fullText);
       playReceiveSound();
       if (liveModeActive) speakInLiveMode(fullText);
-      else if (aiRow) speakText(fullText, {
-        onStart: () => { const b = aiRow.querySelector('.speak-btn'); if (b) b.classList.add('speaking'); },
-        onEnd: () => { const b = aiRow.querySelector('.speak-btn'); if (b) b.classList.remove('speaking'); }
-      });
+      // Normal chat: awaaz sirf speaker button dabane par aayegi (auto-speak band).
 
     } catch (error) {
       console.error(error);
@@ -2171,10 +2165,7 @@
         avatarEl.textContent = regenLabel.replace('Ai ', 'Ai');
         avatarEl.title = regenLabel;
       }
-      if (!liveModeActive) speakText(fullText, {
-        onStart: () => { const b = row.querySelector('.speak-btn'); if (b) b.classList.add('speaking'); },
-        onEnd: () => { const b = row.querySelector('.speak-btn'); if (b) b.classList.remove('speaking'); }
-      });
+      // Regenerate par bhi auto-speak band — speaker button dabane par hi awaaz.
 
     } catch (error) {
       console.error(error);
