@@ -1,5 +1,5 @@
 // api/gemini2.js
-const MODEL = 'gemini-flash-lite-latest';
+const MODEL = process.env.GEMINI_MODEL_2 || 'gemini-flash-lite-latest';
 
 // Family birthdays (month is 1-12)
 const FAMILY_BIRTHDAYS = [
