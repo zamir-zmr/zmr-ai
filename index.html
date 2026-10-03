@@ -939,9 +939,73 @@
   .set-select:hover,.set-btn:hover{border-color:var(--accent)}
   #toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--surface-2);color:var(--text);border:1px solid var(--border);padding:9px 16px;border-radius:20px;font-size:13px;z-index:90;opacity:0;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.3)}
   #toast.show{opacity:1;animation:toast-in 300ms cubic-bezier(.2,.9,.25,1.1) both}
+
+  /* ===== v3 ===== */
+  #model-select-btn,#voice-select-btn{display:none !important}
+  #sound-toggle{margin-left:auto}
+  #main-col{position:relative;z-index:1}
+  body::before,body::after{content:'';position:fixed;border-radius:50%;pointer-events:none;z-index:0;will-change:transform}
+  body::before{width:60vmax;height:60vmax;left:-20vmax;top:-18vmax;background:radial-gradient(circle,rgba(255,138,61,.20),transparent 65%);animation:drift-a 24s ease-in-out infinite alternate}
+  body::after{width:56vmax;height:56vmax;right:-22vmax;bottom:-20vmax;background:radial-gradient(circle,rgba(91,124,255,.18),transparent 65%);animation:drift-b 28s ease-in-out infinite alternate}
+  html[data-theme="light"] body::before{background:radial-gradient(circle,rgba(242,113,28,.14),transparent 65%)}
+  html[data-theme="light"] body::after{background:radial-gradient(circle,rgba(91,124,255,.12),transparent 65%)}
+  @keyframes drift-a{to{transform:translate(10vmax,8vmax) scale(1.15)}}
+  @keyframes drift-b{to{transform:translate(-9vmax,-7vmax) scale(1.12)}}
+
+  /* splash */
+  #splash{position:fixed;inset:0;z-index:300;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .6s ease,visibility .6s}
+  #splash.hide{opacity:0;visibility:hidden}
+  .splash-logo{width:72px;height:72px;border-radius:22px;background:linear-gradient(135deg,var(--accent),#FFB870);display:flex;align-items:center;justify-content:center;font-family:'Manrope',sans-serif;font-weight:800;font-size:26px;color:#1A0E00;animation:splash-pop 900ms cubic-bezier(.2,.9,.25,1.2) both,glow 2.4s 900ms ease-in-out infinite}
+  .splash-name{font-family:'Manrope',sans-serif;font-weight:700;font-size:20px;color:var(--text);animation:fade-up .8s .25s both}
+  .splash-bar{width:120px;height:3px;border-radius:3px;background:var(--surface-2);overflow:hidden;animation:fade-up .8s .4s both}
+  .splash-bar i{display:block;height:100%;width:40%;background:var(--accent);border-radius:3px;animation:splash-slide 1s ease-in-out infinite}
+  @keyframes splash-pop{from{opacity:0;transform:scale(.5) rotate(-14deg)}to{opacity:1;transform:none}}
+  @keyframes fade-up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  @keyframes splash-slide{from{transform:translateX(-110%)}to{transform:translateX(280%)}}
+
+  /* hero (empty chat) */
+  .hero{display:flex;flex-direction:column;align-items:center;text-align:center;margin-top:11vh;padding:0 16px;animation:fade-in 600ms both}
+  .hero-orb{position:relative;width:96px;height:96px;margin-bottom:22px;animation:float 5s ease-in-out infinite}
+  .hero-ring{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,var(--accent),#5B7CFF,#57D68D,var(--accent));animation:spin 6s linear infinite;-webkit-mask:radial-gradient(circle,transparent 58%,#000 60%);mask:radial-gradient(circle,transparent 58%,#000 60%);filter:drop-shadow(0 0 14px rgba(255,138,61,.45))}
+  .hero-core{position:absolute;inset:14px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#FFB870);display:flex;align-items:center;justify-content:center;font-family:'Manrope',sans-serif;font-weight:800;font-size:24px;color:#1A0E00;animation:pop 700ms 150ms cubic-bezier(.3,1.4,.5,1) both}
+  .hero-title{font-family:'Manrope',sans-serif;font-weight:800;font-size:26px;background:linear-gradient(90deg,var(--text),var(--accent),var(--text));background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shimmer 5s linear infinite,fade-up 700ms 200ms both}
+  .hero-sub{margin-top:8px;font-size:14.5px;color:var(--text-dim);animation:fade-up 700ms 350ms both}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+  @keyframes shimmer{from{background-position:0 0}to{background-position:-200% 0}}
+
+  /* streaming cursor + typing */
+  .bubble.streaming .msg-text::after{content:'';display:inline-block;width:7px;height:15px;margin-left:3px;vertical-align:-2px;border-radius:2px;background:var(--accent);animation:blink 1s steps(2) infinite}
+  @keyframes blink{50%{opacity:0}}
+  .typing span{background:var(--accent)}
+
+  /* speaker button */
+  .speak-btn .ic-stop{display:none}
+  .speak-btn.speaking .ic-stop{display:block;animation:pop .3s both}
+  .speak-btn.speaking .ic-play{display:none}
+  .ai-actions .speak-btn.speaking{color:var(--accent);background:var(--accent-dim);animation:speak-pulse 1.2s ease-in-out infinite}
+  @keyframes speak-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,138,61,.45)}50%{box-shadow:0 0 0 7px rgba(255,138,61,0)}}
+
+  /* history active bar */
+  .history-item.active::before{content:'';position:absolute;left:0;top:25%;bottom:25%;width:3px;border-radius:3px;background:var(--accent);animation:bar-grow .35s cubic-bezier(.3,1.4,.5,1) both}
+  @keyframes bar-grow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+
+  /* settings stagger + inputs */
+  .sheet.show .set-row{animation:item-in .42s cubic-bezier(.2,.8,.2,1) both}
+  .sheet.show .set-row:nth-of-type(2){animation-delay:40ms}.sheet.show .set-row:nth-of-type(3){animation-delay:80ms}.sheet.show .set-row:nth-of-type(4){animation-delay:120ms}.sheet.show .set-row:nth-of-type(5){animation-delay:160ms}.sheet.show .set-row:nth-of-type(6){animation-delay:200ms}.sheet.show .set-row:nth-of-type(7){animation-delay:240ms}.sheet.show .set-row:nth-of-type(8){animation-delay:280ms}.sheet.show .set-row:nth-of-type(9){animation-delay:320ms}
+  .set-hint{font-size:11.5px;color:var(--text-dim);margin-top:3px;max-width:230px;line-height:1.35}
+  .set-input{width:100px;text-align:right;background:var(--surface-2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:8px 10px;font-family:'Manrope',sans-serif;font-weight:600;font-size:13px;outline:none;transition:border-color .15s,box-shadow .15s}
+  .set-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,138,61,.15)}
+
+  /* token bar v3 */
+  #tok-text{order:0}
+  .live-dot{width:7px;height:7px;border-radius:50%;background:var(--text-dim);flex-shrink:0;transition:background .3s}
+  #token-bar.live .live-dot{background:#57D68D;animation:pulse-dot 1s ease-out infinite}
+  #token-bar:not(.has-limit) .tok-track{display:none}
+  #token-bar.live .tok-fill{background-size:200% 100%;animation:shimmer 1.2s linear infinite}
 </style>
 </head>
 <body>
+<div id="splash"><div class="splash-logo">AI</div><div class="splash-name">Zamir Ai</div><div class="splash-bar"><i></i></div></div>
 
 <div id="sidebar-backdrop"></div>
 
@@ -1010,8 +1074,9 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
     </button>
 
-    <div id="token-bar" title="Aaj ke estimated tokens">
-      <span id="tok-text">Aaj: 0 used</span>
+    <div id="token-bar" title="Aaj ka real usage (Gemini API se)">
+      <span class="live-dot"></span>
+      <span id="tok-text">Aaj: 0 tokens</span>
       <div class="tok-track"><div class="tok-fill" id="tok-fill"></div></div>
     </div>
 
@@ -1065,8 +1130,9 @@
   <div class="set-row"><div class="set-label">Sounds</div><label class="switch"><input type="checkbox" id="set-sound"><span></span></label></div>
   <div class="set-row"><div class="set-label">Default model</div><select class="set-select" id="set-model"><option value="gemini1">Ai 1</option><option value="gemini2">Ai 2</option><option value="gemini3">Ai 3</option><option value="gemini4">Ai 4</option><option value="gemini5">Ai 5</option></select></div>
   <div class="set-row"><div class="set-label">Default voice</div><button type="button" class="set-btn" id="set-voice-btn"></button></div>
-  <div class="set-row"><div class="set-label">Daily token limit</div><select class="set-select" id="set-limit"><option value="10000">10,000</option><option value="25000">25,000</option><option value="50000">50,000</option><option value="100000">100,000</option><option value="250000">250,000</option></select></div>
-  <div class="set-row"><div class="set-label">Aaj ka token counter</div><button type="button" class="set-btn" id="set-reset-tokens">Reset</button></div>
+  <div class="set-row"><div class="set-label">Aaj ka usage (real)<div class="set-hint" id="set-usage">—</div></div><button type="button" class="set-btn" id="set-reset-tokens">Reset</button></div>
+  <div class="set-row"><div class="set-label">Token limit / din<div class="set-hint">AI Studio ke Rate limits page se dekhkar daalein. Khaali = sirf real usage dikhega.</div></div><input type="number" inputmode="numeric" min="0" class="set-input" id="set-tok-limit" placeholder="—"></div>
+  <div class="set-row"><div class="set-label">Requests limit / din<div class="set-hint">Optional. Quota Pacific time midnight par reset hota hai.</div></div><input type="number" inputmode="numeric" min="0" class="set-input" id="set-req-limit" placeholder="—"></div>
 </div>
 
 <div class="sheet-backdrop" id="share-backdrop"></div>
@@ -1210,17 +1276,20 @@
     setTimeout(() => { setAppHeight(); scrollToBottom(); }, 200);
   });
 
-  /* ---------------- Settings + token counter (v2) ---------------- */
+  /* ---------------- Settings + REAL usage counter (v3) ----------------
+     Tokens Gemini API ke usageMetadata se aate hain (real). Agar kisi
+     response me usageMetadata na mile to estimate hota hai aur "~" dikhta hai. */
   const SETTINGS_KEY = 'zamirSettings';
-  const settings = Object.assign({ theme: 'dark', fontSize: 14.5, autoScroll: true, sound: true, tokenLimit: 50000 },
+  const settings = Object.assign({ theme: 'dark', fontSize: 14.5, autoScroll: true, sound: true, dailyTokenLimit: 0, dailyReqLimit: 0 },
     (() => { try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch (_) { return {}; } })());
   function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (_) {} }
 
-  const TOK_KEY = 'zamirTokens';
-  const dayKey = () => new Date().toLocaleDateString('en-CA');
+  const TOK_KEY = 'zamirUsageV3';
+  // Google AI Studio daily quota Pacific time midnight par reset hota hai.
+  const dayKey = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
   function getTok() {
     try { const t = JSON.parse(localStorage.getItem(TOK_KEY) || 'null'); if (t && t.date === dayKey()) return t; } catch (_) {}
-    return { date: dayKey(), used: 0, sent: 0, recv: 0 };
+    return { date: dayKey(), tokens: 0, input: 0, output: 0, reqs: 0, est: false };
   }
   function estTok(s) { return (s || '').length / 4; }
   function estInputTokens(h) {
@@ -1228,29 +1297,44 @@
     (h || []).forEach(m => (m.parts || []).forEach(p => { if (p.text) n += estTok(p.text); else if (p.inline_data) n += 258; }));
     return n;
   }
-  function addTokens(n, kind) {
-    const t = getTok(); t.used += n; t[kind] = (t[kind] || 0) + n;
+  let inflight = null;
+  function commitUsage(rq) {
+    const t = getTok();
+    t.tokens += rq.input + rq.output; t.input += rq.input; t.output += rq.output; t.reqs += 1;
+    if (!rq.real) t.est = true;
     try { localStorage.setItem(TOK_KEY, JSON.stringify(t)); } catch (_) {}
-    renderTokenBar();
   }
   let shownTok = 0, tokRaf = null;
   function renderTokenBar() {
     const bar = document.getElementById('token-bar'); if (!bar) return;
-    const limit = settings.tokenLimit, used = Math.round(getTok().used);
-    const pct = Math.min(100, used / limit * 100);
-    document.getElementById('tok-fill').style.width = pct + '%';
+    const t = getTok();
+    const used = Math.round(t.tokens + (inflight ? inflight.input + inflight.output : 0));
+    const reqs = t.reqs + (inflight ? 1 : 0);
+    const tl = settings.dailyTokenLimit || 0, rl = settings.dailyReqLimit || 0;
+    let pct = 0;
+    if (tl > 0) pct = used / tl * 100;
+    if (rl > 0) pct = Math.max(pct, reqs / rl * 100);
+    bar.classList.toggle('has-limit', tl > 0 || rl > 0);
+    bar.classList.toggle('live', !!inflight);
     bar.classList.toggle('warn', pct >= 70 && pct < 90);
     bar.classList.toggle('danger', pct >= 90);
+    document.getElementById('tok-fill').style.width = Math.min(100, pct) + '%';
+    const tilde = (t.est || (inflight && !inflight.real)) ? '~' : '';
     const from = shownTok, start = performance.now();
     cancelAnimationFrame(tokRaf);
     const step = now => {
-      const k = Math.min(1, (now - start) / 500);
+      const k = Math.min(1, (now - start) / 450);
       const v = Math.round(from + (used - from) * (1 - Math.pow(1 - k, 3)));
       shownTok = v;
-      document.getElementById('tok-text').textContent = 'Aaj: ' + v.toLocaleString() + ' used • ' + Math.max(0, limit - v).toLocaleString() + ' baki';
+      let txt = 'Aaj: ' + tilde + v.toLocaleString() + ' tokens • ' + reqs + ' req';
+      if (tl > 0) txt += ' • ' + Math.max(0, tl - v).toLocaleString() + ' baki';
+      else if (rl > 0) txt += ' • ' + Math.max(0, rl - reqs) + ' req baki';
+      document.getElementById('tok-text').textContent = txt;
       if (k < 1) tokRaf = requestAnimationFrame(step);
     };
     tokRaf = requestAnimationFrame(step);
+    const su = document.getElementById('set-usage');
+    if (su) su.textContent = tilde + used.toLocaleString() + ' tokens (in ' + Math.round(t.input).toLocaleString() + ' / out ' + Math.round(t.output).toLocaleString() + ') • ' + reqs + ' requests';
   }
 
   /* ---------------- State ---------------- */
@@ -1413,6 +1497,15 @@
      error, or quota/rate-limit exhausted — it falls back to the
      browser's built-in speechSynthesis automatically and silently. */
   let currentTtsAudio = null;
+  let ttsGen = 0, ttsAbort = null, currentUtterance = null;
+  function fadeOutAudio(a) {
+    let v = a.volume; const dec = Math.max(v / 6, 0.05);
+    const iv = setInterval(() => {
+      v -= dec;
+      if (v <= 0.02) { clearInterval(iv); try { a.pause(); } catch (_) {} }
+      else { try { a.volume = v; } catch (_) {} }
+    }, 18);
+  }
 
   // Mobile Chrome blocks audio.play() unless it was triggered directly by
   // a user tap. Our AI voice auto-plays after the reply streams in (not
@@ -1433,11 +1526,8 @@
   document.addEventListener('touchstart', unlockAudioPlayback, { once: true, capture: true });
 
   function speakText(text, { onStart, onEnd } = {}) {
-    window.speechSynthesis.cancel();
-    if (currentTtsAudio) {
-      try { currentTtsAudio.pause(); } catch (_) {}
-      currentTtsAudio = null;
-    }
+    cancelSpeaking();
+    const gen = ttsGen;
 
     const plain = stripMarkdownForSpeech(text);
     if (!plain) { if (onEnd) onEnd(); return; }
@@ -1459,7 +1549,9 @@
     const voiceParam = voice.elevenlabs || voice.deepgram || voice.gemini;
 
     if (onStart) onStart();
+    ttsAbort = new AbortController();
     fetch(apiUrl, {
+      signal: ttsAbort.signal,
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: plain, voice: voiceParam })
@@ -1491,6 +1583,7 @@
         throw new Error('tts-unavailable');
       }
       const data = await res.json();
+      if (gen !== ttsGen) return;
       if (!data || !data.audioContent) throw new Error('tts-empty');
 
       const audio = new Audio('data:' + (data.mimeType || 'audio/mpeg') + ';base64,' + data.audioContent);
@@ -1503,15 +1596,18 @@
       // this one line and keep trying the chosen Gemini voice next time.
       audio.onerror = (e) => {
         console.warn('[voice] Audio playback/decode error:', e);
+        if (gen !== ttsGen) return;
         currentTtsAudio = null;
         speakFallback(plain, onEnd);
       };
       audio.play().catch((e) => {
         console.warn('[voice] audio.play() rejected:', e);
+        if (gen !== ttsGen) return;
         currentTtsAudio = null;
         speakFallback(plain, onEnd);
       });
     }).catch((err) => {
+      if (gen !== ttsGen) return;
       if (err && err.message !== 'tts-unavailable' && err.message !== 'tts-empty') {
         console.warn('[voice] TTS request failed:', err);
         showVoiceFallbackNote(err.message || 'Network error');
@@ -1537,8 +1633,10 @@
     if (!('speechSynthesis' in window)) { if (onEnd) onEnd(); return; }
     const synth = window.speechSynthesis;
     synth.cancel();
+    const g = ttsGen;
     if (onStart) onStart();
     setTimeout(() => {
+      if (g !== ttsGen) return;
       const utterance = new SpeechSynthesisUtterance(plain);
       if (lang) {
         utterance.lang = lang;
@@ -1548,6 +1646,7 @@
         if (hindiVoice) utterance.voice = hindiVoice;
       }
       utterance.rate = 1.15;
+      currentUtterance = utterance;
       utterance.onend = () => { if (onEnd) onEnd(); };
       utterance.onerror = () => { if (onEnd) onEnd(); };
       synth.speak(utterance);
@@ -1555,10 +1654,14 @@
   }
 
   function cancelSpeaking() {
-    window.speechSynthesis.cancel();
+    ttsGen++;
+    if (ttsAbort) { try { ttsAbort.abort(); } catch (_) {} ttsAbort = null; }
+    if (currentUtterance) { currentUtterance.onend = null; currentUtterance.onerror = null; currentUtterance = null; }
+    try { window.speechSynthesis.cancel(); } catch (_) {}
     if (currentTtsAudio) {
-      try { currentTtsAudio.pause(); } catch (_) {}
-      currentTtsAudio = null;
+      const a = currentTtsAudio; currentTtsAudio = null;
+      a.onended = null; a.onerror = null;
+      fadeOutAudio(a);
     }
   }
 
@@ -1717,11 +1820,20 @@
     inp.addEventListener('blur', () => commit(true));
   }
 
+  function renderHero() {
+    const h = new Date().getHours();
+    const g = h < 5 ? 'Shubh ratri' : h < 12 ? 'Suprabhat' : h < 17 ? 'Namaste' : h < 21 ? 'Shubh sandhya' : 'Shubh ratri';
+    const d = document.createElement('div');
+    d.className = 'hero';
+    d.innerHTML = '<div class="hero-orb"><div class="hero-ring"></div><div class="hero-core">AI</div></div><div class="hero-title">' + g + ' 👋</div><div class="hero-sub">' + escapeHtml(WELCOME_TEXT) + '</div>';
+    chatContainer.appendChild(d);
+  }
+
   function renderCurrentSession() {
     const session = getCurrentSession();
     chatContainer.innerHTML = '';
     if (!session || !session.messages || session.messages.length === 0) {
-      appendMessageDOM({ role: 'ai', text: WELCOME_TEXT, attachments: [] }, -1);
+      renderHero();
       return;
     }
     session.messages.forEach((msg, idx) => appendMessageDOM(msg, idx));
@@ -2356,6 +2468,7 @@
   }
 
   function finishSend() {
+    document.querySelectorAll('.bubble.streaming').forEach(b => b.classList.remove('streaming'));
     isSending = false;
     sendBtn.disabled = false;
     sendLabel.textContent = 'Send';
@@ -2414,6 +2527,7 @@
       updateMessageBubble(row, (originalMsg.text || '') + '\n\n[Regenerate failed: ' + error.message + ']', true);
       setTimeout(() => updateMessageBubble(row, originalMsg.text || ''), 2500);
     } finally {
+      document.querySelectorAll('.bubble.streaming').forEach(b => b.classList.remove('streaming'));
       isSending = false;
       regenBtn.classList.remove('spinning');
       regenBtn.disabled = false;
@@ -2432,9 +2546,8 @@
     return { localString, timeZone, isoString: now.toISOString() };
   }
 
-  async function streamGemini(apiHistory, onChunkRaw, retriesLeft = 2, isRetry = false) {
-    const onChunk = (c) => { addTokens(estTok(c), 'recv'); onChunkRaw(c); };
-    if (!isRetry) addTokens(estInputTokens(apiHistory), 'sent');
+  async function streamGemini(apiHistory, onChunk, retriesLeft = 2, isRetry = false) {
+    const rq = { input: estInputTokens(apiHistory), output: 0, real: false };
     let response;
     try {
       response = await fetch(getStreamUrl(), {
@@ -2445,7 +2558,7 @@
     } catch (networkErr) {
       if (retriesLeft > 0) {
         await new Promise(res => setTimeout(res, 300));
-        return streamGemini(apiHistory, onChunkRaw, retriesLeft - 1, true);
+        return streamGemini(apiHistory, onChunk, retriesLeft - 1, true);
       }
       throw networkErr;
     }
@@ -2461,7 +2574,7 @@
       }
       if ((response.status === 503 || response.status === 429) && retriesLeft > 0) {
         await new Promise(res => setTimeout(res, 300));
-        return streamGemini(apiHistory, onChunkRaw, retriesLeft - 1, true);
+        return streamGemini(apiHistory, onChunk, retriesLeft - 1, true);
       }
       const err = new Error(errMsg);
       err.status = response.status;
@@ -2471,7 +2584,9 @@
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let buffer = '';
-
+    inflight = rq; renderTokenBar();
+    let finished = false;
+    try {
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -2487,15 +2602,32 @@
         if (!jsonStr || jsonStr === '[DONE]') continue;
         try {
           const parsed = JSON.parse(jsonStr);
+          const um = parsed.usageMetadata;
+          if (um) {
+            rq.real = true;
+            if (um.promptTokenCount != null) rq.input = um.promptTokenCount;
+            const out = (um.totalTokenCount != null)
+              ? um.totalTokenCount - (um.promptTokenCount != null ? um.promptTokenCount : rq.input)
+              : (um.candidatesTokenCount || 0) + (um.thoughtsTokenCount || 0);
+            rq.output = Math.max(0, out);
+          }
           const piece = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (piece) onChunk(piece);
+          if (piece) { if (!rq.real) rq.output += estTok(piece); onChunk(piece); }
+          renderTokenBar();
         } catch (_) {}
       }
+    }
+    finished = true;
+    } finally {
+      inflight = null;
+      if (finished || rq.output > 0) commitUsage(rq);
+      renderTokenBar();
     }
   }
 
   /* ---------------- DOM rendering ---------------- */
   function appendMessageDOM(msg, index) {
+    if (index >= 0) { const hr = chatContainer.querySelector('.hero'); if (hr) hr.remove(); }
     const isUser = msg.role === 'user';
     const row = document.createElement('div');
     row.className = `row ${isUser ? 'user' : 'ai'}`;
@@ -2518,7 +2650,8 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
           </button>
           <button type="button" class="speak-btn" title="Listen" aria-label="Read response aloud">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+            <svg class="ic-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+            <svg class="ic-stop" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2.5"></rect></svg>
           </button>
           <button type="button" class="regen-btn" title="Regenerate" aria-label="Regenerate response">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
@@ -2594,6 +2727,7 @@
   function updateMessageBubble(row, text, isError = false) {
     const bubble = row.querySelector('.bubble');
     bubble.classList.toggle('error', isError);
+    bubble.classList.toggle('streaming', !isError && !!text && isSending);
     const textSpan = bubble.querySelector('.msg-text');
     if (textSpan) textSpan.innerHTML = isError ? escapeHtml(text) : renderMarkdown(text);
     if (settings.autoScroll) scrollToBottom();
@@ -2721,7 +2855,9 @@
     document.getElementById('set-autoscroll').checked = !!settings.autoScroll;
     document.getElementById('set-sound').checked = !!soundOn;
     document.getElementById('set-model').value = selectedModel;
-    document.getElementById('set-limit').value = String(settings.tokenLimit);
+    document.getElementById('set-tok-limit').value = settings.dailyTokenLimit || '';
+    document.getElementById('set-req-limit').value = settings.dailyReqLimit || '';
+    renderTokenBar();
     document.getElementById('set-voice-btn').textContent = voiceSelectLabel.textContent;
   }
   function openSettings() { syncSettingsUI(); setSheet.classList.add('show'); setBackdrop.classList.add('show'); }
@@ -2743,7 +2879,8 @@
   if (!soundOn) soundIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line>';
   document.getElementById('set-model').addEventListener('change', e => { modelSelectBtn.value = e.target.value; modelSelectBtn.dispatchEvent(new Event('change')); toast('Default model set'); });
   document.getElementById('set-voice-btn').addEventListener('click', () => { closeSettings(); openVoiceSheet(); });
-  document.getElementById('set-limit').addEventListener('change', e => { settings.tokenLimit = parseInt(e.target.value, 10); saveSettings(); renderTokenBar(); });
+  document.getElementById('set-tok-limit').addEventListener('input', e => { settings.dailyTokenLimit = Math.max(0, parseInt(e.target.value, 10) || 0); saveSettings(); renderTokenBar(); });
+  document.getElementById('set-req-limit').addEventListener('input', e => { settings.dailyReqLimit = Math.max(0, parseInt(e.target.value, 10) || 0); saveSettings(); renderTokenBar(); });
   document.getElementById('set-reset-tokens').addEventListener('click', () => { try { localStorage.removeItem(TOK_KEY); } catch (_) {} renderTokenBar(); toast('Aaj ka counter reset ho gaya'); });
 
   /* Scroll-to-bottom button */
@@ -2791,6 +2928,13 @@
     b.appendChild(s); setTimeout(() => s.remove(), 600);
   });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeSettings(); closeShare(); } });
+
+  (function () {
+    const sp = document.getElementById('splash');
+    const hide = () => setTimeout(() => { sp.classList.add('hide'); setTimeout(() => sp.remove(), 700); }, 900);
+    if (document.readyState === 'complete') hide(); else window.addEventListener('load', hide);
+    setTimeout(() => { if (sp.isConnected) { sp.classList.add('hide'); setTimeout(() => sp.remove(), 700); } }, 4000);
+  })();
 
   applyTheme(settings.theme, false);
   applyFont();
