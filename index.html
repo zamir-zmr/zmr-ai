@@ -1343,6 +1343,10 @@
   });
 
   /* ---------------- Settings ---------------- */
+  var WP_KEY = 'zamirWallpaperCustom';
+  var WP_LIST = ['aurora', 'sunset', 'ocean', 'forest', 'rose', 'dots'];
+  var replyTo = null;
+  var replyBanner = document.getElementById('reply-banner');
   const SETTINGS_KEY = 'zamirSettings';
   const settings = Object.assign({ theme: 'dark', fontSize: 14.5, autoScroll: true, sound: true, wallpaper: 'none' },
     (() => { try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch (_) { return {}; } })());
@@ -2950,7 +2954,7 @@
     try { userInput.value = localStorage.getItem(draftKey()) || ''; } catch (_) {}
   }
   function clearDraft() { try { localStorage.removeItem(draftKey()); } catch (_) {} }
-  let draftT = null;
+  var draftT = null;
   userInput.addEventListener('input', () => {
     clearTimeout(draftT);
     draftT = setTimeout(() => {
@@ -2963,9 +2967,7 @@
   });
 
   /* 73 — Chat wallpaper */
-  const WP_KEY = 'zamirWallpaperCustom';
-  const WP_LIST = ['aurora', 'sunset', 'ocean', 'forest', 'rose', 'dots'];
-  const wpFile = document.getElementById('wp-file');
+  var wpFile = document.getElementById('wp-file');
   function getCustomWp() { try { return localStorage.getItem(WP_KEY); } catch (_) { return null; } }
   function renderWpGrid() {
     const grid = document.getElementById('wp-grid'); if (!grid) return;
@@ -3009,8 +3011,6 @@
   wpFile.addEventListener('change', async () => { const f = wpFile.files && wpFile.files[0]; wpFile.value = ''; if (f) await setCustomWallpaper(f); });
 
   /* Reply state */
-  let replyTo = null;
-  const replyBanner = document.getElementById('reply-banner');
   function setReply(m) {
     replyTo = { role: m.role, text: ((m.text || '').trim() || '[photo]').slice(0, 140) };
     document.getElementById('rb-who').textContent = 'Reply to ' + (m.role === 'user' ? 'You' : 'AI');
@@ -3037,9 +3037,9 @@
   }
 
   /* 76 — Long-press / right-click menu */
-  const msgSheet = document.getElementById('msg-sheet');
-  const msgBackdrop = document.getElementById('msg-backdrop');
-  let menuIdx = null, menuRow = null;
+  var msgSheet = document.getElementById('msg-sheet');
+  var msgBackdrop = document.getElementById('msg-backdrop');
+  var menuIdx = null, menuRow = null;
   function openMsgMenu(row) {
     if (menuIdx !== null) return;
     const idx = parseInt(row.dataset.index, 10);
@@ -3081,10 +3081,10 @@
   });
 
   /* 75 + 76 — Touch gestures: swipe right = reply, swipe left = delete, long-press = menu */
-  const ICON_REPLY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 0 0-4-4H4"></path></svg>';
-  const ICON_TRASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg>';
-  const SWIPE_TRIGGER = 80;
-  let gs = null, lpTimer = null;
+  var ICON_REPLY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 0 0-4-4H4"></path></svg>';
+  var ICON_TRASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg>';
+  var SWIPE_TRIGGER = 80;
+  var gs = null, lpTimer = null;
   function msgRowOf(t) {
     const r = t && t.closest ? t.closest('.row') : null; if (!r) return null;
     return parseInt(r.dataset.index, 10) >= 0 ? r : null;
@@ -3157,7 +3157,7 @@
   });
 
   /* 62 — Family birthday reminder */
-  const FAMILY_BDAYS = [
+  var FAMILY_BDAYS = [
     { name: 'Zamir', rel: 'Husband', m: 3, d: 17 },
     { name: 'Rahima', rel: 'Wife', m: 1, d: 1 },
     { name: 'Zaina Praveen', rel: 'Beti', m: 5, d: 24 }
