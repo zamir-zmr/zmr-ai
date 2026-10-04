@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI Chat Assistant</title>
 <meta name="theme-color" content="#0E1116" id="meta-theme">
-<script>try{var __s=JSON.parse(localStorage.getItem('zamirSettings')||'{}');var __d=document.documentElement;__d.setAttribute('data-theme',__s.theme||'dark');__d.setAttribute('data-anim',__s.anim||'full');__d.setAttribute('data-msg',__s.msgAnim||'slide');__d.setAttribute('data-bg',__s.bgFx||'orbs');__d.style.setProperty('--wp-dim',(__s.wpDim!=null?__s.wpDim:0.68));__d.style.setProperty('--fx-speed',__s.fxSpeed||1);__d.style.setProperty('--fx-bright',(__s.fxBright!=null?__s.fxBright:1));__d.style.setProperty('--msg-speed',__s.msgSpeed||1);__d.style.setProperty('--msg-int',(__s.msgInt!=null?__s.msgInt:1));}catch(e){}</script>
+<script>try{var __s=JSON.parse(localStorage.getItem('zamirSettings')||'{}');var __d=document.documentElement;__d.setAttribute('data-theme',__s.theme||'dark');__d.setAttribute('data-anim',__s.anim||'full');__d.setAttribute('data-msg',__s.msgAnim||'slide');__d.setAttribute('data-bg',__s.bgFx||'orbs');__d.style.setProperty('--wp-dim',(__s.wpDim!=null?__s.wpDim:0.68));__d.style.setProperty('--fx-speed',__s.fxSpeed||1);__d.style.setProperty('--fx-dark',(__s.fxDark!=null?__s.fxDark:0.45));__d.style.setProperty('--fx-bright',(__s.fxBright!=null?__s.fxBright:1));__d.style.setProperty('--msg-speed',__s.msgSpeed||1);__d.style.setProperty('--msg-int',(__s.msgInt!=null?__s.msgInt:1));}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -1327,10 +1327,46 @@
   main{padding-bottom:20px;scroll-padding-bottom:20px}
   main > .row:last-child{margin-bottom:12px}
 
+  /* ===== v11: very tight message / icon gaps ===== */
+  .row{margin-bottom:0 !important;gap:8px}
+  .bubble{padding:8px 12px !important;line-height:1.45 !important}
+  .row.ai .bubble{margin:0 !important}
+  .msg-wrap .model-name{margin:0 0 1px 0 !important;padding:0 8px !important;font-size:10px !important;line-height:15px !important}
+  .ai-meta{margin-top:1px !important;gap:6px !important}
+  .ai-meta .ai-actions{padding:0 3px !important}
+  .ai-meta .ai-actions button{padding:2px 5px !important}
+  .ai-meta .ai-actions svg{width:12px !important;height:12px !important}
+  .ai-meta .msg-time{padding:1px 8px !important;font-size:10px !important}
+  .avatar{width:26px !important;height:26px !important}
+  main{padding-top:12px !important}
+  main > .row:last-child{margin-bottom:12px !important}
+
+  /* ===== v11: 50 background effects (generic particle engine) ===== */
+  .fx-p{position:absolute;display:block;will-change:transform;color:var(--c,#fff);line-height:1;font-style:normal;animation-timing-function:linear;animation-iteration-count:infinite}
+  .fx-p.sh-c{border-radius:50%;background:var(--c)}
+  .fx-p.sh-r{border-radius:50%;border:1.5px solid var(--c)}
+  .fx-p.sh-s{border-radius:2px;background:linear-gradient(180deg,transparent,var(--c))}
+  .fx-p.sh-h{border-radius:2px;background:linear-gradient(90deg,transparent,var(--c))}
+  .fx-p.sh-q{border-radius:2px;background:var(--c)}
+  .fx-p.sh-d{background:var(--c);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+  .fx-p.sh-t{background:var(--c);clip-path:polygon(50% 0,100% 100%,0 100%)}
+  .fx-p.glow{box-shadow:0 0 10px 2px var(--c)}
+  .fx-p.soft{filter:blur(var(--bl,6px));opacity:.55}
+  .fx-p.gl{text-shadow:0 0 8px var(--c)}
+  @keyframes p-fall{0%{transform:translate3d(0,-8vh,0) rotate(0);opacity:0}8%{opacity:.9}50%{transform:translate3d(var(--dx),55vh,0) rotate(calc(var(--rot) * .5))}100%{transform:translate3d(calc(var(--dx) * -.6),112vh,0) rotate(var(--rot));opacity:.25}}
+  @keyframes p-rise{0%{transform:translate3d(0,0,0) rotate(0);opacity:0}8%{opacity:.9}50%{transform:translate3d(var(--dx),-55vh,0) rotate(calc(var(--rot) * .5))}100%{transform:translate3d(calc(var(--dx) * -.6),-115vh,0) rotate(var(--rot));opacity:0}}
+  @keyframes p-rain{0%{transform:translate3d(0,-12vh,0) rotate(var(--rot));opacity:0}10%{opacity:.8}100%{transform:translate3d(var(--dx),112vh,0) rotate(var(--rot));opacity:.3}}
+  @keyframes p-swp{0%{transform:translate3d(-20vw,0,0) rotate(var(--rot));opacity:0}10%{opacity:.9}90%{opacity:.7}100%{transform:translate3d(125vw,var(--dy),0) rotate(var(--rot));opacity:0}}
+  @keyframes p-ring{0%{transform:scale(.2);opacity:0}15%{opacity:.8}100%{transform:scale(var(--sc));opacity:0}}
+  @keyframes p-pls{0%,100%{transform:scale(.6);opacity:.25}50%{transform:scale(1.25);opacity:1}}
+  @keyframes p-flt{0%{transform:translate3d(0,0,0);opacity:0}15%{opacity:.9}50%{transform:translate3d(var(--dx),var(--dy),0);opacity:.4}85%{opacity:.9}100%{transform:translate3d(0,0,0);opacity:0}}
+  @keyframes p-twk{0%,100%{opacity:.1;transform:scale(.6) rotate(0)}50%{opacity:1;transform:scale(1.3) rotate(var(--rot))}}
+  .pv-gen i{position:absolute;display:block;border-radius:50%;animation:pv-fall 3s linear infinite}
+  .pv-gen b{position:absolute;font-weight:400;font-size:13px;line-height:1;animation:pv-fall 3s linear infinite}
+
   /* effect speed + brightness */
-  .fx-o,.fx-a,.fx-b,.fx-s,.fx-f,.fx-n,.fx-sh{animation-duration:calc(var(--d,10s) / (var(--fx-speed,1) * 1.8))}
-  #fx-layer{opacity:min(1,calc(var(--fx-bright,1) * var(--fx-bright,1)))}
-  #fx-layer.fx-boost{filter:brightness(var(--fx-bright,1))}
+  .fx-o,.fx-a,.fx-b,.fx-s,.fx-f,.fx-n,.fx-sh,.fx-p{animation-duration:calc(var(--d,10s) / (var(--fx-speed,1) * 1.8))}
+  #fx-layer{opacity:calc(min(1,var(--fx-bright,1) * var(--fx-bright,1)) * (1 - var(--fx-dark,0) * .55));filter:brightness(calc(var(--fx-bright,1) * (1 - var(--fx-dark,0) * .9)))}
 
   /* message styles: speed (--msg-speed) + strength (--msg-int) */
   @keyframes msg-in-left{from{opacity:0;transform:translate(calc(-24px * var(--msg-int,1)),calc(10px * var(--msg-int,1))) scale(calc(1 - .05 * var(--msg-int,1)))}to{opacity:1;transform:none}}
@@ -1531,6 +1567,7 @@
   <div class="dd-panel" id="dd-set-bgfx"><div class="dd-inner"><div class="dd-grid"></div></div></div>
   <div class="set-slider" data-key="fxSpeed"><div class="ss-head"><span>Effect speed</span><span class="ss-right"><span class="ss-val"></span><button type="button" class="ss-reset" aria-label="Reset">↺</button></span></div><input type="range" class="rng" id="r-fxSpeed"><div class="ss-ends"><span>Slow</span><span>Fast</span></div></div>
   <div class="set-slider" data-key="fxBright"><div class="ss-head"><span>Effect brightness</span><span class="ss-right"><span class="ss-val"></span><button type="button" class="ss-reset" aria-label="Reset">↺</button></span></div><input type="range" class="rng" id="r-fxBright"><div class="ss-ends"><span>Dark</span><span>Light</span></div></div>
+  <div class="set-slider" data-key="fxDark"><div class="ss-head"><span>Effect darkness</span><span class="ss-right"><span class="ss-val"></span><button type="button" class="ss-reset" aria-label="Reset">↺</button></span></div><input type="range" class="rng" id="r-fxDark"><div class="ss-ends"><span>Normal</span><span>Very dark</span></div></div>
   <div class="set-row"><div class="set-label">Send animation</div><label class="switch"><input type="checkbox" id="set-sendfx"><span></span></label></div>
   <div class="set-section">Chat</div>
   <div class="set-row"><div class="set-label">Auto-scroll</div><label class="switch"><input type="checkbox" id="set-autoscroll"><span></span></label></div>
@@ -1763,7 +1800,7 @@
   const settings = Object.assign({ theme: 'dark', fontSize: 14.5, autoScroll: true, sound: true, wallpaper: 'none',
       anim: (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) ? 'light' : 'full',
       msgAnim: 'slide', bgFx: 'orbs', sendFx: true, wpDim: 0.68, wpMove: false,
-      fxSpeed: 1, fxBright: 1, msgSpeed: 1, msgInt: 1 },
+      fxSpeed: 1, fxBright: 1, fxDark: 0.45, msgSpeed: 1, msgInt: 1 },
     (() => { try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch (_) { return {}; } })());
   function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (_) {} }
 
@@ -4088,6 +4125,72 @@
     d.setAttribute('data-anim', settings.anim); d.setAttribute('data-msg', settings.msgAnim); d.setAttribute('data-bg', settings.bgFx);
     buildFx();
   }
+
+  /* 44 extra effects + 6 originals = 50 */
+  var FX_P = {
+    rain:       ['Rain', { sh: 's', col: ['#7fb2ff', '#9cc7ff'], w: [1, 2], h: [18, 38], mo: 'rain', d: [1.2, 2.2], rot: -8 }],
+    storm:      ['Storm', { sh: 's', col: ['#c9d6ff', '#8fa6ff'], w: [1, 2], h: [26, 50], mo: 'rain', d: [.7, 1.3], rot: -18 }],
+    neonrain:   ['Neon rain', { sh: 's', col: ['#ff4fd8', '#4ff0ff', '#a6ff4f'], w: [1, 2], h: [22, 44], mo: 'rain', d: [.9, 1.8], rot: -10, glow: 1 }],
+    drops:      ['Water drops', { sh: 'c', col: ['#6fb7ff', '#8ad0ff'], w: [3, 7], mo: 'fall', d: [4, 8] }],
+    sakura:     ['Sakura', { g: ['✿', '❀', '✾'], col: ['#ffb7d5', '#ff8fbf', '#ffd1e6'], w: [12, 22], mo: 'fall', d: [9, 16], rot: 360 }],
+    flowers:    ['Flowers', { g: ['🌸', '🌼', '🌺'], w: [12, 20], mo: 'fall', d: [10, 17], rot: 300 }],
+    leaves:     ['Leaves', { g: ['❦', '❧', '☘'], col: ['#8bd05a', '#c9d64a', '#5fbf6a'], w: [12, 22], mo: 'fall', d: [9, 15], rot: 420 }],
+    autumn:     ['Autumn', { g: ['🍁', '🍂'], w: [13, 22], mo: 'fall', d: [10, 17], rot: 360 }],
+    roses:      ['Rose petals', { sh: 'c', col: ['#e0245e', '#ff4d7a', '#b3123f'], w: [6, 12], h: [9, 16], mo: 'fall', d: [9, 15], rot: 300 }],
+    hearts:     ['Hearts', { g: ['❤\uFE0E'], col: ['#ff4d8d', '#ff6b6b', '#ff8fb3'], w: [10, 24], mo: 'rise', d: [9, 16], rot: 40, gl: 1 }],
+    lovefall:   ['Love rain', { g: ['❤\uFE0E', '♥\uFE0E'], col: ['#ff3b6b', '#ff7aa2'], w: [9, 18], mo: 'fall', d: [8, 14], rot: 90 }],
+    confetti:   ['Confetti', { sh: 'q', col: ['#ff5a5a', '#ffd35a', '#5affb0', '#5ab0ff', '#d65aff'], w: [5, 9], h: [8, 14], mo: 'fall', d: [5, 10], rot: 720 }],
+    sparkles:   ['Sparkles', { g: ['✦', '✧'], col: ['#ffe27a', '#fff3b0', '#ffffff'], w: [8, 18], mo: 'twk', d: [2, 5], rot: 90, gl: 1 }],
+    goldstars:  ['Gold stars', { g: ['★'], col: ['#ffd24a', '#ffbf1f'], w: [7, 16], mo: 'twk', d: [2.5, 6], rot: 60, gl: 1 }],
+    rainbowstars:['Rainbow stars', { g: ['★', '✦'], col: ['#ff6b6b', '#ffd36b', '#6bff9e', '#6bb8ff', '#c46bff'], w: [7, 15], mo: 'twk', d: [2.5, 6], rot: 60, gl: 1 }],
+    starfall:   ['Star fall', { g: ['★', '✦'], col: ['#ffffff', '#cfe0ff'], w: [7, 14], mo: 'fall', d: [6, 12], rot: 180, gl: 1 }],
+    moondust:   ['Moon dust', { sh: 'c', col: ['#fff2b8', '#ffffff'], w: [1.5, 3.5], mo: 'twk', d: [2, 5], glow: 1 }],
+    golddust:   ['Golden dust', { sh: 'c', col: ['#ffd36b', '#ffb84a'], w: [2, 4], mo: 'fall', d: [7, 13], glow: 1 }],
+    embers:     ['Embers', { sh: 'c', col: ['#ff7a29', '#ffb347', '#ff4d1f'], w: [2, 5], mo: 'rise', d: [5, 10], rot: 0, glow: 1 }],
+    sparks:     ['Sparks', { sh: 'c', col: ['#ffe27a', '#ffc14a'], w: [1.5, 3], mo: 'rise', d: [2.5, 5], rot: 0, glow: 1 }],
+    lava:       ['Lava blobs', { sh: 'c', col: ['#ff5a1f', '#ff8a3d', '#ff3d3d'], w: [28, 70], mo: 'rise', d: [14, 24], rot: 0, soft: 1, bl: 10 }],
+    bokeh:      ['Bokeh', { sh: 'c', col: ['#ffd9a0', '#ffb3d9', '#a0d4ff', '#c9a0ff'], w: [22, 64], mo: 'flt', d: [10, 18], soft: 1, bl: 5 }],
+    mist:       ['Mist', { sh: 'c', col: ['#cfd8ff', '#e6ebff'], w: [90, 170], mo: 'swp', d: [30, 50], soft: 1, bl: 26, dy: 40 }],
+    lanterns:   ['Lanterns', { sh: 'q', col: ['#ffa94d', '#ffcf6b', '#ff8a3d'], w: [10, 16], h: [14, 22], mo: 'rise', d: [14, 24], rot: 8, glow: 1 }],
+    balloons:   ['Balloons', { g: ['🎈'], w: [16, 28], mo: 'rise', d: [12, 20], rot: 12 }],
+    notes:      ['Music notes', { g: ['♪', '♫', '♬'], col: ['#ff8fb3', '#8fd0ff', '#ffe27a', '#b9ff8f'], w: [14, 26], mo: 'rise', d: [9, 16], rot: 30 }],
+    butterflies:['Butterflies', { g: ['🦋'], w: [14, 24], mo: 'flt', d: [9, 16], span: 140 }],
+    fishes:     ['Fishes', { g: ['🐟', '🐠'], w: [14, 26], mo: 'swp', d: [14, 26], dy: 30 }],
+    dandelion:  ['Dandelion', { g: ['✺'], col: ['#ffffff', '#eaf3ff'], w: [9, 16], mo: 'fall', d: [14, 24], rot: 200 }],
+    bigflakes:  ['Snowflakes', { g: ['❄\uFE0E', '❅', '❆'], col: ['#ffffff', '#d6ecff'], w: [10, 22], mo: 'fall', d: [10, 18], rot: 360 }],
+    bluesnow:   ['Blue snow', { sh: 'c', col: ['#9fc8ff', '#c7deff'], w: [2, 5], mo: 'fall', d: [8, 15], glow: 1 }],
+    ash:        ['Ash', { sh: 'c', col: ['#9aa0aa', '#c2c7cf'], w: [2, 5], mo: 'fall', d: [10, 18] }],
+    meteors:    ['Meteors', { sh: 'h', col: ['#ffffff', '#bcd4ff'], w: [70, 140], h: [1.5, 2.5], mo: 'swp', d: [3, 7], rot: 25, dy: 55, glow: 1 }],
+    matrix:     ['Matrix', { g: ['0', '1', 'ア', 'ネ', '7', 'ﾊ'], col: ['#39ff6a', '#1fd95a'], w: [11, 16], mo: 'rain', d: [2.5, 5], rot: 0, gl: 1 }],
+    ripples:    ['Ripples', { sh: 'r', col: ['#6fd8ff', '#8fe6ff', '#b5c8ff'], w: [30, 60], mo: 'ring', d: [4, 8], sc: 3.2 }],
+    neon:       ['Neon dots', { sh: 'c', col: ['#ff4fd8', '#4ff0ff', '#a6ff4f', '#ffd24f'], w: [4, 9], mo: 'pls', d: [2, 5], glow: 1 }],
+    gems:       ['Gems', { sh: 'd', col: ['#4fffb0', '#4fd0ff', '#b84fff', '#ff4f8b'], w: [8, 16], mo: 'fall', d: [7, 13], rot: 360 }],
+    prisms:     ['Prisms', { sh: 't', col: ['#ff6b6b', '#ffd36b', '#6bffb0', '#6bb8ff'], w: [8, 16], mo: 'rise', d: [9, 16], rot: 360 }],
+    pastel:     ['Pastel squares', { sh: 'q', col: ['#ffd1dc', '#c1e1ff', '#d4ffd1', '#fff3b0'], w: [8, 18], mo: 'flt', d: [10, 18] }],
+    pluses:     ['Plus signs', { g: ['✚'], col: ['#ffffff', '#9fc8ff'], w: [8, 14], mo: 'twk', d: [2.5, 6], rot: 90 }],
+    greenflies: ['Green fireflies', { sh: 'c', col: ['#a6ff6b'], w: [4, 6], mo: 'flt', d: [8, 15], glow: 1 }],
+    pinkflies:  ['Pink fireflies', { sh: 'c', col: ['#ff8fd8'], w: [4, 6], mo: 'flt', d: [8, 15], glow: 1 }],
+    pinkbubbles:['Pink bubbles', { sh: 'r', col: ['#ff9ec8', '#ffc0dd'], w: [10, 44], mo: 'rise', d: [14, 26], rot: 0 }],
+    blubbles:   ['Blue bubbles', { sh: 'r', col: ['#7fc8ff', '#a9dcff'], w: [10, 44], mo: 'rise', d: [14, 26], rot: 0 }]
+  };
+  function fxBuildParticles(t, mk) {
+    var spec = FX_P[t][1], r = Math.random, n = 50, i;
+    function pick(a) { return a[Math.floor(r() * a.length)]; }
+    function rg(a) { return a[0] + r() * (a[1] - a[0]); }
+    for (i = 0; i < n; i++) {
+      var w = rg(spec.w), h = spec.h ? rg(spec.h) : w, col = spec.col ? pick(spec.col) : '#fff';
+      var css = '--c:' + col + ';--dx:' + ((r() - .5) * (spec.span || 90)) + 'px;--dy:' + ((r() - .5) * (spec.dy || 90)) + 'px;--rot:' + ((spec.rot != null ? spec.rot : 90) * (r() < .5 ? -1 : 1)) + 'deg;--sc:' + (spec.sc || 2) + ';--d:' + rg(spec.d) + 's;--bl:' + (spec.bl || 6) + 'px;animation-name:p-' + spec.mo + ';animation-delay:-' + (r() * rg(spec.d)) + 's;';
+      var cls = 'fx-p' + (spec.sh ? ' sh-' + spec.sh : '') + (spec.glow ? ' glow' : '') + (spec.soft ? ' soft' : '') + (spec.gl ? ' gl' : '');
+      if (spec.g) css += 'font-size:' + w + 'px;'; else css += 'width:' + w + 'px;height:' + h + 'px;';
+      if (spec.mo === 'rise') css += 'left:' + (r() * 100) + '%;top:100%;';
+      else if (spec.mo === 'fall' || spec.mo === 'rain') css += 'left:' + (r() * 100) + '%;top:0;';
+      else if (spec.mo === 'swp') css += 'left:0;top:' + (r() * 95) + '%;';
+      else css += 'left:' + (r() * 100) + '%;top:' + (r() * 100) + '%;';
+      var el = mk(cls, css);
+      if (spec.g) el.textContent = pick(spec.g);
+    }
+  }
+
   function buildFx() {
     applyAnimVars();
     var L = document.getElementById('fx-layer'); if (!L) return;
@@ -4095,9 +4198,10 @@
     var t = settings.bgFx;
     if (settings.anim !== 'full' || t === 'none') return;
     var r = Math.random, frag = document.createDocumentFragment();
-    function mk(cls, css) { var e = document.createElement('i'); e.className = cls; e.style.cssText = css; frag.appendChild(e); }
+    function mk(cls, css) { var e = document.createElement('i'); e.className = cls; e.style.cssText = css; frag.appendChild(e); return e; }
     var i;
-    if (t === 'orbs') {
+    if (FX_P[t]) { fxBuildParticles(t, mk); }
+    else if (t === 'orbs') {
       [['-22%','-12%','rgba(255,138,61,.34)',62,34],['52%','48%','rgba(91,124,255,.30)',56,40],['6%','66%','rgba(255,110,168,.24)',50,46]].forEach(function (o, k) {
         mk('fx-o', 'left:' + o[0] + ';top:' + o[1] + ';width:' + o[3] + 'vmax;height:' + o[3] + 'vmax;background:radial-gradient(circle,' + o[2] + ' 0,transparent 66%);--ox:' + (k % 2 ? -11 : 11) + 'vmax;--oy:' + (k === 1 ? -9 : 9) + 'vmax;--d:' + o[4] + 's;animation-delay:-' + (k * 9) + 's');
       });
@@ -4108,7 +4212,7 @@
     } else if (t === 'bubbles') {
       for (i = 0; i < 50; i++) { var sz = 10 + r() * 44; mk('fx-b', 'width:' + sz + 'px;height:' + sz + 'px;left:' + (r() * 100) + '%;--dx:' + (r() * 70 - 35) + 'px;--d:' + (16 + r() * 16) + 's;animation-delay:-' + (r() * 26) + 's'); }
     } else if (t === 'stars') {
-      for (i = 0; i < 50; i++) { var z = 1 + r() * 1.6; mk('fx-s', 'width:' + z + 'px;height:' + z + 'px;left:' + (r() * 100) + '%;top:' + (r() * 100) + '%;' + (z > 2 ? 'box-shadow:0 0 6px var(--fx-star);' : '') + '--d:' + (2.5 + r() * 4.5) + 's;animation-delay:-' + (r() * 7) + 's'); }
+      for (i = 0; i < 48; i++) { var z = 1 + r() * 1.6; mk('fx-s', 'width:' + z + 'px;height:' + z + 'px;left:' + (r() * 100) + '%;top:' + (r() * 100) + '%;' + (z > 2 ? 'box-shadow:0 0 6px var(--fx-star);' : '') + '--d:' + (2.5 + r() * 4.5) + 's;animation-delay:-' + (r() * 7) + 's'); }
       mk('fx-sh', 'left:' + (5 + r() * 25) + '%;top:' + (4 + r() * 18) + '%;--d:12s;animation-delay:-2s');
       mk('fx-sh', 'left:' + (35 + r() * 25) + '%;top:' + (14 + r() * 20) + '%;--d:15s;animation-delay:-9s');
     } else if (t === 'snow') {
@@ -4134,6 +4238,15 @@
   /* custom dropdown cards (native select ki jagah) */
   function fxPrev(v) {
     var n = { orbs: 2, aurora: 2, bubbles: 3, stars: 6, fireflies: 3, snow: 6 }[v] || 0, h = '';
+    if (FX_P[v]) {
+      var sp = FX_P[v][1], cols = sp.col || ['#fff'];
+      for (var q = 0; q < 6; q++) {
+        var c = cols[q % cols.length], st = 'left:' + (8 + q * 15) + '%;top:-8px;animation-delay:-' + (q * 0.5) + 's;';
+        if (sp.g) h += '<b style="' + st + 'color:' + c + '">' + sp.g[q % sp.g.length] + '</b>';
+        else h += '<i style="' + st + 'background:' + c + ';width:' + Math.min(10, Math.max(3, sp.w[0])) + 'px;height:' + Math.min(10, Math.max(3, sp.w[0])) + 'px"></i>';
+      }
+      return '<span class="pv pv-gen">' + h + '</span>';
+    }
     if (!n) return '<span class="pv pv-none"><em>—</em></span>';
     for (var k = 0; k < n; k++) h += '<i></i>';
     return '<span class="pv pv-' + v + '">' + h + '</span>';
@@ -4142,7 +4255,7 @@
   var DD_CONF = {
     'set-model': { opts: [['gemini1', 'Ai 1'], ['gemini2', 'Ai 2'], ['gemini3', 'Ai 3'], ['gemini4', 'Ai 4'], ['gemini5', 'Ai 5']] },
     'set-msganim': { prev: msgPrev, opts: [['slide', 'Slide'], ['pop', 'Pop'], ['fade', 'Fade'], ['bounce', 'Bounce'], ['zoom', 'Zoom'], ['flip', 'Flip'], ['rise', 'Rise'], ['swing', 'Swing'], ['elastic', 'Elastic'], ['drop', 'Drop'], ['glow', 'Glow'], ['focus', 'Focus']] },
-    'set-bgfx': { prev: fxPrev, opts: [['orbs', 'Glow orbs'], ['aurora', 'Aurora'], ['bubbles', 'Bubbles'], ['stars', 'Stars'], ['fireflies', 'Fireflies'], ['snow', 'Snow'], ['none', 'None']] }
+    'set-bgfx': { prev: fxPrev, opts: [['orbs', 'Glow orbs'], ['aurora', 'Aurora'], ['bubbles', 'Bubbles'], ['stars', 'Stars'], ['fireflies', 'Fireflies'], ['snow', 'Snow']].concat(Object.keys(FX_P).map(function (k) { return [k, FX_P[k][0]]; })).concat([['none', 'None']]) }
   };
   function ddBuild(id) {
     var c = DD_CONF[id], sel = document.getElementById(id), grid = document.querySelector('#dd-' + id + ' .dd-grid');
@@ -4220,7 +4333,7 @@
   /* control bars (speed / strength / brightness) */
   function applyAnimVars() {
     var d = document.documentElement.style;
-    d.setProperty('--fx-speed', settings.fxSpeed); d.setProperty('--fx-bright', settings.fxBright);
+    d.setProperty('--fx-speed', settings.fxSpeed); d.setProperty('--fx-bright', settings.fxBright); d.setProperty('--fx-dark', settings.fxDark);
     d.setProperty('--msg-speed', settings.msgSpeed); d.setProperty('--msg-int', settings.msgInt);
     var L = document.getElementById('fx-layer'); if (L) L.classList.toggle('fx-boost', settings.fxBright > 1);
   }
@@ -4228,7 +4341,8 @@
     msgSpeed: { min: 25, max: 300, fmt: function (f) { return (Math.round(f * 100) / 100) + '×'; }, demo: true },
     msgInt: { min: 0, max: 200, fmt: function (f) { return Math.round(f * 100) + '%'; }, demo: true },
     fxSpeed: { min: 25, max: 300, fmt: function (f) { return (Math.round(f * 100) / 100) + '×'; } },
-    fxBright: { min: 0, max: 160, fmt: function (f) { return Math.round(f * 100) + '%'; } }
+    fxBright: { min: 0, max: 160, fmt: function (f) { return Math.round(f * 100) + '%'; } },
+    fxDark: { min: 0, max: 100, def: 0.45, fmt: function (f) { return Math.round(f * 100) + '%'; } }
   };
   function slPaint(k) {
     var c = SL[k], inp = document.getElementById('r-' + k), box = inp.closest('.set-slider');
@@ -4246,7 +4360,7 @@
       if (SL[k].demo) { clearTimeout(slDemoT); slDemoT = setTimeout(playDemo, 220); }
     });
     box.querySelector('.ss-reset').addEventListener('click', function () {
-      settings[k] = 1; saveSettings(); applyAnimVars(); slPaint(k);
+      settings[k] = (SL[k].def != null ? SL[k].def : 1); saveSettings(); applyAnimVars(); slPaint(k);
       if (SL[k].demo) playDemo();
     });
   });
