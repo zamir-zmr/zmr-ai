@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI Chat Assistant</title>
 <meta name="theme-color" content="#0E1116" id="meta-theme">
-<script>try{var __s=JSON.parse(localStorage.getItem('zamirSettings')||'{}');var __d=document.documentElement;__d.setAttribute('data-theme',__s.theme||'dark');__d.setAttribute('data-anim',__s.anim||'full');__d.setAttribute('data-msg',__s.msgAnim||'slide');__d.setAttribute('data-bg',__s.bgFx||'orbs');__d.style.setProperty('--wp-dim',(__s.wpDim!=null?__s.wpDim:0.55));__d.style.setProperty('--fx-speed',__s.fxSpeed||1);__d.style.setProperty('--fx-bright',__s.fxBright||1);__d.style.setProperty('--msg-speed',__s.msgSpeed||1);__d.style.setProperty('--msg-int',(__s.msgInt!=null?__s.msgInt:1));}catch(e){}</script>
+<script>try{var __s=JSON.parse(localStorage.getItem('zamirSettings')||'{}');var __d=document.documentElement;__d.setAttribute('data-theme',__s.theme||'dark');__d.setAttribute('data-anim',__s.anim||'full');__d.setAttribute('data-msg',__s.msgAnim||'slide');__d.setAttribute('data-bg',__s.bgFx||'orbs');__d.style.setProperty('--wp-dim',(__s.wpDim!=null?__s.wpDim:0.68));__d.style.setProperty('--fx-speed',__s.fxSpeed||1);__d.style.setProperty('--fx-bright',__s.fxBright||1);__d.style.setProperty('--msg-speed',__s.msgSpeed||1);__d.style.setProperty('--msg-int',(__s.msgInt!=null?__s.msgInt:1));}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -137,6 +137,31 @@
   }
 
   .sync-badge svg{ width:10px; height:10px; }
+
+  #profile-switcher{ position:relative; border-top:1px solid var(--border); padding:8px; flex-shrink:0; }
+  #profile-btn{
+    width:100%; display:flex; align-items:center; gap:10px; padding:9px 10px;
+    background:transparent; border:none; border-radius:12px; cursor:pointer; color:var(--text);
+    font-family:'Manrope',sans-serif; font-weight:600; font-size:13.5px;
+  }
+  #profile-btn:hover{ background:var(--surface-2); }
+  #profile-btn svg{ width:14px; height:14px; margin-left:auto; color:var(--text-dim); flex-shrink:0; }
+  .profile-avatar{
+    width:26px; height:26px; border-radius:50%; background:var(--accent); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0;
+  }
+  .profile-name{ flex:1; text-align:left; }
+  #profile-menu{
+    display:none; position:absolute; bottom:calc(100% + 6px); left:8px; right:8px;
+    background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    box-shadow:0 10px 30px rgba(0,0,0,.3); overflow:hidden; z-index:40;
+  }
+  #profile-menu.show{ display:block; }
+  .profile-opt{
+    width:100%; display:flex; align-items:center; gap:10px; padding:10px 12px;
+    background:transparent; border:none; cursor:pointer; color:var(--text); font-size:13.5px; font-weight:600;
+  }
+  .profile-opt:hover{ background:var(--surface-2); }
 
   #history-list{
     flex:1;
@@ -452,7 +477,7 @@
   main{
     flex:1;
     overflow-y:auto;
-    padding:24px 10px 12px;
+    padding:24px 10px 28px;
     max-width:900px;
     width:100%;
     margin:0 auto;
@@ -542,6 +567,9 @@
   }
 
   .row:hover .msg-actions{ opacity:1; }
+  /* Touch devices have no hover — show actions (copy/speak/regen/share)
+     immediately so they're never hidden-until-tap. */
+  @media (hover:none){ .msg-actions{ opacity:1; } }
 
   .msg-actions button{
     background:transparent;
@@ -1050,8 +1078,8 @@
   #toast.act{pointer-events:auto}
 
   /* ===== v6: wallpapers (100+), animation settings, polish ===== */
-  #wallpaper::after{background:rgba(14,17,22,var(--wp-dim,.55))}
-  html[data-theme="light"] #wallpaper::after{background:rgba(244,246,250,var(--wp-dim,.6))}
+  #wallpaper::after{background:rgba(14,17,22,var(--wp-dim,.68))}
+  html[data-theme="light"] #wallpaper::after{background:rgba(244,246,250,var(--wp-dim,.7))}
   #wallpaper.wp-move{animation:fade-in .6s both,wp-drift 26s ease-in-out .6s infinite}
   @keyframes wp-drift{0%{background-position:0% 30%}50%{background-position:100% 70%}100%{background-position:0% 30%}}
   html[data-bg]:not([data-bg="orbs"]) body::before,html[data-bg]:not([data-bg="orbs"]) body::after{display:none}
@@ -1124,8 +1152,8 @@
   .sheet.wp-sheet.show{display:flex;flex-direction:column}
   .wp-sheet .sheet-title{padding:8px 16px 10px;flex-shrink:0}
   #wp-preview{position:relative;margin:0 12px 10px;height:112px;border-radius:14px;overflow:hidden;border:1px solid var(--border);flex-shrink:0;background:var(--surface-2)}
-  #wp-preview::after{content:'';position:absolute;inset:0;background:rgba(14,17,22,var(--wp-dim,.55))}
-  html[data-theme="light"] #wp-preview::after{background:rgba(244,246,250,var(--wp-dim,.6))}
+  #wp-preview::after{content:'';position:absolute;inset:0;background:rgba(14,17,22,var(--wp-dim,.68))}
+  html[data-theme="light"] #wp-preview::after{background:rgba(244,246,250,var(--wp-dim,.7))}
   .wp-pv-bub{position:absolute;z-index:2;font-size:12px;padding:6px 10px;border-radius:12px;max-width:70%;color:var(--text)}
   .wp-pv-ai{left:10px;top:12px;background:var(--surface);border:1px solid var(--border)}
   .wp-pv-user{right:10px;bottom:12px;background:var(--user-bubble)}
@@ -1358,6 +1386,17 @@
     </span>
   </div>
   <div id="history-list"></div>
+  <div id="profile-switcher">
+    <button type="button" id="profile-btn">
+      <span class="profile-avatar" id="profile-avatar-letter">Z</span>
+      <span class="profile-name" id="profile-name-label">Zamir</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+    </button>
+    <div id="profile-menu">
+      <button type="button" class="profile-opt" data-name="Zamir"><span class="profile-avatar">Z</span> Zamir</button>
+      <button type="button" class="profile-opt" data-name="Rahima"><span class="profile-avatar">R</span> Rahima</button>
+    </div>
+  </div>
 </aside>
 
 <div id="main-col">
@@ -1493,7 +1532,7 @@
 <div class="sheet wp-sheet" id="wp-sheet" role="dialog" aria-label="Chat wallpaper">
   <div class="sheet-title"><span>Chat wallpaper</span><button type="button" class="icon-btn" id="wp-close" aria-label="Close">✕</button></div>
   <div id="wp-preview"><div class="wp-pv-bub wp-pv-ai">Namaste! Kaise hain aap?</div><div class="wp-pv-bub wp-pv-user">Main theek hoon 😊</div></div>
-  <div class="wp-ctl"><span>Dimming</span><input type="range" id="wp-dim" min="0" max="85" step="5"><span class="wp-val" id="wp-dim-val"></span></div>
+  <div class="wp-ctl"><span>Dimming</span><input type="range" id="wp-dim" min="0" max="92" step="4"><span class="wp-val" id="wp-dim-val"></span></div>
   <div class="wp-ctl"><span>Slow movement</span><label class="switch" style="margin-left:auto"><input type="checkbox" id="wp-move"><span></span></label></div>
   <div class="wp-tabs" id="wp-tabs"></div>
   <div class="wp-hint" id="wp-hint"></div>
@@ -1597,6 +1636,38 @@
   const sidebar = document.getElementById('sidebar');
   const sidebarBackdrop = document.getElementById('sidebar-backdrop');
   const menuBtn = document.getElementById('menu-btn');
+  // ---------------- Profile (Zamir / Rahima) ----------------
+  const PROFILE_KEY = 'zamirActiveProfile';
+  let activeProfile = localStorage.getItem(PROFILE_KEY) || 'Zamir';
+  if (activeProfile !== 'Zamir' && activeProfile !== 'Rahima') activeProfile = 'Zamir';
+  function applyProfileUI() {
+    const letter = activeProfile === 'Rahima' ? 'R' : 'Z';
+    const av = document.getElementById('profile-avatar-letter');
+    const nm = document.getElementById('profile-name-label');
+    if (av) av.textContent = letter;
+    if (nm) nm.textContent = activeProfile;
+  }
+  applyProfileUI();
+  const profileBtn = document.getElementById('profile-btn');
+  const profileMenu = document.getElementById('profile-menu');
+  if (profileBtn && profileMenu) {
+    profileBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      profileMenu.classList.toggle('show');
+    });
+    document.addEventListener('click', () => profileMenu.classList.remove('show'));
+    profileMenu.querySelectorAll('.profile-opt').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        activeProfile = btn.dataset.name;
+        localStorage.setItem(PROFILE_KEY, activeProfile);
+        applyProfileUI();
+        profileMenu.classList.remove('show');
+        renderCurrentSession();
+      });
+    });
+  }
+
   const newChatBtn = document.getElementById('new-chat-btn');
   const historyList = document.getElementById('history-list');
   const editBanner = document.getElementById('edit-banner');
@@ -1656,6 +1727,17 @@
   window.addEventListener('orientationchange', () => {
     setTimeout(() => { setAppHeight(); scrollToBottom(); }, 200);
   });
+  // Android keyboard open/close sometimes fires visualViewport events late
+  // or not at all right when the input gets focus — force a few
+  // recalculations right after focus so the composer and the last
+  // message's action icons are never left hidden behind the keyboard.
+  userInput.addEventListener('focus', () => {
+    setAppHeight();
+    scrollToBottom();
+    setTimeout(() => { setAppHeight(); scrollToBottom(); }, 120);
+    setTimeout(() => { setAppHeight(); scrollToBottom(); }, 320);
+    setTimeout(() => { setAppHeight(); scrollToBottom(); }, 600);
+  });
 
   /* ---------------- Settings ---------------- */
   var WP_KEY = 'zamirWallpaperCustom';
@@ -1667,7 +1749,7 @@
   const SETTINGS_KEY = 'zamirSettings';
   const settings = Object.assign({ theme: 'dark', fontSize: 14.5, autoScroll: true, sound: true, wallpaper: 'none',
       anim: (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) ? 'light' : 'full',
-      msgAnim: 'slide', bgFx: 'orbs', sendFx: true, wpDim: 0.55, wpMove: false,
+      msgAnim: 'slide', bgFx: 'orbs', sendFx: true, wpDim: 0.68, wpMove: false,
       fxSpeed: 1, fxBright: 1, msgSpeed: 1, msgInt: 1 },
     (() => { try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch (_) { return {}; } })());
   function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (_) {} }
@@ -2707,7 +2789,7 @@
     }
 
     if (!session.messages) session.messages = [];
-    const userMsg = { role: 'user', text: promptText, attachments: attachmentsForThisMessage, createdAt: Date.now() };
+    const userMsg = { role: 'user', text: promptText, attachments: attachmentsForThisMessage, createdAt: Date.now(), sender: activeProfile };
     if (replyTo) { userMsg.replyTo = { role: replyTo.role, text: replyTo.text }; clearReply(); }
     session.messages.push(userMsg);
     updateSessionTitle(session);
@@ -2928,7 +3010,7 @@
       response = await fetch(getStreamUrl(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: apiHistory, clientTime: getClientTimeInfo() })
+        body: JSON.stringify({ contents: apiHistory, clientTime: getClientTimeInfo(), profile: activeProfile })
       });
     } catch (networkErr) {
       if (retriesLeft > 0) {
@@ -3024,11 +3106,12 @@
     // Jis model (Gemini 1..5) ne is particular message ka jawab diya,
     // usi ka naam yahan dikhaya jaata hai — hardcoded "AI" nahi.
     const modelLabel = (!isUser && index >= 0) ? getModelLabel(msg.model || selectedModel) : null;
-    const modelNameHtml = modelLabel ? `<span class="model-name">${escapeHtml(modelLabel)}</span>` : '';
-    const avatarText = isUser ? 'You' : (!isUser && index >= 0 ? getModelAvatar(msg.model || selectedModel) : 'AI');
+    const modelNameHtml = modelLabel ? `<span class="model-name">${escapeHtml(modelLabel)}</span>` : (isUser ? `<span class="model-name">${escapeHtml(senderName)}</span>` : '');
+    const senderName = isUser ? (msg.sender || activeProfile) : null;
+    const avatarText = isUser ? (senderName === 'Rahima' ? 'R' : 'Z') : (!isUser && index >= 0 ? getModelAvatar(msg.model || selectedModel) : 'AI');
 
     row.innerHTML = `
-      <div class="avatar ${isUser ? 'user' : 'ai'}"${modelLabel ? ` title="${escapeHtml(modelLabel)}"` : ''}>${avatarText}</div>
+      <div class="avatar ${isUser ? 'user' : 'ai'}"${isUser ? ` title="${escapeHtml(senderName)}"` : (modelLabel ? ` title="${escapeHtml(modelLabel)}"` : '')}>${avatarText}</div>
       <div class="msg-wrap">
         ${modelNameHtml}
         <div class="bubble">${msg.starred ? '<span class="star-mark">★</span>' : ''}${msg.replyTo ? '<div class="reply-quote"><b>' + (msg.replyTo.role === 'user' ? 'You' : 'AI') + '</b>' + escapeHtml(msg.replyTo.text || '') + '</div>' : ''}${imagesHtml}<span class="msg-text">${bubbleTextHtml}</span></div>
