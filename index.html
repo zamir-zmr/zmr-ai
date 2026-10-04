@@ -1630,7 +1630,7 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
   const sessionsRef = db.ref('geminiChatApp/sessions');
-  const settingsRef = db.ref('geminiChatApp/settings');
+  const settingsRef = db.ref('geminiChatApp/uiSettings'); // NOTE: 'settings' node wallpaper ke liye hai, isliye alag path
 
   /* ---------------- Config ---------------- */
   // NOTE: API_KEY, MODEL aur direct Gemini URL yahan se hata diye gaye hain.
@@ -3930,8 +3930,26 @@
     }).catch(function () {}));
     return Promise.all(jobs);
   }
+  /* Galti se mit gayi shared wallpapers ko is phone ke local cache se wapas Firebase me daalo (sirf jab library khali ho) */
+  function recoverWallpapers() {
+    return wpTx('wpcache', 'readonly', function (st) { return st.getAll(); }).then(function (all) {
+      all = (all || []).filter(function (x) { return x && x.id && x.data; });
+      if (!all.length) return;
+      return wpLibRef.once('value').then(function (sn) {
+        var lib = sn.val() || {};
+        if (Object.keys(lib).length) return;
+        return Promise.all(all.map(function (x, k) {
+          return shrinkData(x.data).then(function (data) {
+            return wpDataRef.child(x.id).set(data).then(function () { return imgFromSrc(data); })
+              .then(function (im) { return resizeToDataUrl(im, 200, 0.6, 0); })
+              .then(function (thumb) { return wpLibRef.child(x.id).set({ thumb: thumb, t: Date.now() + k }); });
+          }).catch(function () {});
+        }));
+      });
+    }).catch(function () {});
+  }
   function initSharedWallpapers() {
-    wpMigrateP = migrateLocalWallpapers();
+    wpMigrateP = migrateLocalWallpapers().then(recoverWallpapers);
     wpLibRef.on('value', function (snap) {
       var v = snap.val() || {};
       customWps = Object.keys(v).map(function (id) { return { id: id, thumb: v[id].thumb || '', t: v[id].t || 0 }; }).sort(function (a, b) { return b.t - a.t; });
