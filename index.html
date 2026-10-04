@@ -2095,33 +2095,120 @@
     }
   });
 
-  sessionsRef.on('value', (snapshot) => {
-    const data = snapshot.val() || {};
-    sessions = Object.keys(data)
-      .map(id => ({ id, ...data[id] }))
-      .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  /* Light-weight index (title/updatedAt/pinned) alag node me; poora sessions tree (images ke saath) ab load nahi hota */
+  const metaRef = db.ref('geminiChatApp/meta');
+  const META_CACHE_KEY = 'zamirMetaCache_v1';
+  let metaMap = {};
+  const sessionData = {};
+  const loadedIds = new Set();
+  let migrationState = 0; // 0 = not started, 1 = running, 2 = done
+  let curWatch = null;
 
-    if (!firebaseReady) {
-      firebaseReady = true;
-      if (sessions.length === 0) {
-        createSession();
-      } else {
-        currentSessionId = sessions[0].id;
-        renderCurrentSession();
-        restoreDraft();
+  try { metaMap = JSON.parse(localStorage.getItem(META_CACHE_KEY) || '{}') || {}; } catch (_) { metaMap = {}; }
+
+  function rebuildSessions() {
+    sessions = Object.keys(metaMap).map(id => {
+      const o = sessionData[id] || (sessionData[id] = { id, messages: [] });
+      const m = metaMap[id] || {};
+      o.id = id;
+      o.title = m.title || o.title || 'New chat';
+      o.updatedAt = m.updatedAt || o.updatedAt || 0;
+      o.pinned = !!m.pinned;
+      if (!Array.isArray(o.messages)) o.messages = [];
+      return o;
+    }).sort((x, y) => (y.updatedAt || 0) - (x.updatedAt || 0));
+  }
+
+  function metaOf(session) {
+    return { title: session.title || 'New chat', updatedAt: session.updatedAt || Date.now(), pinned: !!session.pinned };
+  }
+
+  function watchSession(id) {
+    if (curWatch) { try { curWatch.ref.off('value', curWatch.fn); } catch (_) {} curWatch = null; }
+    if (!id) return;
+    const ref = sessionsRef.child(id);
+    const fn = (snap) => {
+      const v = snap.val();
+      const o = sessionData[id] || (sessionData[id] = { id, messages: [] });
+      let msgs = [];
+      if (v && v.messages) msgs = Array.isArray(v.messages) ? v.messages.filter(Boolean) : Object.keys(v.messages).sort((x, y) => x - y).map(k => v.messages[k]);
+      o.messages = msgs;
+      if (v) {
+        if (v.title) o.title = v.title;
+        if (v.updatedAt) o.updatedAt = v.updatedAt;
+        o.pinned = !!v.pinned;
       }
-    } else {
-      // Live update from this device or a friend using the same app
-      if (currentSessionId && !sessions.find(s => s.id === currentSessionId)) {
-        currentSessionId = sessions.length > 0 ? sessions[0].id : null;
-        if (!currentSessionId) createSession();
-        renderCurrentSession();
-      } else if (currentSessionId && !isSending) {
-        // Refresh the open chat if it changed elsewhere (e.g. a friend's device)
-        renderCurrentSession();
-      }
+      loadedIds.add(id);
+      if (id === currentSessionId && !isSending) renderCurrentSession();
+    };
+    ref.on('value', fn, (err) => { console.error('session read failed', err); statusText.textContent = 'Error'; });
+    curWatch = { ref, fn };
+  }
+
+  function pickLatestOrCreate() {
+    if (sessions.length > 0) {
+      currentSessionId = sessions[0].id;
+      watchSession(currentSessionId);
+      renderCurrentSession();
+      restoreDraft();
+    } else if (migrationState === 2) {
+      createSession();
     }
+  }
+
+  function migrateMeta() {
+    const base = firebaseConfig.databaseURL + '/geminiChatApp/sessions.json?shallow=true';
+    return fetch(base).then(r => r.json()).then(keys => {
+      if (!keys || typeof keys !== 'object' || keys.error) return;
+      const missing = Object.keys(keys).filter(id => !metaMap[id]);
+      return Promise.all(missing.map(id => {
+        const c = sessionsRef.child(id);
+        return Promise.all([c.child('title').once('value'), c.child('updatedAt').once('value'), c.child('pinned').once('value')])
+          .then(([t, u, p]) => {
+            const m = { title: t.val() || 'New chat', updatedAt: u.val() || 0, pinned: !!p.val() };
+            metaMap[id] = m;
+            return metaRef.child(id).set(m);
+          }).catch(() => {});
+      }));
+    }).catch((e) => { console.error('migrate failed', e); });
+  }
+
+  function onMetaChanged() {
+    try { localStorage.setItem(META_CACHE_KEY, JSON.stringify(metaMap)); } catch (_) {}
+    rebuildSessions();
+    if (currentSessionId && !metaMap[currentSessionId]) {
+      // current chat kisi aur device se delete hui
+      currentSessionId = null;
+    }
+    if (!currentSessionId) pickLatestOrCreate();
     renderHistoryList();
+  }
+
+  // cache se turant dikhao
+  (function initFromCache() {
+    rebuildSessions();
+    if (sessions.length > 0) {
+      currentSessionId = sessions[0].id;
+      watchSession(currentSessionId);
+      renderHistoryList();
+    }
+  })();
+
+  metaRef.on('value', (snapshot) => {
+    metaMap = snapshot.val() || {};
+    firebaseReady = true;
+    if (migrationState === 0) {
+      migrationState = 1;
+      onMetaChanged();
+      migrateMeta().then(() => { migrationState = 2; onMetaChanged(); });
+      return;
+    }
+    onMetaChanged();
+  }, (err) => {
+    console.error('meta read failed', err);
+    statusDot.classList.add('offline');
+    statusText.textContent = 'Error';
+    syncBadge.style.color = '#FF6E6E';
   });
 
   function getCurrentSession() {
@@ -2129,15 +2216,27 @@
   }
 
   function saveSession(session) {
+    if (!loadedIds.has(session.id)) return; // load hone se pehle overwrite na ho
     session.updatedAt = Date.now();
-    sessionsRef.child(session.id).set(session);
+    const payload = JSON.parse(JSON.stringify(session));
+    sessionsRef.child(session.id).set(payload);
+    const m = metaOf(session);
+    metaMap[session.id] = m;
+    metaRef.child(session.id).set(m);
   }
 
   /* ---------------- Session management ---------------- */
   function createSession() {
     const session = { id: 'c' + Date.now(), title: 'New chat', updatedAt: Date.now(), messages: [] };
     currentSessionId = session.id;
-    sessionsRef.child(session.id).set(session);
+    sessionData[session.id] = session;
+    loadedIds.add(session.id);
+    metaMap[session.id] = metaOf(session);
+    rebuildSessions();
+    sessionsRef.child(session.id).set({ id: session.id, title: session.title, updatedAt: session.updatedAt, messages: [] });
+    metaRef.child(session.id).set(metaMap[session.id]);
+    watchSession(session.id);
+    renderHistoryList();
     userInput.value = '';
     clearReply();
     renderCurrentSession();
@@ -2147,6 +2246,7 @@
 
   function loadSession(id) {
     currentSessionId = id;
+    watchSession(id);
     editingIndex = null;
     hideEditBanner();
     pendingAttachments = [];
@@ -2163,14 +2263,18 @@
     evt.stopPropagation();
     try { localStorage.removeItem('zamirDraft_' + id); } catch (_) {}
     sessionsRef.child(id).remove();
+    metaRef.child(id).remove();
+    delete metaMap[id]; delete sessionData[id]; loadedIds.delete(id);
+    try { localStorage.setItem(META_CACHE_KEY, JSON.stringify(metaMap)); } catch (_) {}
     if (currentSessionId === id) {
+      rebuildSessions();
       const remaining = sessions.filter(s => s.id !== id);
       if (remaining.length > 0) {
         loadSession(remaining[0].id);
       } else {
         createSession();
       }
-    }
+    } else { rebuildSessions(); renderHistoryList(); }
   }
 
   function renderHistoryList() {
@@ -2211,7 +2315,7 @@
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const s = sessions.find(x => x.id === btn.dataset.id);
-        if (s) sessionsRef.child(s.id).update({ pinned: !s.pinned });
+        if (s) { const pv = !s.pinned; sessionsRef.child(s.id).update({ pinned: pv }); metaRef.child(s.id).update({ pinned: pv }); }
       });
     });
     historyList.querySelectorAll('.history-rename').forEach(btn => {
@@ -2234,7 +2338,7 @@
     const commit = (save) => {
       if (done) return; done = true;
       const v = inp.value.trim();
-      if (save && v && v !== s.title) sessionsRef.child(id).update({ title: v });
+      if (save && v && v !== s.title) { sessionsRef.child(id).update({ title: v }); metaRef.child(id).update({ title: v }); }
       else renderHistoryList();
     };
     inp.addEventListener('click', e => e.stopPropagation());
@@ -3106,8 +3210,8 @@
     // Jis model (Gemini 1..5) ne is particular message ka jawab diya,
     // usi ka naam yahan dikhaya jaata hai — hardcoded "AI" nahi.
     const modelLabel = (!isUser && index >= 0) ? getModelLabel(msg.model || selectedModel) : null;
-    const modelNameHtml = modelLabel ? `<span class="model-name">${escapeHtml(modelLabel)}</span>` : (isUser ? `<span class="model-name">${escapeHtml(senderName)}</span>` : '');
     const senderName = isUser ? (msg.sender || activeProfile) : null;
+    const modelNameHtml = modelLabel ? `<span class="model-name">${escapeHtml(modelLabel)}</span>` : (isUser ? `<span class="model-name">${escapeHtml(senderName)}</span>` : '');
     const avatarText = isUser ? (senderName === 'Rahima' ? 'R' : 'Z') : (!isUser && index >= 0 ? getModelAvatar(msg.model || selectedModel) : 'AI');
 
     row.innerHTML = `
