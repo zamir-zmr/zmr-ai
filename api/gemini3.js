@@ -35,7 +35,7 @@ function daysUntil(t, month, day) {
   return Math.round((next - today) / 86400000);
 }
 
-function buildSystemText(clientTime) {
+function buildSystemText(clientTime, profile) {
   const zone = safeZone(clientTime && clientTime.timeZone);
   const t = todayParts(zone);
   const local = clientTime && typeof clientTime.localString === 'string'
@@ -48,12 +48,21 @@ function buildSystemText(clientTime) {
     return `- ${b.name} (${b.rel}/${b.relHi}) — ${b.label} — ${when}`;
   }).join('\n');
 
+  const who = (profile === 'Rahima') ? 'Rahima' : 'Zamir';
+  const whoRel = (who === 'Rahima') ? 'wife' : 'husband';
+  const otherName = (who === 'Rahima') ? 'Zamir' : 'Rahima';
+  const otherRel = (who === 'Rahima') ? 'husband' : 'wife';
+
   return [
     `Current user local time: ${local || 'unknown'} (timezone: ${zone}). When asked for the time or date, answer using exactly this local time.`,
     'User location is Oman (GST, UTC+4) unless the device timezone above says otherwise.',
     '',
     'Family details you must remember:',
     '- The user is Zamir (husband). His wife is Rahima. Their daughter is Zaina Praveen.',
+    '',
+    `You are currently chatting with ${who} (the ${whoRel}), not ${otherName}.`,
+    `If ${who} asks for something romantic (e.g. shayari, a love note, a message) without naming who it is for, assume it is for ${otherName} (${who}'s ${otherRel}) unless ${who} says otherwise.`,
+    `Address ${who} naturally by name sometimes, and tailor tone/suggestions as if you know you're talking to ${who} specifically.`,
     '',
     `Family birthdays (today's date: ${t.y}-${String(t.m).padStart(2, '0')}-${String(t.d).padStart(2, '0')}):`,
     statusLines,
@@ -76,14 +85,14 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { contents, systemInstruction, clientTime } = req.body || {};
+  const { contents, systemInstruction, clientTime, profile } = req.body || {};
   if (!contents) {
     res.status(400).json({ error: { message: 'Missing "contents" in request body' } });
     return;
   }
 
   // Server-side system prompt (time + family birthdays), plus any frontend systemInstruction
-  let systemText = buildSystemText(clientTime);
+  let systemText = buildSystemText(clientTime, (req.body || {}).profile);
   const extra = systemInstruction && Array.isArray(systemInstruction.parts)
     ? systemInstruction.parts.map((p) => (p && p.text) || '').filter(Boolean).join('\n')
     : '';
