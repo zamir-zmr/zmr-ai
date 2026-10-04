@@ -1573,7 +1573,7 @@
   <div class="set-row"><div class="set-label">Auto-scroll</div><label class="switch"><input type="checkbox" id="set-autoscroll"><span></span></label></div>
   <div class="set-row"><div class="set-label">Sounds</div><label class="switch"><input type="checkbox" id="set-sound"><span></span></label></div>
   <div class="set-row"><div class="set-label">Default voice</div><button type="button" class="set-btn" id="set-voice-btn"></button></div>
-  <div class="set-note">Chat wallpaper aap dono ke phone par sync hota hai: jo ek lagaye, doosre ko bhi dikhta hai. Theme, font size, sounds aur animations sirf isi phone par save hote hain.</div>
+  <div class="set-note">Chat wallpaper aap dono ke phone par sync hota hai: jo ek lagaye, doosre ko bhi dikhta hai. Theme, font size, animations aur background effects (speed, brightness, darkness) bhi dono phones par sync hote hain; sounds sirf isi phone par.</div>
 </div>
 <div class="sheet-backdrop" id="wp-backdrop"></div>
 <div class="sheet wp-sheet" id="wp-sheet" role="dialog" aria-label="Chat wallpaper">
@@ -1630,6 +1630,7 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
   const sessionsRef = db.ref('geminiChatApp/sessions');
+  const settingsRef = db.ref('geminiChatApp/settings');
 
   /* ---------------- Config ---------------- */
   // NOTE: API_KEY, MODEL aur direct Gemini URL yahan se hata diye gaye hain.
@@ -1802,7 +1803,8 @@
       msgAnim: 'slide', bgFx: 'orbs', sendFx: true, wpDim: 0.68, wpMove: false,
       fxSpeed: 1, fxBright: 1, fxDark: 0.45, msgSpeed: 1, msgInt: 1 },
     (() => { try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch (_) { return {}; } })());
-  function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (_) {} }
+  var remoteApplying = false, settingsPushT = null, lastSettingsJson = '';
+  function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (_) {} if (!remoteApplying) pushSettings(); }
 
   /* ---------------- State ---------------- */
   let sessions = [];                      // array of { id, title, updatedAt, messages:[{role,text,attachments}] }
@@ -4405,6 +4407,36 @@
     slSyncAll();
     initSharedWallpapers();
   }
+  /* ---------------- Settings Firebase sync (dono phones par same) ---------------- */
+  var SYNC_KEYS = ['theme', 'fontSize', 'autoScroll', 'anim', 'msgAnim', 'bgFx', 'sendFx', 'fxSpeed', 'fxBright', 'fxDark', 'msgSpeed', 'msgInt'];
+  function settingsPayload() { var o = {}; SYNC_KEYS.forEach(function (k) { if (settings[k] !== undefined) o[k] = settings[k]; }); return o; }
+  function pushSettings() {
+    clearTimeout(settingsPushT);
+    settingsPushT = setTimeout(function () {
+      var pl = settingsPayload(), j = JSON.stringify(pl);
+      if (j === lastSettingsJson) return;
+      lastSettingsJson = j;
+      pl.t = Date.now();
+      settingsRef.set(pl).catch(function () {});
+    }, 300);
+  }
+  settingsRef.on('value', function (snap) {
+    var v = snap.val();
+    if (!v) { lastSettingsJson = ''; pushSettings(); return; }
+    var changed = false;
+    SYNC_KEYS.forEach(function (k) { if (v[k] !== undefined && settings[k] !== v[k]) { settings[k] = v[k]; changed = true; } });
+    lastSettingsJson = JSON.stringify(settingsPayload());
+    if (!changed) return;
+    remoteApplying = true;
+    try {
+      saveSettings();
+      applyTheme(settings.theme, false);
+      applyFont();
+      applyAnim();
+      syncSettingsUI();
+    } finally { remoteApplying = false; }
+  });
+
   initV6();
   initBirthdayBanner();
 </script>
