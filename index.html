@@ -2946,7 +2946,7 @@
 
     if (!session.messages) session.messages = [];
     const userMsg = { role: 'user', text: promptText, attachments: attachmentsForThisMessage, createdAt: Date.now(), sender: activeProfile };
-    if (replyTo) { userMsg.replyTo = { role: replyTo.role, text: replyTo.text }; clearReply(); }
+    if (replyTo) { userMsg.replyTo = { role: replyTo.role, text: replyTo.text, ctx: replyTo.ctx || replyTo.text, sender: replyTo.sender }; clearReply(); }
     session.messages.push(userMsg);
     updateSessionTitle(session);
     saveSession(session);
@@ -3038,6 +3038,24 @@
     }
   });
 
+  function senderOfMsg(m) { return (m && m.sender === 'Rahima') ? 'Rahima' : 'Zamir'; }
+  function replyWho(rt) {
+    if (!rt || rt.role !== 'user') return 'AI';
+    const who = (rt.sender === 'Rahima' || rt.sender === 'Zamir') ? rt.sender : activeProfile;
+    return who === activeProfile ? 'You' : who;
+  }
+  function apiReplyNote(m, me) {
+    const rt = m.replyTo; if (!rt) return '';
+    const quoted = (rt.ctx || rt.text || '').replace(/"/g, "'");
+    let target;
+    if (rt.role !== 'user') target = "the AI's (your) earlier message";
+    else {
+      const author = (rt.sender === 'Rahima' || rt.sender === 'Zamir') ? rt.sender : me;
+      target = author === me ? 'their own earlier message' : author + "'s earlier message";
+    }
+    return '[' + me + ' is replying to ' + target + ': "' + quoted + '"]\n';
+  }
+
   function buildApiHistory(session) {
     const allMessages = session.messages || [];
 
@@ -3046,7 +3064,7 @@
     // long the saved chat history grows. Full history stays saved in
     // Firebase for the user to scroll back through; only what we SEND to
     // Gemini is capped.
-    const MAX_HISTORY_MESSAGES = 20;
+    const MAX_HISTORY_MESSAGES = 40;
     const messages = allMessages.slice(-MAX_HISTORY_MESSAGES);
 
     // Fix for 413 Payload Too Large: earlier versions resent EVERY image
@@ -3064,7 +3082,16 @@
 
     return messages.map((m, i) => {
       const parts = [];
-      if (m.text || m.replyTo) parts.push({ text: (m.replyTo ? '[Replying to ' + (m.replyTo.role === 'user' ? 'my' : 'your') + ' earlier message: "' + m.replyTo.text + '"]\n' : '') + (m.text || '') });
+      if (m.text || m.replyTo) {
+        if (m.role === 'user') {
+          const me = senderOfMsg(m);
+          parts.push({ text: '[' + me + ']: ' + apiReplyNote(m, me) + (m.text || '') });
+        } else {
+          parts.push({ text: (m.replyTo ? apiReplyNote(m, 'AI') : '') + (m.text || '') });
+        }
+      } else if (m.role === 'user') {
+        parts.push({ text: '[' + senderOfMsg(m) + ']: ' });
+      }
 
       const hasAttachments = (m.attachments || []).length > 0;
       if (hasAttachments && i === lastAttachmentIndex) {
@@ -3264,7 +3291,7 @@
       <div class="avatar ${isUser ? 'user' : 'ai'}"${isUser ? ` title="${escapeHtml(senderName)}"` : (modelLabel ? ` title="${escapeHtml(modelLabel)}"` : '')}>${avatarText}</div>
       <div class="msg-wrap">
         ${modelNameHtml}
-        <div class="bubble">${msg.starred ? '<span class="star-mark">★</span>' : ''}${msg.replyTo ? '<div class="reply-quote"><b>' + (msg.replyTo.role === 'user' ? 'You' : 'AI') + '</b>' + escapeHtml(msg.replyTo.text || '') + '</div>' : ''}${imagesHtml}<span class="msg-text">${bubbleTextHtml}</span></div>
+        <div class="bubble">${msg.starred ? '<span class="star-mark">★</span>' : ''}${msg.replyTo ? '<div class="reply-quote"><b>' + replyWho(msg.replyTo) + '</b>' + escapeHtml(msg.replyTo.text || '') + '</div>' : ''}${imagesHtml}<span class="msg-text">${bubbleTextHtml}</span></div>
         ${editBtnHtml}
         ${aiActionsHtml}
       </div>
@@ -3560,8 +3587,9 @@
 
   /* Reply state */
   function setReply(m) {
-    replyTo = { role: m.role, text: ((m.text || '').trim() || '[photo]').slice(0, 140) };
-    document.getElementById('rb-who').textContent = 'Reply to ' + (m.role === 'user' ? 'You' : 'AI');
+    const fullText = ((m.text || '').trim() || '[photo]');
+    replyTo = { role: m.role, text: fullText.slice(0, 140), ctx: fullText.slice(0, 800), sender: m.role === 'user' ? senderOfMsg(m) : 'AI' };
+    document.getElementById('rb-who').textContent = 'Reply to ' + replyWho(replyTo);
     document.getElementById('rb-text').textContent = replyTo.text;
     replyBanner.classList.add('active'); keepFocus();
   }
