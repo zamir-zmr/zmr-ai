@@ -1720,7 +1720,9 @@
         localStorage.setItem(PROFILE_KEY, activeProfile);
         applyProfileUI();
         profileMenu.classList.remove('show');
-        renderCurrentSession();
+        var __last = null; try { __last = localStorage.getItem('zamirLast_' + activeProfile); } catch (_) {}
+        if (__last && __last !== currentSessionId && typeof metaMap !== 'undefined' && metaMap[__last]) { loadSession(__last); }
+        else { renderCurrentSession(); restoreDraft(); }
       });
     });
   }
@@ -2171,7 +2173,8 @@
     syncBadge.style.color = '#57D68D';
     var p = otherPres, now = Date.now() + srvOffset;
     var fresh = !!(p && p.online && (now - (p.lastSeen || 0) < 75000));
-    if (fresh && p.typing) statusText.textContent = 'typing…';
+    var typingFresh = !!(p && p.typing && (now - (p.typingAt || p.lastSeen || 0) < 6000));
+    if (fresh && typingFresh) statusText.textContent = 'typing…';
     else if (fresh) statusText.textContent = 'Online';
     else {
       statusDot.classList.add('away');
@@ -2224,15 +2227,54 @@
   }, 25000);
   document.addEventListener('visibilitychange', function () { presenceOnline(!document.hidden); });
   window.addEventListener('pagehide', function () { presenceOnline(false); });
-  userInput.addEventListener('input', function () {
+  var lastTypingWrite = 0;
+  function setTyping(on) {
     if (!fbConnected || !myPresName) return;
+    typingOn = on; lastTypingWrite = Date.now();
+    presenceRef.child(myPresName).update(on ? { typing: true, typingAt: TS, lastSeen: TS, online: true } : { typing: false }).catch(function () {});
+  }
+  userInput.addEventListener('input', function () {
     var has = userInput.value.trim().length > 0;
     clearTimeout(typingT);
-    if (has && !typingOn) { typingOn = true; presenceRef.child(myPresName).update({ typing: true, lastSeen: TS }).catch(function () {}); }
-    if (!has && typingOn) { typingOn = false; presenceRef.child(myPresName).update({ typing: false }).catch(function () {}); return; }
-    if (has) typingT = setTimeout(function () { typingOn = false; presenceRef.child(myPresName).update({ typing: false }).catch(function () {}); }, 3000);
+    if (!has) { if (typingOn) setTyping(false); return; }
+    if (!typingOn || Date.now() - lastTypingWrite > 2500) setTyping(true);
+    typingT = setTimeout(function () { setTyping(false); }, 4000);
   });
+  chatForm.addEventListener('submit', function () { clearTimeout(typingT); if (typingOn) setTyping(false); }, true);
+  setInterval(updateHeaderStatus, 8000);
   refreshPresence();
+
+  /* ---------------- Live AI streaming mirror (doosre phone par bhi jawab banta dikhe) ---------------- */
+  var liveWatch = null, remoteLiveRow = null;
+  function removeRemoteLive() { if (remoteLiveRow && remoteLiveRow.parentNode) remoteLiveRow.parentNode.removeChild(remoteLiveRow); remoteLiveRow = null; }
+  function watchLive(id) {
+    if (liveWatch) { try { liveWatch.ref.off('value', liveWatch.fn); } catch (_) {} liveWatch = null; }
+    removeRemoteLive();
+    if (!id) return;
+    const ref = db.ref('geminiChatApp/live/' + id);
+    const fn = (snap) => {
+      const v = snap.val();
+      const fresh = !!(v && v.by && v.by !== activeProfile && v.text && (Date.now() + srvOffset - (v.t || 0) < 30000));
+      if (!fresh || isSending) { removeRemoteLive(); return; }
+      if (!remoteLiveRow) {
+        const sess = getCurrentSession();
+        remoteLiveRow = appendMessageDOM({ role: 'ai', text: '', attachments: [], createdAt: 0, model: v.model }, sess && sess.messages ? sess.messages.length : 0);
+      }
+      if (remoteLiveRow) { updateMessageBubble(remoteLiveRow, v.text); if (pinned) scrollToBottom(); }
+    };
+    ref.on('value', fn);
+    liveWatch = { ref, fn };
+  }
+  function makeLivePusher(sid) {
+    const ref = db.ref('geminiChatApp/live/' + sid);
+    let last = 0, timer = null, latest = '';
+    try { ref.onDisconnect().remove(); } catch (_) {}
+    const flush = () => { timer = null; last = Date.now(); ref.set({ by: activeProfile, text: latest, model: selectedModel, t: TS }).catch(() => {}); };
+    return {
+      push(text) { latest = text; if (Date.now() - last > 700) { if (timer) { clearTimeout(timer); timer = null; } flush(); } else if (!timer) timer = setTimeout(flush, 700); },
+      end() { if (timer) { clearTimeout(timer); timer = null; } ref.remove().catch(() => {}); }
+    };
+  }
 
   /* Light-weight index (title/updatedAt/pinned) alag node me; poora sessions tree (images ke saath) ab load nahi hota */
   const metaRef = db.ref('geminiChatApp/meta');
@@ -2242,6 +2284,7 @@
   const loadedIds = new Set();
   let migrationState = 0; // 0 = not started, 1 = running, 2 = done
   let curWatch = null;
+  var pendingRemoteRender = false;
 
   try { metaMap = JSON.parse(localStorage.getItem(META_CACHE_KEY) || '{}') || {}; } catch (_) { metaMap = {}; }
 
@@ -2258,11 +2301,19 @@
     }).sort((x, y) => (y.updatedAt || 0) - (x.updatedAt || 0));
   }
 
+  function lastHumanSender(session) {
+    const ms = (session && session.messages) || [];
+    for (let i = ms.length - 1; i >= 0; i--) { if (ms[i] && ms[i].role === 'user') return (ms[i].sender === 'Rahima') ? 'Rahima' : 'Zamir'; }
+    return null;
+  }
   function metaOf(session) {
-    return { title: session.title || 'New chat', updatedAt: session.updatedAt || Date.now(), pinned: !!session.pinned };
+    const m = { title: session.title || 'New chat', updatedAt: session.updatedAt || Date.now(), pinned: !!session.pinned };
+    const by = lastHumanSender(session); if (by) m.by = by;
+    return m;
   }
 
   function watchSession(id) {
+    if (typeof watchLive === 'function') watchLive(id);
     if (curWatch) { try { curWatch.ref.off('value', curWatch.fn); } catch (_) {} curWatch = null; }
     if (!id) return;
     const ref = sessionsRef.child(id);
@@ -2271,14 +2322,36 @@
       const o = sessionData[id] || (sessionData[id] = { id, messages: [] });
       let msgs = [];
       if (v && v.messages) msgs = Array.isArray(v.messages) ? v.messages.filter(Boolean) : Object.keys(v.messages).sort((x, y) => x - y).map(k => v.messages[k]);
+      const prev = Array.isArray(o.messages) ? o.messages : [];
+      const sig = (m) => (m.role || '') + '|' + (m.createdAt || 0) + '|' + ((m.text || '').length) + '|' + (m.starred ? 1 : 0) + '|' + ((m.attachments || []).length);
+      let same = prev.length === msgs.length;
+      if (same) for (let i = 0; i < prev.length; i++) { if (sig(prev[i]) !== sig(msgs[i])) { same = false; break; } }
+      let appendOnly = !same && msgs.length > prev.length && prev.every((m, i) => sig(m) === sig(msgs[i]));
       o.messages = msgs;
       if (v) {
         if (v.title) o.title = v.title;
         if (v.updatedAt) o.updatedAt = v.updatedAt;
         o.pinned = !!v.pinned;
       }
+      const firstLoad = !loadedIds.has(id);
       loadedIds.add(id);
-      if (id === currentSessionId && !isSending) renderCurrentSession();
+      if (id !== currentSessionId) return;
+      if (firstLoad) { renderCurrentSession(); return; }
+      if (same) return;
+      if (isSending) { pendingRemoteRender = true; return; }
+      if (appendOnly && prev.length > 0) {
+        removeRemoteLive();
+        const wasPinned = pinned;
+        for (let i = prev.length; i < msgs.length; i++) {
+          appendMessageDOM(msgs[i], i);
+          const fromOther = msgs[i].role === 'user' ? (msgs[i].sender && msgs[i].sender !== activeProfile) : true;
+          if (fromOther) { try { playReceiveSound(); } catch (_) {} }
+        }
+        if (wasPinned) scrollToBottom();
+      } else {
+        removeRemoteLive();
+        renderCurrentSession();
+      }
     };
     ref.on('value', fn, (err) => { console.error('session read failed', err); statusText.textContent = 'Error'; });
     curWatch = { ref, fn };
@@ -2312,8 +2385,23 @@
     }).catch((e) => { console.error('migrate failed', e); });
   }
 
+  var knownUpd = {}, metaSeeded = false;
+  function detectOtherActivity() {
+    if (!metaSeeded) { Object.keys(metaMap).forEach(k => { knownUpd[k] = (metaMap[k] || {}).updatedAt || 0; }); metaSeeded = true; return; }
+    let target = null;
+    Object.keys(metaMap).forEach(k => {
+      const m = metaMap[k] || {}, u = m.updatedAt || 0;
+      if (u > (knownUpd[k] || 0) && k !== currentSessionId && m.by && m.by !== activeProfile) { if (!target || u > target.u) target = { id: k, u: u, by: m.by, title: m.title }; }
+      knownUpd[k] = Math.max(knownUpd[k] || 0, u);
+    });
+    if (!target) return;
+    const idle = !isSending && !(userInput.value || '').trim();
+    if (idle) { loadSession(target.id); toast(target.by + ' ki chat khul gayi'); }
+    else toast(target.by + ' ne naya message bheja', 'Open', () => loadSession(target.id), 6000);
+  }
   function onMetaChanged() {
     try { localStorage.setItem(META_CACHE_KEY, JSON.stringify(metaMap)); } catch (_) {}
+    detectOtherActivity();
     rebuildSessions();
     if (currentSessionId && !metaMap[currentSessionId]) {
       // current chat kisi aur device se delete hui
@@ -2385,6 +2473,7 @@
 
   function loadSession(id) {
     currentSessionId = id;
+    try { localStorage.setItem('zamirLast_' + activeProfile, id); } catch (_) {}
     watchSession(id);
     editingIndex = null;
     hideEditBanner();
@@ -2400,7 +2489,7 @@
 
   function deleteSession(id, evt) {
     evt.stopPropagation();
-    try { localStorage.removeItem('zamirDraft_' + id); } catch (_) {}
+    try { localStorage.removeItem('zamirDraft_Zamir_' + id); localStorage.removeItem('zamirDraft_Rahima_' + id); } catch (_) {}
     sessionsRef.child(id).remove();
     metaRef.child(id).remove();
     delete metaMap[id]; delete sessionData[id]; loadedIds.delete(id);
@@ -3060,12 +3149,13 @@
     const loadingId = appendTypingIndicator();
     let aiRow = null;
     let fullText = '';
+    const livePush = makeLivePusher(session.id);
 
     try {
       let historyToSend = apiHistory;
       try {
         await streamGemini(historyToSend, (chunk) => {
-          fullText += chunk;
+          fullText += chunk; livePush.push(fullText);
           if (!aiRow) {
             removeMessage(loadingId);
             aiRow = appendMessageDOM({ role: 'ai', text: '', attachments: [], createdAt: Date.now(), model: selectedModel }, session.messages.length);
@@ -3082,7 +3172,7 @@
           historyToSend = historyToSend.slice(-1);
           fullText = '';
           await streamGemini(historyToSend, (chunk) => {
-            fullText += chunk;
+            fullText += chunk; livePush.push(fullText);
             if (!aiRow) {
               removeMessage(loadingId);
               aiRow = appendMessageDOM({ role: 'ai', text: '', attachments: [], createdAt: Date.now(), model: selectedModel }, session.messages.length);
@@ -3121,6 +3211,7 @@
       saveSession(session);
       if (liveModeActive) startLiveListening();
     } finally {
+      livePush.end();
       finishSend();
     }
   });
@@ -3200,6 +3291,7 @@
     isSending = false;
     sendBtn.disabled = false;
     sendLabel.textContent = 'Send';
+    if (pendingRemoteRender) { pendingRemoteRender = false; renderCurrentSession(); }
     keepFocus();
   }
 
@@ -3656,7 +3748,7 @@
   /* ===================== v5 features ===================== */
 
   /* 68 — Draft auto-save (per chat) */
-  function draftKey() { return 'zamirDraft_' + (currentSessionId || 'x'); }
+  function draftKey() { return 'zamirDraft_' + activeProfile + '_' + (currentSessionId || 'x'); }
   function restoreDraft() {
     if (editingIndex !== null) return;
     try { userInput.value = localStorage.getItem(draftKey()) || ''; } catch (_) {}
