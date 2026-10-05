@@ -35,7 +35,7 @@ function daysUntil(t, month, day) {
   return Math.round((next - today) / 86400000);
 }
 
-function buildSystemText(clientTime, profile) {
+function buildSystemText(clientTime, profile, participants) {
   const zone = safeZone(clientTime && clientTime.timeZone);
   const t = todayParts(zone);
   const local = clientTime && typeof clientTime.localString === 'string'
@@ -53,6 +53,12 @@ function buildSystemText(clientTime, profile) {
   const otherName = (who === 'Rahima') ? 'Zamir' : 'Rahima';
   const otherRel = (who === 'Rahima') ? 'husband' : 'wife';
 
+  const STAT = { online: 'online right now', typing: 'online and typing a message right now', offline: 'currently offline' };
+  const pOther = (participants && typeof participants === 'object' && participants.otherUser === otherName) ? participants : null;
+  const participantLine = pOther
+    ? `Live status: ${otherName} is ${STAT[pOther.otherStatus] || STAT.offline}. ${who} is the one messaging you now.`
+    : `${who} is the one messaging you now.`;
+
   return [
     `Current user local time: ${local || 'unknown'} (timezone: ${zone}). When asked for the time or date, answer using exactly this local time.`,
     'User location is Oman (GST, UTC+4) unless the device timezone above says otherwise.',
@@ -65,6 +71,11 @@ function buildSystemText(clientTime, profile) {
     'Always attribute messages to the right person. If an earlier message was written by the other person, refer to it as theirs (for example "Rahima said..."), never as the active user\'s words.',
     'REPLIES: a line like [Rahima is replying to the AI\'s earlier message: "..."] means that person is responding to exactly that quoted text. Read the quoted text, use it as the context for what they wrote, and answer accordingly. If the quoted message was written by the other person, understand that the active user is responding to that person\'s words.',
     'Use the whole conversation history for context and stay consistent with it.',
+    'MULTI-USER RULES: only Zamir and Rahima are authorized users of this chat. Both can write in the same conversation at any time. Always know who is speaking from the [Name]: tag of the newest turn.',
+    'If a turn contains [INTERRUPTION: ...], the active user wrote while you had not yet answered the other person. Acknowledge that you were in the middle of helping the other person, answer the active user directly by name, and keep the other person\'s pending request in mind so it is not lost.',
+    'If a turn contains [CONTEXT SWITCH: ...], the active user has stepped into a conversation you were having with the other person. Recognise this immediately, use the earlier conversation as context, and tailor your answer to the new speaker. Never answer as if the new speaker wrote the earlier messages, and never attribute their words to the other person.',
+    'When the active user replies to something you said to the other person, make clear (briefly, naturally) that you understand it was said to the other person, then answer the active user.',
+    participantLine,
     '',
     `If ${who} asks for something romantic (e.g. shayari, a love note, a message) without naming who it is for, assume it is for ${otherName} (${who}'s ${otherRel}) unless ${who} says otherwise.`,
     `Address ${who} naturally by name sometimes, and tailor tone/suggestions as if you know you're talking to ${who} specifically.`,
@@ -97,7 +108,7 @@ export default async function handler(req, res) {
   }
 
   // Server-side system prompt (time + family birthdays), plus any frontend systemInstruction
-  let systemText = buildSystemText(clientTime, (req.body || {}).profile);
+  let systemText = buildSystemText(clientTime, (req.body || {}).profile, (req.body || {}).participants);
   const extra = systemInstruction && Array.isArray(systemInstruction.parts)
     ? systemInstruction.parts.map((p) => (p && p.text) || '').filter(Boolean).join('\n')
     : '';
