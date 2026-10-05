@@ -1519,6 +1519,7 @@
       </button>
       <!-- Single input, NO capture attr: Android/Kodular WebView chooser shows Camera + Gallery/Files -->
       <input type="file" id="file-input" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt" multiple style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none;" tabindex="-1">
+      <input type="file" id="file-input-camera" accept="image/*" capture="environment" style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none;" tabindex="-1">
 
       <input type="text" id="user-input" placeholder="Yahan apna Question type karein..." autocomplete="off">
 
@@ -1680,6 +1681,7 @@
   const sendLabel = document.getElementById('send-label');
   const attachBtn = document.getElementById('attach-btn');
   const fileInput = document.getElementById('file-input');
+  const fileInputCamera = document.getElementById('file-input-camera');
   const micBtn = document.getElementById('mic-btn');
   const liveBtn = document.getElementById('live-btn');
   const attachMenu = document.getElementById('attach-menu');
@@ -2705,12 +2707,49 @@
   }
   // Har click par value reset: same file / dobara camera photo bhi chuni ja sake
   fileInput.addEventListener('click', () => { try { fileInput.value = ''; } catch (e) {} });
-  attachBtn.addEventListener('click', openFilePicker);
+  attachBtn.addEventListener('click', openAttachMenu);
   attachMenuBackdrop.addEventListener('click', closeAttachMenu);
   attachMenuCancel.addEventListener('click', closeAttachMenu);
 
-  attachCameraOption.addEventListener('click', openFilePicker);
+  /* Camera:
+     - Kodular APK  -> native Camera1 via AppInventor.setWebViewString (system chooser has no camera there)
+     - Normal browser -> <input capture> fallback */
+  function openCamera() {
+    closeAttachMenu();
+    try {
+      if (window.AppInventor && typeof window.AppInventor.setWebViewString === 'function') {
+        // unique suffix so the string-change event fires on every tap
+        window.AppInventor.setWebViewString('OPEN_CAMERA:' + Date.now());
+        return;
+      }
+    } catch (e) { console.error('Kodular bridge failed:', e); }
+    try { fileInputCamera.value = ''; } catch (e) {}
+    fileInputCamera.click();
+  }
+  attachCameraOption.addEventListener('click', openCamera);
   attachGalleryOption.addEventListener('click', openFilePicker);
+  fileInputCamera.addEventListener('click', () => { try { fileInputCamera.value = ''; } catch (e) {} });
+  fileInputCamera.addEventListener('change', async () => {
+    await handleSelectedFiles(fileInputCamera.files);
+    fileInputCamera.value = '';
+  });
+
+  // Called from Kodular blocks: Web_Viewer1.LoadUrl "javascript:receiveNativeImage('<base64>','image/jpeg')"
+  window.receiveNativeImage = async function (base64, mime) {
+    try {
+      const clean = String(base64 || '').replace(/[\r\n\s]/g, '').replace(/^data:[^,]*,/, '');
+      if (!clean) return;
+      const type = mime || 'image/jpeg';
+      const bin = atob(clean);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      const file = new File([bytes], 'camera_' + Date.now() + '.jpg', { type });
+      await handleSelectedFiles([file]);   // reuses existing compression + preview
+    } catch (err) {
+      console.error('receiveNativeImage failed:', err);
+      alert('Camera photo load nahi ho paayi. Dobara try karein.');
+    }
+  };
 
   function fileIconPreview(name, mime) {
     const ext = ((name || '').split('.').pop() || 'FILE').slice(0, 4).toUpperCase();
