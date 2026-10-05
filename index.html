@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 <title>AI Chat Assistant</title>
 <meta name="theme-color" content="#0E1116" id="meta-theme">
-<script>try{var __s=JSON.parse(localStorage.getItem('zamirSettings')||'{}');var __d=document.documentElement;__d.setAttribute('data-theme',__s.theme||'dark');__d.setAttribute('data-anim',__s.anim||'full');__d.setAttribute('data-msg',__s.msgAnim||'slide');__d.setAttribute('data-bg',__s.bgFx||'orbs');__d.style.setProperty('--wp-dim',(__s.wpDim!=null?__s.wpDim:0.68));__d.style.setProperty('--fx-speed',__s.fxSpeed||1);__d.style.setProperty('--fx-dark',(__s.fxDark!=null?__s.fxDark:0.45));__d.style.setProperty('--fx-bright',(__s.fxBright!=null?__s.fxBright:1));__d.style.setProperty('--msg-speed',__s.msgSpeed||1);__d.style.setProperty('--msg-int',(__s.msgInt!=null?__s.msgInt:1));}catch(e){}</script>
+<script>try{var __s=JSON.parse(localStorage.getItem('zamirSettings')||'{}');var __d=document.documentElement;__d.setAttribute('data-theme',__s.theme||'dark');__d.setAttribute('data-anim',__s.anim||'full');__d.setAttribute('data-msg',__s.msgAnim||'slide');__d.setAttribute('data-bg',__s.bgFx||'orbs');__d.style.setProperty('--wp-dim',(__s.wpDim!=null?__s.wpDim:0.68));__d.style.setProperty('--fx-speed',__s.fxSpeed||1);__d.style.setProperty('--fx-dark',(__s.fxDark!=null?__s.fxDark:0.6));__d.style.setProperty('--fx-bright',(__s.fxBright!=null?__s.fxBright:1));__d.style.setProperty('--msg-speed',__s.msgSpeed||1);__d.style.setProperty('--msg-int',(__s.msgInt!=null?__s.msgInt:1));}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -297,6 +297,7 @@
   }
 
   .status-dot.offline{ background:#FF6E6E; }
+  .status-dot.away{ background:#8a93a6; animation:none !important; box-shadow:none !important; }
 
   @keyframes pulse-dot{
     0%{box-shadow:0 0 0 0 rgba(87,214,141,0.45);}
@@ -1364,8 +1365,15 @@
   .pv-gen i{position:absolute;display:block;border-radius:50%;animation:pv-fall 3s linear infinite}
   .pv-gen b{position:absolute;font-weight:400;font-size:13px;line-height:1;animation:pv-fall 3s linear infinite}
 
+  /* ===== v12: even tighter turn gap, keyboard-safe bottom ===== */
+  .row + .row{margin-top:-3px !important}
+  .row.user + .row.ai,.row.ai + .row.user{margin-top:-5px !important}
+  .row.ai .msg-wrap .model-name{margin-top:0 !important}
+  .ai-meta{margin-top:0 !important}
+  main{padding-bottom:calc(14px + env(safe-area-inset-bottom,0px)) !important}
+
   /* effect speed + brightness */
-  .fx-o,.fx-a,.fx-b,.fx-s,.fx-f,.fx-n,.fx-sh,.fx-p{animation-duration:calc(var(--d,10s) / (var(--fx-speed,1) * 1.8))}
+  .fx-o,.fx-a,.fx-b,.fx-s,.fx-f,.fx-n,.fx-sh,.fx-p{animation-duration:calc(var(--d,10s) / (var(--fx-speed,1) * 2.8))}
   #fx-layer{opacity:calc(min(1,var(--fx-bright,1) * var(--fx-bright,1)) * (1 - var(--fx-dark,0) * .55));filter:brightness(calc(var(--fx-bright,1) * (1 - var(--fx-dark,0) * .9)))}
 
   /* message styles: speed (--msg-speed) + strength (--msg-int) */
@@ -1454,7 +1462,7 @@
     </button>
     <div class="brand-mark">AI</div>
     <div class="brand-info">
-      <div class="brand-title">Zamir Ai</div>
+      <div class="brand-title" id="brand-title">Rahima</div>
       <div class="brand-status"><span class="status-dot" id="status-dot"></span><span id="status-text">Connecting...</span></div>
     </div>
     <select id="model-select-btn" title="Choose an AI model">
@@ -1694,6 +1702,7 @@
     const nm = document.getElementById('profile-name-label');
     if (av) av.textContent = letter;
     if (nm) nm.textContent = activeProfile;
+    if (typeof refreshPresence === 'function') refreshPresence();
   }
   applyProfileUI();
   const profileBtn = document.getElementById('profile-btn');
@@ -1801,7 +1810,7 @@
   const settings = Object.assign({ theme: 'dark', fontSize: 14.5, autoScroll: true, sound: true, wallpaper: 'none',
       anim: (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) ? 'light' : 'full',
       msgAnim: 'slide', bgFx: 'orbs', sendFx: true, wpDim: 0.68, wpMove: false,
-      fxSpeed: 1, fxBright: 1, fxDark: 0.45, msgSpeed: 1, msgInt: 1 },
+      fxSpeed: 1, fxBright: 1, fxDark: 0.6, msgSpeed: 1, msgInt: 1 },
     (() => { try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch (_) { return {}; } })());
   var remoteApplying = false, settingsPushT = null, lastSettingsJson = '';
   function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (_) {} if (!remoteApplying) pushSettings(); }
@@ -2135,17 +2144,95 @@
   }
 
   /* ---------------- Firebase realtime sync ---------------- */
-  db.ref('.info/connected').on('value', (snap) => {
-    if (snap.val() === true) {
-      statusDot.classList.remove('offline');
-      statusText.textContent = 'Online';
-      syncBadge.style.color = '#57D68D';
-    } else {
-      statusDot.classList.add('offline');
-      statusText.textContent = 'Offline';
-      syncBadge.style.color = '#FF6E6E';
+  /* ---------------- Real-time presence (header me doosre ka naam + status) ---------------- */
+  var presenceRef = db.ref('geminiChatApp/presence');
+  var fbConnected = false, srvOffset = 0, otherPres = null, myPresName = null, hbT = null, typingT = null, typingOn = false;
+  var otherWatch = null;
+  var TS = firebase.database.ServerValue.TIMESTAMP;
+  db.ref('.info/serverTimeOffset').on('value', function (sn) { srvOffset = sn.val() || 0; });
+  function otherUserName() { return activeProfile === 'Rahima' ? 'Zamir' : 'Rahima'; }
+  function fmtSeen(ts) {
+    try {
+      var d = new Date(ts), n = new Date();
+      var t = new Intl.DateTimeFormat('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true }).format(d);
+      if (d.toDateString() === n.toDateString()) return 'Last seen ' + t;
+      var y = new Date(n.getTime() - 86400000);
+      if (d.toDateString() === y.toDateString()) return 'Last seen yesterday ' + t;
+      return 'Last seen ' + new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short' }).format(d) + ' ' + t;
+    } catch (_) { return 'Offline'; }
+  }
+  function updateHeaderStatus() {
+    var bt = document.getElementById('brand-title');
+    if (bt) bt.textContent = otherUserName();
+    statusDot.classList.remove('offline', 'away');
+    if (!fbConnected) {
+      statusDot.classList.add('offline'); statusText.textContent = 'Offline'; syncBadge.style.color = '#FF6E6E'; return;
     }
+    syncBadge.style.color = '#57D68D';
+    var p = otherPres, now = Date.now() + srvOffset;
+    var fresh = !!(p && p.online && (now - (p.lastSeen || 0) < 75000));
+    if (fresh && p.typing) statusText.textContent = 'typing…';
+    else if (fresh) statusText.textContent = 'Online';
+    else {
+      statusDot.classList.add('away');
+      statusText.textContent = (p && p.lastSeen) ? fmtSeen(p.lastSeen) : 'Offline';
+    }
+  }
+  function presenceOnline(flag) {
+    if (!fbConnected || !myPresName) return;
+    var o = { online: !!flag, lastSeen: TS };
+    if (!flag) o.typing = false;
+    presenceRef.child(myPresName).update(o).catch(function () {});
+  }
+  function setMyPresence() {
+    if (!fbConnected) return;
+    var name = activeProfile;
+    if (myPresName && myPresName !== name) {
+      var old = presenceRef.child(myPresName);
+      old.onDisconnect().cancel();
+      old.update({ online: false, typing: false, lastSeen: TS }).catch(function () {});
+    }
+    myPresName = name;
+    var r = presenceRef.child(name);
+    r.onDisconnect().update({ online: false, typing: false, lastSeen: TS }).then(function () {
+      if (!document.hidden) r.update({ online: true, lastSeen: TS }).catch(function () {});
+    }).catch(function () {});
+  }
+  function watchOtherPresence() {
+    if (otherWatch) { try { otherWatch.ref.off('value', otherWatch.fn); } catch (_) {} otherWatch = null; }
+    otherPres = null;
+    var ref = presenceRef.child(otherUserName());
+    var fn = function (sn) { otherPres = sn.val(); updateHeaderStatus(); };
+    ref.on('value', fn);
+    otherWatch = { ref: ref, fn: fn };
+  }
+  function refreshPresence() {
+    if (!presenceRef) return;
+    watchOtherPresence();
+    setMyPresence();
+    updateHeaderStatus();
+  }
+  db.ref('.info/connected').on('value', (snap) => {
+    fbConnected = snap.val() === true;
+    if (fbConnected) { myPresName = null; setMyPresence(); }
+    updateHeaderStatus();
   });
+  clearInterval(hbT);
+  hbT = setInterval(function () {
+    if (fbConnected && !document.hidden) presenceOnline(true);
+    updateHeaderStatus();
+  }, 25000);
+  document.addEventListener('visibilitychange', function () { presenceOnline(!document.hidden); });
+  window.addEventListener('pagehide', function () { presenceOnline(false); });
+  userInput.addEventListener('input', function () {
+    if (!fbConnected || !myPresName) return;
+    var has = userInput.value.trim().length > 0;
+    clearTimeout(typingT);
+    if (has && !typingOn) { typingOn = true; presenceRef.child(myPresName).update({ typing: true, lastSeen: TS }).catch(function () {}); }
+    if (!has && typingOn) { typingOn = false; presenceRef.child(myPresName).update({ typing: false }).catch(function () {}); return; }
+    if (has) typingT = setTimeout(function () { typingOn = false; presenceRef.child(myPresName).update({ typing: false }).catch(function () {}); }, 3000);
+  });
+  refreshPresence();
 
   /* Light-weight index (title/updatedAt/pinned) alag node me; poora sessions tree (images ke saath) ab load nahi hota */
   const metaRef = db.ref('geminiChatApp/meta');
@@ -3369,6 +3456,8 @@
   function scrollToBottom() {
     if (scrollLock) return;
     chatContainer.scrollTop = chatContainer.scrollHeight;
+    const lastRow = chatContainer.lastElementChild;
+    if (lastRow && lastRow.scrollIntoView) { try { lastRow.scrollIntoView({ block: 'end' }); } catch (_) {} }
   }
 
   function escapeHtml(text) {
@@ -4390,7 +4479,7 @@
     msgInt: { min: 0, max: 200, fmt: function (f) { return Math.round(f * 100) + '%'; }, demo: true },
     fxSpeed: { min: 25, max: 300, fmt: function (f) { return (Math.round(f * 100) / 100) + '×'; } },
     fxBright: { min: 0, max: 160, fmt: function (f) { return Math.round(f * 100) + '%'; } },
-    fxDark: { min: 0, max: 100, def: 0.45, fmt: function (f) { return Math.round(f * 100) + '%'; } }
+    fxDark: { min: 0, max: 100, def: 0.6, fmt: function (f) { return Math.round(f * 100) + '%'; } }
   };
   function slPaint(k) {
     var c = SL[k], inp = document.getElementById('r-' + k), box = inp.closest('.set-slider');
