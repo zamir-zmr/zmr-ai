@@ -1517,8 +1517,8 @@
       <button type="button" id="attach-btn" class="icon-btn" title="Attach">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
       </button>
-      <input type="file" id="file-input" accept="image/*,video/*" multiple hidden>
-      <input type="file" id="file-input-camera" accept="image/*" capture="environment" hidden>
+      <!-- Single input, NO capture attr: Android/Kodular WebView chooser shows Camera + Gallery/Files -->
+      <input type="file" id="file-input" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt" multiple style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none;" tabindex="-1">
 
       <input type="text" id="user-input" placeholder="Yahan apna Question type karein..." autocomplete="off">
 
@@ -1680,7 +1680,6 @@
   const sendLabel = document.getElementById('send-label');
   const attachBtn = document.getElementById('attach-btn');
   const fileInput = document.getElementById('file-input');
-  const fileInputCamera = document.getElementById('file-input-camera');
   const micBtn = document.getElementById('mic-btn');
   const liveBtn = document.getElementById('live-btn');
   const attachMenu = document.getElementById('attach-menu');
@@ -2698,23 +2697,35 @@
     attachMenuBackdrop.classList.remove('show');
   }
 
-  attachBtn.addEventListener('click', openAttachMenu);
+  // Open the system chooser directly (Camera / Gallery / Files) - works in Kodular WebViewer
+  function openFilePicker() {
+    closeAttachMenu();
+    try { fileInput.value = ''; } catch (e) {}   // reset so the same file can be picked again
+    fileInput.click();
+  }
+  attachBtn.addEventListener('click', openFilePicker);
   attachMenuBackdrop.addEventListener('click', closeAttachMenu);
   attachMenuCancel.addEventListener('click', closeAttachMenu);
 
-  attachCameraOption.addEventListener('click', () => {
-    closeAttachMenu();
-    fileInputCamera.click();
-  });
+  attachCameraOption.addEventListener('click', openFilePicker);
+  attachGalleryOption.addEventListener('click', openFilePicker);
 
-  attachGalleryOption.addEventListener('click', () => {
-    closeAttachMenu();
-    fileInput.click();
-  });
+  function fileIconPreview(name, mime) {
+    const ext = ((name || '').split('.').pop() || 'FILE').slice(0, 4).toUpperCase();
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"><rect width="96" height="96" rx="12" fill="#2b2f3a"/><path d="M28 14h28l16 16v52H28z" fill="#4b5563"/><path d="M56 14v16h16z" fill="#6b7280"/><text x="50" y="68" font-family="Arial" font-size="16" font-weight="700" fill="#fff" text-anchor="middle">${ext}</text></svg>`;
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+  }
 
   async function handleSelectedFiles(fileList) {
     const files = Array.from(fileList || []);
     for (const file of files) {
+      if (!file.type || !file.type.startsWith('image/')) {
+        try {
+          const base64 = await fileToBase64(file);
+          pendingAttachments.push({ mimeType: file.type || 'application/octet-stream', base64, previewUrl: fileIconPreview(file.name, file.type) });
+        } catch (err) { console.error('File read failed:', err); }
+        continue;
+      }
       try {
         const { base64, mimeType } = await compressImageToTarget(file);
         const previewUrl = `data:${mimeType};base64,${base64}`;
@@ -2733,11 +2744,6 @@
   fileInput.addEventListener('change', async () => {
     await handleSelectedFiles(fileInput.files);
     fileInput.value = '';
-  });
-
-  fileInputCamera.addEventListener('change', async () => {
-    await handleSelectedFiles(fileInputCamera.files);
-    fileInputCamera.value = '';
   });
 
   function fileToBase64(file) {
