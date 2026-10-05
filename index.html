@@ -2703,6 +2703,8 @@
     try { fileInput.value = ''; } catch (e) {}   // reset so the same file can be picked again
     fileInput.click();
   }
+  // Har click par value reset: same file / dobara camera photo bhi chuni ja sake
+  fileInput.addEventListener('click', () => { try { fileInput.value = ''; } catch (e) {} });
   attachBtn.addEventListener('click', openFilePicker);
   attachMenuBackdrop.addEventListener('click', closeAttachMenu);
   attachMenuCancel.addEventListener('click', closeAttachMenu);
