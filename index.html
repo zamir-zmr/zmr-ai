@@ -3234,6 +3234,30 @@
     return '[' + me + ' is replying to ' + target + ': "' + quoted + '"]\n';
   }
 
+  function apiConvoNote(msgs, i, me) {
+    let pj = -1;
+    for (let j = i - 1; j >= 0; j--) { if (msgs[j].role === 'user') { pj = j; break; } }
+    if (pj < 0) return '';
+    const prev = msgs[pj], prevName = senderOfMsg(prev);
+    if (prevName === me) return '';
+    let answered = false;
+    for (let k = pj + 1; k < i; k++) { if (msgs[k].role !== 'user') { answered = true; break; } }
+    const gap = (msgs[i].createdAt || 0) - (prev.createdAt || 0);
+    const q = (prev.text || '[photo]').replace(/"/g, "'").slice(0, 300);
+    if (!answered) return '[INTERRUPTION: ' + me + ' wrote this while you had not yet answered ' + prevName + '\'s message "' + q + '". Recognise both people: answer ' + me + ' directly as ' + me + ', and keep ' + prevName + '\'s pending message in mind.]\n';
+    if (gap < 15 * 60 * 1000) return '[CONTEXT SWITCH: ' + me + ' is now joining the conversation you were having with ' + prevName + '. Your last reply was addressed to ' + prevName + '. Answer ' + me + ' as ' + me + ', use the earlier conversation as context, and do not mix up who said what.]\n';
+    return '';
+  }
+  function buildParticipantContext() {
+    const other = otherUserName();
+    let st = 'offline';
+    try {
+      const p = otherPres, now = Date.now() + (srvOffset || 0);
+      if (p && p.online && now - (p.lastSeen || 0) < 75000) st = (p.typing && now - (p.typingAt || 0) < 6000) ? 'typing' : 'online';
+    } catch (_) {}
+    return { activeUser: activeProfile, otherUser: other, otherStatus: st };
+  }
+
   function buildApiHistory(session) {
     const allMessages = session.messages || [];
 
@@ -3263,12 +3287,12 @@
       if (m.text || m.replyTo) {
         if (m.role === 'user') {
           const me = senderOfMsg(m);
-          parts.push({ text: '[' + me + ']: ' + apiReplyNote(m, me) + (m.text || '') });
+          parts.push({ text: '[' + me + ']: ' + apiConvoNote(messages, i, me) + apiReplyNote(m, me) + (m.text || '') });
         } else {
           parts.push({ text: (m.replyTo ? apiReplyNote(m, 'AI') : '') + (m.text || '') });
         }
       } else if (m.role === 'user') {
-        parts.push({ text: '[' + senderOfMsg(m) + ']: ' });
+        parts.push({ text: '[' + senderOfMsg(m) + ']: ' + apiConvoNote(messages, i, senderOfMsg(m)) });
       }
 
       const hasAttachments = (m.attachments || []).length > 0;
@@ -3372,7 +3396,7 @@
       response = await fetch(getStreamUrl(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: apiHistory, clientTime: getClientTimeInfo(), profile: activeProfile })
+        body: JSON.stringify({ contents: apiHistory, clientTime: getClientTimeInfo(), profile: activeProfile, participants: buildParticipantContext() })
       });
     } catch (networkErr) {
       if (retriesLeft > 0) {
