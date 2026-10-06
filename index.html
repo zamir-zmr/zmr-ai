@@ -2747,7 +2747,7 @@
 
   // Called from Kodular: javascript:receiveNativeImage("data:image/png;base64,....")
   // also accepts: receiveNativeImage('<base64>', 'image/png')
-  window.receiveNativeImage = async function (arg1, arg2) {
+  const receiveNativeImageAsync = async function (arg1, arg2) {
     try {
       let raw = String(arg1 || '');
       let mime = arg2 ? String(arg2) : '';
@@ -2770,6 +2770,12 @@
       console.error('receiveNativeImage failed:', err);
       camToast('Camera photo load nahi ho paayi');
     }
+  };
+
+  // IMPORTANT: must return undefined. A javascript: URL that returns a value (e.g. a Promise)
+  // makes the WebView replace the whole page with that value -> white screen.
+  window.receiveNativeImage = function (arg1, arg2) {
+    receiveNativeImageAsync(arg1, arg2);
   };
 
   // Optional: for very large photos Kodular can send pieces:
