@@ -2734,21 +2734,60 @@
     fileInputCamera.value = '';
   });
 
-  // Called from Kodular blocks: Web_Viewer1.LoadUrl "javascript:receiveNativeImage('<base64>','image/jpeg')"
-  window.receiveNativeImage = async function (base64, mime) {
+  // ---- Kodular camera bridge --------------------------------------------
+  function camToast(msg) {
     try {
-      const clean = String(base64 || '').replace(/[\r\n\s]/g, '').replace(/^data:[^,]*,/, '');
-      if (!clean) return;
-      const type = mime || 'image/jpeg';
-      const bin = atob(clean);
+      const t = document.createElement('div');
+      t.textContent = msg;
+      t.style.cssText = 'position:fixed;left:50%;bottom:110px;transform:translateX(-50%);background:rgba(20,20,28,.92);color:#fff;padding:8px 14px;border-radius:14px;font-size:13px;z-index:99999;max-width:86%;text-align:center;pointer-events:none;';
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 2600);
+    } catch (e) {}
+  }
+
+  // Called from Kodular: javascript:receiveNativeImage("data:image/png;base64,....")
+  // also accepts: receiveNativeImage('<base64>', 'image/png')
+  window.receiveNativeImage = async function (arg1, arg2) {
+    try {
+      let raw = String(arg1 || '');
+      let mime = arg2 ? String(arg2) : '';
+      const m = raw.match(/^data:([^;,]+)[^,]*,/);
+      if (m) { if (!mime) mime = m[1]; raw = raw.slice(m[0].length); }
+      raw = raw.replace(/[\r\n\s]/g, '').replace(/-/g, '+').replace(/_/g, '/');
+      if (!raw) { camToast('Camera photo khaali aayi'); return; }
+      if (raw.startsWith('iVBOR')) mime = 'image/png';
+      else if (raw.startsWith('/9j/')) mime = 'image/jpeg';
+      if (!mime) mime = 'image/jpeg';
+      while (raw.length % 4) raw += '=';
+      const bin = atob(raw);
       const bytes = new Uint8Array(bin.length);
       for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-      const file = new File([bytes], 'camera_' + Date.now() + '.jpg', { type });
-      await handleSelectedFiles([file]);   // reuses existing compression + preview
+      const ext = mime === 'image/png' ? 'png' : 'jpg';
+      const file = new File([bytes], 'camera_' + Date.now() + '.' + ext, { type: mime });
+      camToast('Camera photo mili (' + Math.round(bytes.length / 1024) + ' KB)');
+      await handleSelectedFiles([file]);   // same path as gallery: compression + preview
     } catch (err) {
       console.error('receiveNativeImage failed:', err);
-      alert('Camera photo load nahi ho paayi. Dobara try karein.');
+      camToast('Camera photo load nahi ho paayi');
     }
+  };
+
+  // Optional: for very large photos Kodular can send pieces:
+  // javascript:receiveNativeChunk(index,total,"<piece>")   (index starts at 0)
+  window.__camChunks = [];
+  window.receiveNativeChunk = function (index, total, piece) {
+    try {
+      index = Number(index); total = Number(total);
+      if (index === 0) window.__camChunks = [];
+      window.__camChunks[index] = String(piece || '');
+      let have = 0;
+      for (let i = 0; i < total; i++) if (window.__camChunks[i] !== undefined) have++;
+      if (have === total) {
+        const all = window.__camChunks.join('');
+        window.__camChunks = [];
+        window.receiveNativeImage(all, '');
+      }
+    } catch (e) { console.error('receiveNativeChunk failed:', e); }
   };
 
   function fileIconPreview(name, mime) {
