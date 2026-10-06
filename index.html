@@ -2735,13 +2735,21 @@
   });
 
   // ---- Kodular camera bridge --------------------------------------------
+  let camBoxTimer = null;
   function camToast(msg) {
     try {
-      const t = document.createElement('div');
-      t.textContent = msg;
-      t.style.cssText = 'position:fixed;left:50%;bottom:110px;transform:translateX(-50%);background:rgba(20,20,28,.92);color:#fff;padding:8px 14px;border-radius:14px;font-size:13px;z-index:99999;max-width:86%;text-align:center;pointer-events:none;';
-      document.body.appendChild(t);
-      setTimeout(() => t.remove(), 2600);
+      let box = document.getElementById('cam-debug');
+      if (!box) {
+        box = document.createElement('div');
+        box.id = 'cam-debug';
+        box.style.cssText = 'position:fixed;left:8px;right:8px;top:72px;background:rgba(20,20,28,.94);color:#fff;padding:8px 12px;border-radius:12px;font-size:12px;line-height:1.5;z-index:99999;pointer-events:none;';
+        document.body.appendChild(box);
+      }
+      const line = document.createElement('div');
+      line.textContent = msg;
+      box.appendChild(line);
+      clearTimeout(camBoxTimer);
+      camBoxTimer = setTimeout(() => { try { box.remove(); } catch (e) {} }, 12000);
     } catch (e) {}
   }
 
@@ -2764,17 +2772,19 @@
       for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
       const ext = mime === 'image/png' ? 'png' : 'jpg';
       const file = new File([bytes], 'camera_' + Date.now() + '.' + ext, { type: mime });
-      camToast('Camera photo mili (' + Math.round(bytes.length / 1024) + ' KB)');
+      camToast('2) decode ok: ' + mime + ', ' + Math.round(bytes.length / 1024) + ' KB');
       await handleSelectedFiles([file]);   // same path as gallery: compression + preview
+      camToast('3) preview mein jodi. Attachments: ' + pendingAttachments.length);
     } catch (err) {
       console.error('receiveNativeImage failed:', err);
-      camToast('Camera photo load nahi ho paayi');
+      camToast('ERROR: ' + (err && err.message ? err.message : err));
     }
   };
 
   // IMPORTANT: must return undefined. A javascript: URL that returns a value (e.g. a Promise)
   // makes the WebView replace the whole page with that value -> white screen.
   window.receiveNativeImage = function (arg1, arg2) {
+    camToast('1) call aaya, length = ' + String(arg1 || '').length);
     receiveNativeImageAsync(arg1, arg2);
   };
 
