@@ -2154,21 +2154,33 @@
   const tokensRef = db.ref('geminiChatApp/fcmTokens');
   let fcmTokens = {};
   tokensRef.on('value', function (sn) { fcmTokens = sn.val() || {}; });
+  function fcmWarn(msg) { console.warn('FCM:', msg); try { toast('🔔 ' + msg, null, null, 7000); } catch (_) {} }
   async function registerFcm() {
+    let step = 'start';
     try {
-      if (!('serviceWorker' in navigator) || !('Notification' in window) || !firebase.messaging.isSupported()) return;
-      if (!VAPID_KEY || VAPID_KEY.indexOf('PASTE_') === 0) { console.warn('FCM: VAPID_KEY set nahi hai'); return; }
-      if (Notification.permission === 'default') await Notification.requestPermission();
-      if (Notification.permission !== 'granted') return;
-      const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-      const token = await firebase.messaging().getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
-      if (token) {
-        const other = activeProfile === 'Zamir' ? 'Rahima' : 'Zamir';
-        const sn = await tokensRef.child(other).once('value');
-        if (sn.val() === token) await tokensRef.child(other).remove();
-        await tokensRef.child(activeProfile).set(token);
+      step = 'support';
+      if (!('serviceWorker' in navigator) || !('Notification' in window) || !firebase.messaging.isSupported()) {
+        return fcmWarn('Is browser/WebView me push supported nahi hai. Chrome me kholein ya app ko Home Screen par install karein.');
       }
-    } catch (e) { console.warn('FCM register error:', e && (e.code || e.message)); }
+      step = 'vapid';
+      if (!VAPID_KEY || VAPID_KEY.indexOf('PASTE_') === 0) return fcmWarn('VAPID_KEY set nahi hai (index.html me placeholder badlein).');
+      step = 'permission';
+      if (Notification.permission === 'default') await Notification.requestPermission();
+      if (Notification.permission !== 'granted') return fcmWarn('Notification permission blocked hai. Browser/site settings me Allow karein.');
+      step = 'service-worker';
+      const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+      step = 'token';
+      const token = await firebase.messaging().getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
+      if (!token) return fcmWarn('Token nahi mila.');
+      step = 'database';
+      const other = activeProfile === 'Zamir' ? 'Rahima' : 'Zamir';
+      const sn = await tokensRef.child(other).once('value');
+      if (sn.val() === token) await tokensRef.child(other).remove();
+      await tokensRef.child(activeProfile).set(token);
+      toast('🔔 Notifications ON (' + activeProfile + ')', null, null, 3000);
+    } catch (e) {
+      fcmWarn('Error at [' + step + ']: ' + (e && (e.code || e.message) || e));
+    }
   }
   document.addEventListener('click', registerFcm, { once: true });
   if ('Notification' in window && Notification.permission === 'granted') registerFcm();
