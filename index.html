@@ -2720,6 +2720,7 @@
       if (window.AppInventor && typeof window.AppInventor.setWebViewString === 'function') {
         // unique suffix so the string-change event fires on every tap
         window.AppInventor.setWebViewString('OPEN_CAMERA:' + Date.now());
+        if (window.__armCameraPoll) window.__armCameraPoll();
         return;
       }
     } catch (e) { console.error('Kodular bridge failed:', e); }
@@ -2734,62 +2735,68 @@
     fileInputCamera.value = '';
   });
 
-  // ---- Kodular camera bridge --------------------------------------------
-  let camBoxTimer = null;
-  function camToast(msg) {
-    try {
-      let box = document.getElementById('cam-debug');
-      if (!box) {
-        box = document.createElement('div');
-        box.id = 'cam-debug';
-        box.style.cssText = 'position:fixed;left:8px;right:8px;top:72px;background:rgba(20,20,28,.94);color:#fff;padding:8px 12px;border-radius:12px;font-size:12px;line-height:1.5;z-index:2147483647;pointer-events:none;';
-        (document.documentElement || document.body).appendChild(box);
-      }
-      const line = document.createElement('div');
-      line.textContent = msg;
-      box.appendChild(line);
-      clearTimeout(camBoxTimer);
-      camBoxTimer = setTimeout(() => { try { box.remove(); } catch (e) {} }, 12000);
-    } catch (e) {}
+  // ---- Kodular camera bridge (v8) ---------------------------------------
+  // Kodular: WebViewer.WebViewString = "IMG:" + <base64>, then javascript:receiveFromApp()
+  const CAM_MAX_SIDE = 800;      // max width/height in px
+  const CAM_QUALITY = 0.7;       // JPEG quality
+  let __camBusy = false, __lastSig = '', __camPollUntil = 0;
+
+  function __sigOf(str) { return str.length + ':' + str.slice(0, 40) + ':' + str.slice(-40); }
+
+  // Compress with an offscreen canvas: <=800px, JPEG 0.7. Returns { base64, mimeType }.
+  function compressCameraBase64(raw, mime) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          let w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+          if (!w || !h) throw new Error('empty image');
+          const k = Math.min(1, CAM_MAX_SIDE / Math.max(w, h));
+          w = Math.max(1, Math.round(w * k)); h = Math.max(1, Math.round(h * k));
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h);
+          ctx.drawImage(img, 0, 0, w, h);
+          const out = canvas.toDataURL('image/jpeg', CAM_QUALITY);
+          canvas.width = canvas.height = 0;   // free memory
+          img.onload = img.onerror = null; img.src = '';
+          resolve({ base64: out.slice(out.indexOf(',') + 1), mimeType: 'image/jpeg' });
+        } catch (e) { reject(e); }
+      };
+      img.onerror = () => reject(new Error('image decode failed'));
+      img.src = 'data:' + mime + ';base64,' + raw;
+    });
   }
 
-  // Called from Kodular: javascript:receiveNativeImage("data:image/png;base64,....")
-  // also accepts: receiveNativeImage('<base64>', 'image/png')
-  const receiveNativeImageAsync = async function (arg1, arg2) {
+  async function receiveNativeImageAsync(arg1, arg2) {
+    if (__camBusy) return;
+    __camBusy = true;
     try {
       let raw = String(arg1 || '');
       let mime = arg2 ? String(arg2) : '';
       const m = raw.match(/^data:([^;,]+)[^,]*,/);
       if (m) { if (!mime) mime = m[1]; raw = raw.slice(m[0].length); }
       raw = raw.replace(/[\r\n\s]/g, '').replace(/-/g, '+').replace(/_/g, '/');
-      if (!raw) { camToast('Camera photo khaali aayi'); return; }
+      if (!raw) return;
       if (raw.startsWith('iVBOR')) mime = 'image/png';
       else if (raw.startsWith('/9j/')) mime = 'image/jpeg';
       if (!mime) mime = 'image/jpeg';
       while (raw.length % 4) raw += '=';
-      const bin = atob(raw);
-      const bytes = new Uint8Array(bin.length);
-      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-      const ext = mime === 'image/png' ? 'png' : 'jpg';
-      const file = new File([bytes], 'camera_' + Date.now() + '.' + ext, { type: mime });
-      camToast('2) decode ok: ' + mime + ', ' + Math.round(bytes.length / 1024) + ' KB');
-      await handleSelectedFiles([file]);   // same path as gallery: compression + preview
-      camToast('3) preview mein jodi. Attachments: ' + pendingAttachments.length);
+      const { base64, mimeType } = await compressCameraBase64(raw, mime);
+      raw = null;
+      pendingAttachments.push({ mimeType, base64, previewUrl: 'data:' + mimeType + ';base64,' + base64 });
+      renderPreviewBar();
+      keepFocus();
     } catch (err) {
       console.error('receiveNativeImage failed:', err);
-      camToast('ERROR: ' + (err && err.message ? err.message : err));
-    }
-  };
+    } finally { __camBusy = false; }
+  }
 
-  // IMPORTANT: must return undefined. A javascript: URL that returns a value (e.g. a Promise)
-  // makes the WebView replace the whole page with that value -> white screen.
-  window.receiveNativeImage = function (arg1, arg2) {
-    camToast('1) call aaya, length = ' + String(arg1 || '').length);
-    receiveNativeImageAsync(arg1, arg2);
-  };
+  // IMPORTANT: must return undefined (a javascript: URL that returns a value blanks the page)
+  window.receiveNativeImage = function (arg1, arg2) { receiveNativeImageAsync(arg1, arg2); };
 
-  // Optional: for very large photos Kodular can send pieces:
-  // javascript:receiveNativeChunk(index,total,"<piece>")   (index starts at 0)
+  // Optional: very large photos can be sent in pieces: javascript:receiveNativeChunk(index,total,"<piece>")
   window.__camChunks = [];
   window.receiveNativeChunk = function (index, total, piece) {
     try {
@@ -2806,10 +2813,6 @@
     } catch (e) { console.error('receiveNativeChunk failed:', e); }
   };
 
-  // ---- Kodular WebViewString bridge (v7) ----------------------------------
-  // Kodular: set WebViewer.WebViewString = "IMG:" + <base64>, then call JS  receiveFromApp()
-  // Works with or without an argument; also polled so the photo is never missed.
-  let __lastAppStr = '';
   function __readAppString(arg) {
     try {
       if (typeof arg === 'string' && arg) return arg;
@@ -2820,24 +2823,25 @@
     return '';
   }
   function __handleAppString(str) {
-    if (!str || str === __lastAppStr) return false;
-    if (str.indexOf('IMG:') !== 0) return false;
-    __lastAppStr = str;
-    const data = str.slice(4).trim();            // remove the IMG: prefix
-    if (!data) { camToast('IMG: ke baad data khaali hai'); return true; }
-    camToast('IMG mila, length = ' + data.length);
-    window.receiveNativeImage(data, '');         // decode + compress + show in preview box above input
+    if (!str || str.charCodeAt(0) !== 73 || str.indexOf('IMG:') !== 0) return false;   // must start with IMG:
+    const sig = __sigOf(str);
+    if (sig === __lastSig) return false;           // same photo already handled
+    __lastSig = sig;
+    __camPollUntil = 0;
+    window.receiveNativeImage(str.slice(4).trim(), '');   // IMG: prefix removed
     return true;
   }
-  // IMPORTANT: returns undefined (a javascript: URL must not return a value)
   window.receiveFromApp = function (arg) {
-    try { __handleAppString(__readAppString(arg)); } catch (e) { console.error('receiveFromApp failed:', e); camToast('ERROR: ' + (e && e.message ? e.message : e)); }
+    try { __handleAppString(__readAppString(arg)); } catch (e) { console.error('receiveFromApp failed:', e); }
   };
-  // Safety net: poll WebViewString in case the javascript: call is skipped by the WebView
-  setInterval(() => { try { __handleAppString(__readAppString()); } catch (e) {} }, 800);
+  // Light safety net: poll only for ~90s after the camera was requested (reading a multi-MB string is costly)
+  window.__armCameraPoll = function () { __camPollUntil = Date.now() + 90000; };
+  setInterval(() => {
+    if (Date.now() > __camPollUntil) return;
+    try { __handleAppString(__readAppString()); } catch (e) {}
+  }, 1000);
 
-  // Startup self-check: proves THIS index.html is the one loaded inside the app
-  setTimeout(() => camToast('index v7 loaded: camera bridge ready'), 1500);
+  console.log('index v8 loaded');
 
   function fileIconPreview(name, mime) {
     const ext = ((name || '').split('.').pop() || 'FILE').slice(0, 4).toUpperCase();
