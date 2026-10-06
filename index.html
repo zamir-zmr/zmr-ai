@@ -1027,6 +1027,17 @@
   .row{position:relative;touch-action:pan-y}
   @media (hover:none){.row .bubble{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}}
   .row.pressed .bubble{box-shadow:0 0 0 2px var(--accent),0 8px 24px rgba(0,0,0,.25);transition:box-shadow .2s}
+  /* multi-select delete */
+  body.sel-mode .row{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;cursor:pointer}
+  body.sel-mode .row.sel-picked{background:rgba(255,138,61,.22)}
+  body.sel-mode .row.sel-picked .bubble{box-shadow:0 0 0 2px var(--accent)}
+  #sel-bar{display:none;position:fixed;top:0;left:0;right:0;z-index:65;align-items:center;gap:6px;padding:calc(env(safe-area-inset-top,0px) + 8px) 10px 8px;background:var(--surface);border-bottom:1px solid var(--border);box-shadow:0 6px 20px rgba(0,0,0,.35)}
+  body.sel-mode #sel-bar{display:flex}
+  #sel-bar button{background:var(--surface-2);border:none;color:var(--text);width:44px;height:44px;border-radius:12px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  #sel-bar button svg{width:22px;height:22px}
+  #sel-bar #sel-count{flex:1;font-weight:700;font-size:16px;padding-left:6px}
+  #sel-bar #sel-del{background:#E5484D;color:#fff}
+
   #wallpaper{position:absolute;inset:0;z-index:0;pointer-events:none;background-size:cover;background-position:center;background-repeat:no-repeat;animation:fade-in .6s both}
   #wallpaper::after{content:'';position:absolute;inset:0;background:rgba(14,17,22,.58)}
   html[data-theme="light"] #wallpaper::after{background:rgba(244,246,250,.62)}
@@ -1625,6 +1636,12 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><span>Copy text</span></button>
   <button type="button" id="share-cancel" style="width:100%;margin-top:6px;background:var(--surface-2);border:none;color:var(--text-dim);font-weight:600;font-size:14.5px;padding:12px;border-radius:10px;cursor:pointer">Cancel</button>
 </div>
+<div id="sel-bar">
+  <button type="button" id="sel-cancel" aria-label="Cancel selection">✕</button>
+  <span id="sel-count">0 selected</span>
+  <button type="button" id="sel-more" aria-label="More options" style="display:none">⋯</button>
+  <button type="button" id="sel-del" aria-label="Delete selected"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg></button>
+</div>
 <div id="toast"></div>
 
 <script>
@@ -2152,7 +2169,7 @@
 
   /* ---------------- Firebase realtime sync ---------------- */
   /* ---------------- FCM Push Notifications ---------------- */
-  const VAPID_KEY = 'BPJA7Q6LOD92SnkC-Z7tyAgtUQdz8tBvGrdijnNDkDKAyQNc84zdI2DTYZWasZbTFZwCnq5TXGsBnhIMq1-I4uU';
+  const VAPID_KEY = 'PASTE_YOUR_WEB_PUSH_VAPID_KEY_HERE';
   const tokensRef = db.ref('geminiChatApp/fcmTokens');
   let fcmTokens = {};
   tokensRef.on('value', function (sn) { fcmTokens = sn.val() || {}; });
@@ -4060,6 +4077,78 @@
     toast(m.starred ? 'Star lagaya ★' : 'Star hataya');
   });
 
+  /* Multi-select: long-press = select, phir tap karke aur select, trash se delete */
+  var selMode = false, selSet = new Set(), selIgnoreUntil = 0;
+  var selBar = document.getElementById('sel-bar');
+  function selRows() { return chatContainer.querySelectorAll('.row[data-index]'); }
+  function selPaint() {
+    selRows().forEach(function (r) {
+      var i = parseInt(r.dataset.index, 10);
+      r.classList.toggle('sel-picked', selMode && selSet.has(i));
+    });
+    document.getElementById('sel-count').textContent = selSet.size + ' selected';
+    document.getElementById('sel-more').style.display = selSet.size === 1 ? 'flex' : 'none';
+  }
+  function exitSelect() {
+    selMode = false; selSet.clear();
+    document.body.classList.remove('sel-mode');
+    selPaint();
+  }
+  function toggleSel(row) {
+    var i = parseInt(row.dataset.index, 10);
+    if (!(i >= 0)) return;
+    if (selSet.has(i)) selSet.delete(i); else selSet.add(i);
+    if (selSet.size === 0) { exitSelect(); return; }
+    selPaint();
+  }
+  function enterSelect(row) {
+    if (menuIdx !== null) return;
+    selMode = true; selIgnoreUntil = Date.now() + 500;
+    document.body.classList.add('sel-mode');
+    try { if (navigator.vibrate) navigator.vibrate(15); } catch (_) {}
+    toggleSel(row);
+  }
+  chatContainer.addEventListener('click', function (e) {
+    if (!selMode) return;
+    var r = msgRowOf(e.target); if (!r) return;
+    e.preventDefault(); e.stopPropagation();
+    if (Date.now() < selIgnoreUntil) return;
+    toggleSel(r);
+  }, true);
+  new MutationObserver(function () { if (selMode) selPaint(); }).observe(chatContainer, { childList: true });
+  document.getElementById('sel-cancel').addEventListener('click', exitSelect);
+  document.getElementById('sel-more').addEventListener('click', function () {
+    if (selSet.size !== 1) return;
+    var i = Array.from(selSet)[0];
+    var r = chatContainer.querySelector('.row[data-index="' + i + '"]');
+    exitSelect(); if (r) openMsgMenu(r);
+  });
+  document.getElementById('sel-del').addEventListener('click', function () {
+    if (isSending) { toast('Jawab aane ke baad try karein'); return; }
+    var sess = getCurrentSession();
+    if (!sess || !sess.messages || selSet.size === 0) return;
+    var idxs = Array.from(selSet).filter(function (i) { return sess.messages[i]; }).sort(function (a, b) { return a - b; });
+    if (!idxs.length) { exitSelect(); return; }
+    var sid = sess.id, del = new Set(idxs);
+    var anchor = captureAnchor('none', -1);
+    if (anchor.idx !== null) {
+      if (del.has(anchor.idx)) anchor.idx = null;
+      else anchor.newIdx = anchor.idx - idxs.filter(function (i) { return i < anchor.idx; }).length;
+    }
+    var removed = idxs.map(function (i) { return { idx: i, msg: sess.messages[i] }; });
+    for (var k = idxs.length - 1; k >= 0; k--) sess.messages.splice(idxs[k], 1);
+    exitSelect();
+    holdScrollUntil = Date.now() + 1500;
+    saveSession(sess); renderCurrentSession(anchor);
+    toast(idxs.length + ' messages delete hue', 'Undo', function () {
+      var ss = getCurrentSession(); if (!ss || ss.id !== sid) return;
+      if (!ss.messages) ss.messages = [];
+      removed.forEach(function (x) { ss.messages.splice(Math.min(x.idx, ss.messages.length), 0, x.msg); });
+      holdScrollUntil = Date.now() + 1500;
+      saveSession(ss); renderCurrentSession({ idx: null, newIdx: null, off: 0, st: chatContainer.scrollTop });
+    }, 6000);
+  });
+
   /* 75 + 76 — Touch gestures: swipe right = reply, swipe left = delete, long-press = menu */
   var ICON_REPLY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 0 0-4-4H4"></path></svg>';
   var ICON_TRASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg>';
@@ -4083,12 +4172,13 @@
   }
   chatContainer.addEventListener('touchstart', (e) => {
     resetGesture(false);
+    if (selMode) return;
     if (e.touches.length !== 1) return;
     const row = msgRowOf(e.target); if (!row) return;
     if (e.target.closest('button,a,input,textarea,pre')) return;
     const t = e.touches[0];
     gs = { row, x: t.clientX, y: t.clientY, mode: null, fired: false, hint: null, dx: 0 };
-    lpTimer = setTimeout(() => { if (gs && !gs.mode) { gs.fired = true; openMsgMenu(row); } }, 480);
+    lpTimer = setTimeout(() => { if (gs && !gs.mode) { gs.fired = true; enterSelect(row); } }, 480);
   }, { passive: true });
   chatContainer.addEventListener('touchmove', (e) => {
     if (!gs || gs.fired) return;
@@ -4133,7 +4223,7 @@
   chatContainer.addEventListener('touchcancel', () => resetGesture(true));
   chatContainer.addEventListener('contextmenu', (e) => {
     const r = msgRowOf(e.target); if (!r) return;
-    e.preventDefault(); if (!gs || !gs.fired) openMsgMenu(r);
+    e.preventDefault(); if (!selMode && (!gs || !gs.fired)) openMsgMenu(r);
   });
 
   /* 62 — Family birthday reminder */
