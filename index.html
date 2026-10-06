@@ -1722,6 +1722,7 @@
         localStorage.setItem(PROFILE_KEY, activeProfile);
         applyProfileUI();
         profileMenu.classList.remove('show');
+        if (typeof registerFcm === 'function') registerFcm();
         var __last = null; try { __last = localStorage.getItem('zamirLast_' + activeProfile); } catch (_) {}
         if (__last && __last !== currentSessionId && typeof metaMap !== 'undefined' && metaMap[__last]) { loadSession(__last); }
         else { renderCurrentSession(); restoreDraft(); }
@@ -2161,10 +2162,16 @@
       if (Notification.permission !== 'granted') return;
       const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
       const token = await firebase.messaging().getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
-      if (token) tokensRef.child(activeProfile).set(token);
+      if (token) {
+        const other = activeProfile === 'Zamir' ? 'Rahima' : 'Zamir';
+        const sn = await tokensRef.child(other).once('value');
+        if (sn.val() === token) await tokensRef.child(other).remove();
+        await tokensRef.child(activeProfile).set(token);
+      }
     } catch (e) { console.warn('FCM register error:', e && (e.code || e.message)); }
   }
   document.addEventListener('click', registerFcm, { once: true });
+  if ('Notification' in window && Notification.permission === 'granted') registerFcm();
   function notifyOther(text) {
     try {
       fetch('/api/notify', {
