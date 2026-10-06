@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
 <style>
   :root{
     --bg:#0E1116;
@@ -2147,6 +2148,37 @@
   }
 
   /* ---------------- Firebase realtime sync ---------------- */
+  /* ---------------- FCM Push Notifications ---------------- */
+  const VAPID_KEY = 'PASTE_YOUR_WEB_PUSH_VAPID_KEY_HERE';
+  const tokensRef = db.ref('geminiChatApp/fcmTokens');
+  let fcmTokens = {};
+  tokensRef.on('value', function (sn) { fcmTokens = sn.val() || {}; });
+  async function registerFcm() {
+    try {
+      if (!('serviceWorker' in navigator) || !('Notification' in window) || !firebase.messaging.isSupported()) return;
+      if (Notification.permission === 'default') await Notification.requestPermission();
+      if (Notification.permission !== 'granted') return;
+      const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+      const token = await firebase.messaging().getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
+      if (token) tokensRef.child(activeProfile).set(token);
+    } catch (e) {}
+  }
+  document.addEventListener('click', registerFcm, { once: true });
+  function notifyOther(text) {
+    try {
+      fetch('/api/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sender: activeProfile,
+          messageText: text || '📎 Attachment',
+          zamirToken: fcmTokens.Zamir || '',
+          rahimaToken: fcmTokens.Rahima || ''
+        })
+      }).catch(function () {});
+    } catch (_) {}
+  }
+
   /* ---------------- Real-time presence (header me doosre ka naam + status) ---------------- */
   var presenceRef = db.ref('geminiChatApp/presence');
   var fbConnected = false, srvOffset = 0, otherPres = null, myPresName = null, hbT = null, typingT = null, typingOn = false;
@@ -3265,6 +3297,7 @@
     session.messages.push(userMsg);
     updateSessionTitle(session);
     saveSession(session);
+    notifyOther(promptText);
 
     appendMessageDOM(userMsg, session.messages.length - 1);
     playSendSound();
