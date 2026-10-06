@@ -2742,8 +2742,8 @@
       if (!box) {
         box = document.createElement('div');
         box.id = 'cam-debug';
-        box.style.cssText = 'position:fixed;left:8px;right:8px;top:72px;background:rgba(20,20,28,.94);color:#fff;padding:8px 12px;border-radius:12px;font-size:12px;line-height:1.5;z-index:99999;pointer-events:none;';
-        document.body.appendChild(box);
+        box.style.cssText = 'position:fixed;left:8px;right:8px;top:72px;background:rgba(20,20,28,.94);color:#fff;padding:8px 12px;border-radius:12px;font-size:12px;line-height:1.5;z-index:2147483647;pointer-events:none;';
+        (document.documentElement || document.body).appendChild(box);
       }
       const line = document.createElement('div');
       line.textContent = msg;
@@ -2805,6 +2805,9 @@
       }
     } catch (e) { console.error('receiveNativeChunk failed:', e); }
   };
+
+  // Startup self-check: proves THIS index.html is the one loaded inside the app
+  setTimeout(() => camToast('index v6 loaded: camera bridge ready'), 1500);
 
   function fileIconPreview(name, mime) {
     const ext = ((name || '').split('.').pop() || 'FILE').slice(0, 4).toUpperCase();
