@@ -2156,12 +2156,13 @@
   async function registerFcm() {
     try {
       if (!('serviceWorker' in navigator) || !('Notification' in window) || !firebase.messaging.isSupported()) return;
+      if (!VAPID_KEY || VAPID_KEY.indexOf('PASTE_') === 0) { console.warn('FCM: VAPID_KEY set nahi hai'); return; }
       if (Notification.permission === 'default') await Notification.requestPermission();
       if (Notification.permission !== 'granted') return;
       const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
       const token = await firebase.messaging().getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: reg });
       if (token) tokensRef.child(activeProfile).set(token);
-    } catch (e) {}
+    } catch (e) { console.warn('FCM register error:', e && (e.code || e.message)); }
   }
   document.addEventListener('click', registerFcm, { once: true });
   function notifyOther(text) {
