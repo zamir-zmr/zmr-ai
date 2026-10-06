@@ -2806,8 +2806,38 @@
     } catch (e) { console.error('receiveNativeChunk failed:', e); }
   };
 
+  // ---- Kodular WebViewString bridge (v7) ----------------------------------
+  // Kodular: set WebViewer.WebViewString = "IMG:" + <base64>, then call JS  receiveFromApp()
+  // Works with or without an argument; also polled so the photo is never missed.
+  let __lastAppStr = '';
+  function __readAppString(arg) {
+    try {
+      if (typeof arg === 'string' && arg) return arg;
+      if (window.AppInventor && typeof window.AppInventor.getWebViewString === 'function') {
+        return String(window.AppInventor.getWebViewString() || '');
+      }
+    } catch (e) { console.error('getWebViewString failed:', e); }
+    return '';
+  }
+  function __handleAppString(str) {
+    if (!str || str === __lastAppStr) return false;
+    if (str.indexOf('IMG:') !== 0) return false;
+    __lastAppStr = str;
+    const data = str.slice(4).trim();            // remove the IMG: prefix
+    if (!data) { camToast('IMG: ke baad data khaali hai'); return true; }
+    camToast('IMG mila, length = ' + data.length);
+    window.receiveNativeImage(data, '');         // decode + compress + show in preview box above input
+    return true;
+  }
+  // IMPORTANT: returns undefined (a javascript: URL must not return a value)
+  window.receiveFromApp = function (arg) {
+    try { __handleAppString(__readAppString(arg)); } catch (e) { console.error('receiveFromApp failed:', e); camToast('ERROR: ' + (e && e.message ? e.message : e)); }
+  };
+  // Safety net: poll WebViewString in case the javascript: call is skipped by the WebView
+  setInterval(() => { try { __handleAppString(__readAppString()); } catch (e) {} }, 800);
+
   // Startup self-check: proves THIS index.html is the one loaded inside the app
-  setTimeout(() => camToast('index v6 loaded: camera bridge ready'), 1500);
+  setTimeout(() => camToast('index v7 loaded: camera bridge ready'), 1500);
 
   function fileIconPreview(name, mime) {
     const ext = ((name || '').split('.').pop() || 'FILE').slice(0, 4).toUpperCase();
