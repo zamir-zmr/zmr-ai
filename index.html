@@ -939,6 +939,8 @@
   footer{position:sticky}
   #scroll-bottom-btn{position:absolute;top:-56px;right:18px;width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.25);opacity:0;transform:translateY(12px) scale(.7);pointer-events:none;transition:opacity 240ms ease,transform 320ms cubic-bezier(.3,1.4,.5,1),border-color 140ms ease}
   #scroll-bottom-btn.show{opacity:1;transform:none;pointer-events:auto}
+  #sb-badge{display:none;position:absolute;top:-7px;right:-5px;min-width:20px;height:20px;padding:0 5px;box-sizing:border-box;border-radius:10px;background:var(--accent);color:#1b1206;font-size:11px;font-weight:800;align-items:center;justify-content:center;line-height:1}
+  #sb-badge.show{display:flex}
   #scroll-bottom-btn:hover{border-color:var(--accent);color:var(--accent)}
   #scroll-bottom-btn svg{width:20px;height:20px}
 
@@ -1524,6 +1526,7 @@
 
     <button type="button" id="scroll-bottom-btn" title="Neeche jaayein" aria-label="Scroll to bottom">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      <span id="sb-badge"></span>
     </button>
 
 
@@ -1827,6 +1830,7 @@
   var WP_KEY = 'zamirWallpaperCustom';
   var customWps = [], v5Ready = false;
   var scrollLock = false, holdScrollUntil = 0, pinned = true;
+  var unreadBelow = 0;
   var WP_LIST = ['aurora', 'sunset', 'ocean', 'forest', 'rose', 'dots'];
   var replyTo = null;
   var replyBanner = document.getElementById('reply-banner');
@@ -2169,7 +2173,7 @@
 
   /* ---------------- Firebase realtime sync ---------------- */
   /* ---------------- FCM Push Notifications ---------------- */
-  const VAPID_KEY = 'BPJA7Q6LOD92SnkC-Z7tyAgtUQdz8tBvGrdijnNDkDKAyQNc84zdI2DTYZWasZbTFZwCnq5TXGsBnhIMq1-I4uU';
+  const VAPID_KEY = 'PASTE_YOUR_WEB_PUSH_VAPID_KEY_HERE';
   const tokensRef = db.ref('geminiChatApp/fcmTokens');
   let fcmTokens = {};
   tokensRef.on('value', function (sn) { fcmTokens = sn.val() || {}; });
@@ -2330,7 +2334,9 @@
       if (!fresh || isSending) { removeRemoteLive(); return; }
       if (!remoteLiveRow) {
         const sess = getCurrentSession();
-        remoteLiveRow = appendMessageDOM({ role: 'ai', text: '', attachments: [], createdAt: 0, model: v.model }, sess && sess.messages ? sess.messages.length : 0);
+        scrollLock = true;
+        try { remoteLiveRow = appendMessageDOM({ role: 'ai', text: '', attachments: [], createdAt: 0, model: v.model }, sess && sess.messages ? sess.messages.length : 0); } finally { scrollLock = false; }
+        if (pinned) scrollToBottom();
       }
       if (remoteLiveRow) { updateMessageBubble(remoteLiveRow, v.text); if (pinned) scrollToBottom(); }
     };
@@ -2415,14 +2421,18 @@
         removeRemoteLive();
         const wasPinned = pinned;
         for (let i = prev.length; i < msgs.length; i++) {
-          appendMessageDOM(msgs[i], i);
+          scrollLock = true;
+          try { appendMessageDOM(msgs[i], i); } finally { scrollLock = false; }
           const fromOther = msgs[i].role === 'user' ? (msgs[i].sender && msgs[i].sender !== activeProfile) : true;
-          if (fromOther) { try { playReceiveSound(); } catch (_) {} }
+          if (fromOther) {
+            try { playReceiveSound(); } catch (_) {}
+            if (!wasPinned) unreadBelow++;
+          }
         }
-        if (wasPinned) scrollToBottom();
+        if (wasPinned) scrollToBottom(); else updateScrollBtn();
       } else {
         removeRemoteLive();
-        renderCurrentSession();
+        renderCurrentSession(pinned ? undefined : captureAnchor('none', -1));
       }
     };
     ref.on('value', fn, (err) => { console.error('session read failed', err); statusText.textContent = 'Error'; });
@@ -3926,13 +3936,16 @@
 
   /* Scroll-to-bottom button */
   const sbBtn = document.getElementById('scroll-bottom-btn');
+  var sbBadge = document.getElementById('sb-badge');
   function updateScrollBtn() {
     const d = chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight;
-    sbBtn.classList.toggle('show', d > 240);
+    if (d < 90 && unreadBelow) unreadBelow = 0;
+    sbBtn.classList.toggle('show', d > 240 || (unreadBelow > 0 && d > 90));
+    if (sbBadge) { sbBadge.textContent = unreadBelow > 99 ? '99+' : unreadBelow; sbBadge.classList.toggle('show', unreadBelow > 0); }
   }
   chatContainer.addEventListener('scroll', updateScrollBtn, { passive: true });
   new MutationObserver(updateScrollBtn).observe(chatContainer, { childList: true, subtree: true, characterData: true });
-  sbBtn.addEventListener('click', () => chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' }));
+  sbBtn.addEventListener('click', () => { unreadBelow = 0; updateScrollBtn(); chatContainer.scrollTo({ top: chatContainer.scrollHeight, behavior: 'smooth' }); });
 
   /* Share reply */
   const shareSheet = document.getElementById('share-sheet');
@@ -4223,7 +4236,10 @@
   chatContainer.addEventListener('touchcancel', () => resetGesture(true));
   chatContainer.addEventListener('contextmenu', (e) => {
     const r = msgRowOf(e.target); if (!r) return;
-    e.preventDefault(); if (!selMode && (!gs || !gs.fired)) openMsgMenu(r);
+    e.preventDefault();
+    if (selMode) return;
+    if (gs && gs.row) { if (!gs.fired) { gs.fired = true; clearTimeout(lpTimer); enterSelect(r); } return; }
+    openMsgMenu(r);
   });
 
   /* 62 — Family birthday reminder */
