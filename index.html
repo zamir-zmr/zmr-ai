@@ -9,10 +9,8 @@
 <link rel="apple-touch-icon" href="/icons/icon-192.png">
 <script>try{var __s=JSON.parse(localStorage.getItem('zamirSettings')||'{}');var __d=document.documentElement;__d.setAttribute('data-theme',__s.theme||'dark');__d.setAttribute('data-anim',__s.anim||'full');__d.setAttribute('data-msg',__s.msgAnim||'slide');__d.setAttribute('data-bg',__s.bgFx||'orbs');__d.style.setProperty('--wp-dim',(__s.wpDim!=null?__s.wpDim:0.68));__d.style.setProperty('--fx-speed',__s.fxSpeed||1);__d.style.setProperty('--fx-dark',(__s.fxDark!=null?__s.fxDark:0.6));__d.style.setProperty('--fx-bright',(__s.fxBright!=null?__s.fxBright:1));__d.style.setProperty('--msg-speed',__s.msgSpeed||1);__d.style.setProperty('--msg-int',(__s.msgInt!=null?__s.msgInt:1));}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet"></noscript>
 <style>
   :root{
     --bg:#0E1116;
@@ -1447,6 +1445,9 @@
 </head>
 <body>
 <div id="splash"><div class="splash-stage"><i class="splash-ring"></i><i class="splash-ring r2"></i><img class="splash-logo" src="/icons/icon-192.png" alt="Zamir AI" width="96" height="96"></div><div class="splash-name">Zamir Ai</div><div class="splash-bar"><i></i></div></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
 
 <div id="sidebar-backdrop"></div>
 
@@ -2185,7 +2186,7 @@
 
   /* ---------------- Firebase realtime sync ---------------- */
   /* ---------------- FCM Push Notifications ---------------- */
-  const VAPID_KEY = 'BPJA7Q6LOD92SnkC-Z7tyAgtUQdz8tBvGrdijnNDkDKAyQNc84zdI2DTYZWasZbTFZwCnq5TXGsBnhIMq1-I4uU';
+  const VAPID_KEY = 'PASTE_YOUR_WEB_PUSH_VAPID_KEY_HERE';
   const tokensRef = db.ref('geminiChatApp/fcmTokens');
   let fcmTokens = {};
   tokensRef.on('value', function (sn) { fcmTokens = sn.val() || {}; });
