@@ -980,15 +980,27 @@
   @keyframes drift-b{to{transform:translate(-9vmax,-7vmax) scale(1.12)}}
 
   /* splash */
-  #splash{position:fixed;inset:0;z-index:300;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .6s ease,visibility .6s}
-  #splash.hide{opacity:0;visibility:hidden}
-  .splash-logo{width:96px;height:96px;border-radius:22px;object-fit:cover;background:none;display:flex;align-items:center;justify-content:center;font-family:'Manrope',sans-serif;font-weight:800;font-size:26px;color:#1A0E00;animation:splash-pop 900ms cubic-bezier(.2,.9,.25,1.2) both,glow 2.4s 900ms ease-in-out infinite}
-  .splash-name{font-family:'Manrope',sans-serif;font-weight:700;font-size:20px;color:var(--text);animation:fade-up .8s .25s both}
-  .splash-bar{width:120px;height:3px;border-radius:3px;background:var(--surface-2);overflow:hidden;animation:fade-up .8s .4s both}
-  .splash-bar i{display:block;height:100%;width:40%;background:var(--accent);border-radius:3px;animation:splash-slide 1s ease-in-out infinite}
-  @keyframes splash-pop{from{opacity:0;transform:scale(.5) rotate(-14deg)}to{opacity:1;transform:none}}
-  @keyframes fade-up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  #splash{position:fixed;inset:0;z-index:300;background:var(--bg);overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;transition:opacity .7s ease,transform .7s cubic-bezier(.4,0,.2,1),visibility .7s}
+  #splash.hide{opacity:0;visibility:hidden;transform:scale(1.12)}
+  #splash::before,#splash::after{content:'';position:absolute;width:380px;height:380px;border-radius:50%;pointer-events:none}
+  #splash::before{top:10%;left:-130px;background:radial-gradient(circle,rgba(74,222,100,.24),transparent 65%);animation:orb1 7s ease-in-out infinite alternate}
+  #splash::after{bottom:8%;right:-130px;background:radial-gradient(circle,rgba(255,138,61,.22),transparent 65%);animation:orb2 7s ease-in-out infinite alternate}
+  .splash-stage{position:relative;width:96px;height:96px;animation:splash-float 3s .9s ease-in-out infinite}
+  .splash-ring{position:absolute;inset:0;border-radius:24px;border:2px solid rgba(74,222,100,.6);opacity:0;animation:splash-ring 2.2s .9s ease-out infinite}
+  .splash-ring.r2{animation-delay:2s}
+  .splash-logo{position:relative;display:block;width:96px;height:96px;border-radius:22px;object-fit:cover;filter:drop-shadow(0 10px 28px rgba(52,211,80,.45));animation:splash-pop 1s cubic-bezier(.2,.9,.25,1.25) both}
+  .splash-name{position:relative;font-family:'Manrope',sans-serif;font-weight:800;font-size:24px;background:linear-gradient(90deg,var(--text) 0%,var(--accent) 50%,var(--text) 100%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:name-in 1s .35s cubic-bezier(.2,.8,.2,1) both,name-shimmer 2.4s 1.4s linear infinite}
+  .splash-bar{position:relative;width:130px;height:3px;border-radius:3px;background:var(--surface-2);overflow:hidden;animation:fade-up .8s .6s both}
+  .splash-bar i{display:block;height:100%;width:40%;background:linear-gradient(90deg,#4ADE64,var(--accent));border-radius:3px;animation:splash-slide 1s ease-in-out infinite}
+  @keyframes splash-pop{from{opacity:0;transform:scale(.4) rotate(-16deg)}to{opacity:1;transform:none}}
+  @keyframes splash-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+  @keyframes splash-ring{0%{transform:scale(1);opacity:.7}100%{transform:scale(2.2);opacity:0}}
+  @keyframes name-in{from{opacity:0;letter-spacing:.4em;transform:translateY(10px)}to{opacity:1;letter-spacing:.02em;transform:none}}
+  @keyframes name-shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+  @keyframes orb1{to{transform:translate(130px,90px) scale(1.25)}}
+  @keyframes orb2{to{transform:translate(-130px,-80px) scale(1.2)}}
   @keyframes splash-slide{from{transform:translateX(-110%)}to{transform:translateX(280%)}}
+  @keyframes fade-up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 
   /* hero (empty chat) */
   .hero{display:flex;flex-direction:column;align-items:center;text-align:center;margin-top:11vh;padding:0 16px;animation:fade-in 600ms both}
@@ -1434,7 +1446,7 @@
 </style>
 </head>
 <body>
-<div id="splash"><img class="splash-logo" src="/icons/icon-192.png" alt="Zamir AI" width="96" height="96"><div class="splash-name">Zamir Ai</div><div class="splash-bar"><i></i></div></div>
+<div id="splash"><div class="splash-stage"><i class="splash-ring"></i><i class="splash-ring r2"></i><img class="splash-logo" src="/icons/icon-192.png" alt="Zamir AI" width="96" height="96"></div><div class="splash-name">Zamir Ai</div><div class="splash-bar"><i></i></div></div>
 
 <div id="sidebar-backdrop"></div>
 
@@ -3985,9 +3997,9 @@
 
   (function () {
     const sp = document.getElementById('splash');
-    const hide = () => setTimeout(() => { sp.classList.add('hide'); setTimeout(() => sp.remove(), 700); }, 900);
+    const hide = () => setTimeout(() => { sp.classList.add('hide'); setTimeout(() => sp.remove(), 800); }, 1900);
     if (document.readyState === 'complete') hide(); else window.addEventListener('load', hide);
-    setTimeout(() => { if (sp.isConnected) { sp.classList.add('hide'); setTimeout(() => sp.remove(), 700); } }, 4000);
+    setTimeout(() => { if (sp.isConnected) { sp.classList.add('hide'); setTimeout(() => sp.remove(), 700); } }, 5000);
   })();
 
   applyTheme(settings.theme, false);
