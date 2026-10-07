@@ -982,7 +982,7 @@
   /* splash */
   #splash{position:fixed;inset:0;z-index:300;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .6s ease,visibility .6s}
   #splash.hide{opacity:0;visibility:hidden}
-  .splash-logo{width:72px;height:72px;border-radius:22px;background:linear-gradient(135deg,var(--accent),#FFB870);display:flex;align-items:center;justify-content:center;font-family:'Manrope',sans-serif;font-weight:800;font-size:26px;color:#1A0E00;animation:splash-pop 900ms cubic-bezier(.2,.9,.25,1.2) both,glow 2.4s 900ms ease-in-out infinite}
+  .splash-logo{width:96px;height:96px;border-radius:22px;object-fit:cover;background:none;display:flex;align-items:center;justify-content:center;font-family:'Manrope',sans-serif;font-weight:800;font-size:26px;color:#1A0E00;animation:splash-pop 900ms cubic-bezier(.2,.9,.25,1.2) both,glow 2.4s 900ms ease-in-out infinite}
   .splash-name{font-family:'Manrope',sans-serif;font-weight:700;font-size:20px;color:var(--text);animation:fade-up .8s .25s both}
   .splash-bar{width:120px;height:3px;border-radius:3px;background:var(--surface-2);overflow:hidden;animation:fade-up .8s .4s both}
   .splash-bar i{display:block;height:100%;width:40%;background:var(--accent);border-radius:3px;animation:splash-slide 1s ease-in-out infinite}
@@ -1434,7 +1434,7 @@
 </style>
 </head>
 <body>
-<div id="splash"><div class="splash-logo">AI</div><div class="splash-name">Zamir Ai</div><div class="splash-bar"><i></i></div></div>
+<div id="splash"><img class="splash-logo" src="/icons/icon-192.png" alt="Zamir AI" width="96" height="96"><div class="splash-name">Zamir Ai</div><div class="splash-bar"><i></i></div></div>
 
 <div id="sidebar-backdrop"></div>
 
@@ -2173,7 +2173,7 @@
 
   /* ---------------- Firebase realtime sync ---------------- */
   /* ---------------- FCM Push Notifications ---------------- */
-  const VAPID_KEY = 'BPJA7Q6LOD92SnkC-Z7tyAgtUQdz8tBvGrdijnNDkDKAyQNc84zdI2DTYZWasZbTFZwCnq5TXGsBnhIMq1-I4uU';
+  const VAPID_KEY = 'PASTE_YOUR_WEB_PUSH_VAPID_KEY_HERE';
   const tokensRef = db.ref('geminiChatApp/fcmTokens');
   let fcmTokens = {};
   tokensRef.on('value', function (sn) { fcmTokens = sn.val() || {}; });
@@ -2232,7 +2232,7 @@
   function fmtSeen(ts) {
     try {
       var d = new Date(ts), n = new Date();
-      var t = new Intl.DateTimeFormat('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true }).format(d);
+      var t = new Intl.DateTimeFormat('en-IN', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(d);
       if (d.toDateString() === n.toDateString()) return 'Last seen ' + t;
       var y = new Date(n.getTime() - 86400000);
       if (d.toDateString() === y.toDateString()) return 'Last seen yesterday ' + t;
