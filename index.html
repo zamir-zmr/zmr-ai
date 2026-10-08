@@ -1441,6 +1441,28 @@
   @keyframes pvl-drop{0%{opacity:0;transform:translateY(-26px)}14%{opacity:1;transform:translateY(4px)}22%,78%{opacity:1;transform:none}92%,100%{opacity:0}}
   @keyframes pvl-glow{0%{opacity:0;filter:brightness(2.4) blur(3px)}22%,78%{opacity:1;filter:none}92%,100%{opacity:0}}
   @keyframes pvl-focus{0%{opacity:0;transform:scale(1.25);filter:blur(8px)}22%,78%{opacity:1;transform:none;filter:blur(0)}92%,100%{opacity:0}}
+
+  /* ===== settings: card layout ===== */
+  #settings-sheet{--st-bg:#2A2B31;--st-card:#3B3C43;--st-text:#fff;--st-dim:#A7A9B3;--st-ctl:#2E2F35;background:var(--st-bg);border-color:transparent;border-radius:26px 26px 0 0;padding:10px 12px 20px}
+  html[data-theme="light"] #settings-sheet{--st-bg:#EEF1F7;--st-card:#fff;--st-text:#1B2030;--st-dim:#6B7280;--st-ctl:#EDF0F6}
+  #settings-sheet .sheet-title{font-size:22px;padding:10px 8px 4px;color:var(--st-text)}
+  .set-card{background:var(--st-card);border-radius:24px;margin:12px 0;padding:6px 6px 10px;animation:item-in .45s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--ci,0) * 70ms)}
+  html[data-theme="light"] .set-card{box-shadow:0 2px 14px rgba(30,40,80,.08)}
+  #settings-sheet .set-section{display:block;cursor:default;background:none;border:none;border-radius:0;margin:0;padding:16px 16px 6px;font-size:20px;letter-spacing:0;text-transform:none;color:var(--st-text)}
+  #settings-sheet .set-section::after{display:none}
+  #settings-sheet .set-cat{display:block;padding:0}
+  #settings-sheet .set-row{border-top:none;padding:11px 16px;gap:14px}
+  #settings-sheet .set-label{display:flex;align-items:center;gap:14px;color:var(--st-text);font-size:16px;font-weight:600}
+  #settings-sheet .set-lt{min-width:0}
+  #settings-sheet .set-hint{color:var(--st-dim);font-size:13.5px;font-weight:500;max-width:none;margin-top:2px}
+  .set-ic{width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--st-text)}
+  .set-ic svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  #settings-sheet .seg,#settings-sheet .dd-btn,#settings-sheet .set-btn,#settings-sheet .wp-open{background:var(--st-ctl);border-color:transparent;color:var(--st-text)}
+  #settings-sheet .seg button{color:var(--st-dim)}
+  #settings-sheet .seg button.active{color:#1A0E00}
+  #settings-sheet .set-slider{border-top:none;padding:8px 16px 12px}
+  #settings-sheet .ss-head{color:var(--st-text);font-weight:600}
+  #settings-sheet .set-note{border-top:none;color:var(--st-dim);padding:6px 10px 4px}
 </style>
 </head>
 <body>
@@ -2245,7 +2267,7 @@
   function fmtSeen(ts) {
     try {
       var d = new Date(ts), n = new Date();
-      var t = new Intl.DateTimeFormat('en-IN', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(d);
+      var t = new Intl.DateTimeFormat('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true }).format(d).toUpperCase();
       if (d.toDateString() === n.toDateString()) return 'Last seen ' + t;
       var y = new Date(n.getTime() - 86400000);
       if (d.toDateString() === y.toDateString()) return 'Last seen yesterday ' + t;
@@ -4939,28 +4961,42 @@
   sendBtn.addEventListener('mousedown', function (e) { e.preventDefault(); });
   sendBtn.addEventListener('touchstart', function () { if (document.activeElement === userInput) userInput.focus({ preventScroll: true }); }, { passive: true });
 
-  /* settings categories: ek waqt me sirf ek khula */
+  /* settings: har section ek card, icons ke saath */
   (function () {
     var sheet = document.getElementById('settings-sheet');
-    var kids = Array.prototype.slice.call(sheet.children), cur = null, cats = [];
+    var IC = {
+      'default model': '<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 17v4M17 19h4"/>',
+      'theme': '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
+      'font size': '<path d="M4 7V4h16v3M9 20h6M12 4v16"/>',
+      'chat wallpaper': '<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>',
+      'animations': '<circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/>',
+      'message style': '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+      'background effect': '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',
+      'send animation': '<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>',
+      'auto-scroll': '<circle cx="12" cy="12" r="10"/><polyline points="8 12 12 16 16 12"/><line x1="12" y1="8" x2="12" y2="16"/>',
+      'sounds': '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/>',
+      'default voice': '<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/>'
+    };
+    sheet.querySelectorAll('.set-label').forEach(function (lb) {
+      var t = lb.firstChild ? (lb.firstChild.textContent || '').trim().toLowerCase() : '';
+      var wrap = document.createElement('span'); wrap.className = 'set-lt';
+      while (lb.firstChild) wrap.appendChild(lb.firstChild);
+      var ic = document.createElement('span'); ic.className = 'set-ic';
+      ic.innerHTML = IC[t] ? '<svg viewBox="0 0 24 24">' + IC[t] + '</svg>' : '';
+      if (!IC[t]) ic.style.display = 'none';
+      lb.appendChild(ic); lb.appendChild(wrap);
+    });
+    var kids = Array.prototype.slice.call(sheet.children), cur = null, n = 0;
     kids.forEach(function (el) {
       if (el.classList.contains('set-section')) {
-        cur = document.createElement('div'); cur.className = 'set-cat';
-        sheet.insertBefore(cur, el.nextSibling);
-        cats.push({ head: el, body: cur });
+        var card = document.createElement('div'); card.className = 'set-card'; card.style.setProperty('--ci', n++);
+        cur = document.createElement('div'); cur.className = 'set-cat open';
+        sheet.insertBefore(card, el);
+        card.appendChild(el); card.appendChild(cur);
       } else if (cur && !el.classList.contains('set-note')) {
         cur.appendChild(el);
       } else if (el.classList.contains('set-note')) { cur = null; }
     });
-    function openCat(c) {
-      cats.forEach(function (x) {
-        var on = x === c && !x.body.classList.contains('open');
-        x.body.classList.toggle('open', on); x.head.classList.toggle('open', on);
-      });
-      if (typeof ddCloseAll === 'function') ddCloseAll(null);
-    }
-    cats.forEach(function (c) { c.head.addEventListener('click', function () { openCat(c); }); });
-    if (cats[0]) { cats[0].body.classList.add('open'); cats[0].head.classList.add('open'); }
   })();
 
   function initV6() {
